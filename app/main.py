@@ -5,14 +5,19 @@ Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
 
-from app import data
-from app.database import Base, SessionLocal, engine
+from app import crud
+from app.database import Base, SessionLocal, engine, get_db
 from app.schemas import Education, Experience, Profile, Project, Skills
 from app.seed import seed
+
+# Cada ruta que declara este tipo recibe una sesión abierta para esa petición.
+DbSession = Annotated[Session, Depends(get_db)]
 
 
 @asynccontextmanager
@@ -45,25 +50,25 @@ def health() -> dict[str, str]:
 
 
 @app.get("/profile", response_model=Profile, tags=["cv"])
-def get_profile() -> Profile:
-    return data.PROFILE
+def get_profile(db: DbSession) -> Profile:
+    return crud.get_profile(db)
 
 
 @app.get("/experience", response_model=list[Experience], tags=["cv"])
-def get_experience() -> list[Experience]:
-    return data.EXPERIENCE
+def get_experience(db: DbSession) -> list[Experience]:
+    return crud.get_experience(db)
 
 
 @app.get("/projects", response_model=list[Project], tags=["cv"])
-def get_projects() -> list[Project]:
-    return data.PROJECTS
+def get_projects(db: DbSession) -> list[Project]:
+    return crud.get_projects(db)
 
 
 @app.get("/education", response_model=list[Education], tags=["cv"])
-def get_education() -> list[Education]:
-    return data.EDUCATION
+def get_education(db: DbSession) -> list[Education]:
+    return crud.get_education(db)
 
 
 @app.get("/skills", response_model=Skills, tags=["cv"])
-def get_skills() -> Skills:
-    return data.SKILLS
+def get_skills(db: DbSession) -> Skills:
+    return crud.get_skills(db)

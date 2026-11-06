@@ -1,0 +1,40 @@
+"""Configuración común de los tests.
+
+Cada test usa su propia base SQLite en memoria, ya cargada con los datos
+iniciales, así que no depende de cv.db ni lo modifica.
+"""
+from collections.abc import Iterator
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.database import Base, get_db
+from app.main import app
+from app.seed import seed
+
+
+@pytest.fixture
+def db_session() -> Iterator[Session]:
+    # StaticPool mantiene una sola conexión: al cerrarla, la base en memoria
+    # desaparecería. FastAPI puede usarla desde otro hilo, de ahí check_same_thread.
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        seed(session)
+        yield session
+    engine.dispose()
+
+
+@pytest.fixture
+def client(db_session: Session) -> Iterator[TestClient]:
+    app.dependency_overrides[get_db] = lambda: db_session
+    # Sin "with", TestClient no ejecuta el arranque de la app y no toca cv.db.
+    yield TestClient(app)
+    app.dependency_overrides.clear()
