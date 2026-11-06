@@ -18,6 +18,7 @@ web-CV personal.
 | GET    | `/projects`   | Proyectos                        |
 | GET    | `/education`  | Formación                        |
 | GET    | `/skills`     | Habilidades técnicas             |
+| GET    | `/languages`  | Idiomas                          |
 
 Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
 

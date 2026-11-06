@@ -33,6 +33,22 @@ def test_education_and_skills(client):
     assert "languages" in client.get("/skills").json()
 
 
+def test_cv_matches_the_pdf(client):
+    assert client.get("/profile").json()["summary"].endswith("seguir creciendo en Python.")
+    internship = client.get("/experience").json()[0]
+    assert internship["period"] == "26 de enero – 15 de mayo de 2026"
+    assert "Apoyo de Codex" in internship["highlights"][0]
+    assert "comprobación mediante pruebas" in internship["highlights"][0]
+    assert "Codex" in client.get("/skills").json()["tools"]
+
+
+def test_languages(client):
+    assert client.get("/languages").json() == [
+        {"name": "Español", "level": "nativo"},
+        {"name": "Inglés", "level": "B2 (2022)"},
+    ]
+
+
 def test_lists_keep_their_order(client):
     """Las listas salen en el mismo orden que en el CV."""
     experience = client.get("/experience").json()

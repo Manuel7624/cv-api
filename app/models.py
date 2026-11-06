@@ -105,3 +105,12 @@ class Skill(Base):
     category: Mapped[str]  # "languages", "tools" o "concepts"
     name: Mapped[str]
     position: Mapped[int]
+
+
+class Language(Base):
+    __tablename__ = "language"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    level: Mapped[str]
+    position: Mapped[int]

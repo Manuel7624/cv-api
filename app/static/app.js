@@ -99,21 +99,28 @@ function renderSkills(skills) {
   }
 }
 
+function renderLanguages(items) {
+  const names = items.map((item) => `${item.name} · ${item.level}`);
+  document.getElementById("languages").append(createList(names, "plain-list"));
+}
+
 async function loadCv() {
   const status = document.getElementById("status");
   try {
-    const [profile, experience, projects, education, skills] = await Promise.all([
+    const [profile, experience, projects, education, skills, languages] = await Promise.all([
       getJson("/profile"),
       getJson("/experience"),
       getJson("/projects"),
       getJson("/education"),
       getJson("/skills"),
+      getJson("/languages"),
     ]);
     renderProfile(profile);
     renderExperience(experience);
     renderProjects(projects);
     renderEducation(education);
     renderSkills(skills);
+    renderLanguages(languages);
     status.hidden = true;
     document.getElementById("content").hidden = false;
   } catch (error) {

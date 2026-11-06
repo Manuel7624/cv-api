@@ -47,3 +47,8 @@ class Skills(BaseModel):
     languages: list[str]
     tools: list[str]
     concepts: list[str]
+
+
+class Language(BaseModel):
+    name: str
+    level: str

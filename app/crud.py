@@ -68,3 +68,8 @@ def get_skills(db: Session) -> schemas.Skills:
     for row in rows:
         skills[row.category].append(row.name)
     return schemas.Skills(**skills)
+
+
+def get_languages(db: Session) -> list[schemas.Language]:
+    rows = db.scalars(select(models.Language).order_by(models.Language.position))
+    return [schemas.Language(name=row.name, level=row.level) for row in rows]

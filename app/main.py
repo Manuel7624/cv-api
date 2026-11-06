@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.database import Base, SessionLocal, engine, get_db
-from app.schemas import Education, Experience, Profile, Project, Skills
+from app.schemas import Education, Experience, Language, Profile, Project, Skills
 from app.seed import seed
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -79,3 +79,8 @@ def get_education(db: DbSession) -> list[Education]:
 @app.get("/skills", response_model=Skills, tags=["cv"])
 def get_skills(db: DbSession) -> Skills:
     return crud.get_skills(db)
+
+
+@app.get("/languages", response_model=list[Language], tags=["cv"])
+def get_languages(db: DbSession) -> list[Language]:
+    return crud.get_languages(db)

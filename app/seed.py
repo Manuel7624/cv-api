@@ -18,7 +18,8 @@ PROFILE = {
         "Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, con "
         "prácticas en una empresa de software (Python, Docker y GitLab) y un "
         "proyecto propio en Android con Java y SQLite. Busco mi primera "
-        "oportunidad como desarrollador backend junior."
+        "oportunidad como desarrollador backend junior y seguir creciendo en "
+        "Python."
     ),
     "availability": "Disponibilidad inmediata",
     "email": "manusastrenar@gmail.com",
@@ -30,10 +31,12 @@ EXPERIENCE = [
         "role": "Prácticas de desarrollo (FCT)",
         "company": "Brainy Inteligencia Semántica",
         "kind": "Prácticas",
-        "period": "26 de enero de 2026 – 15 de mayo de 2026",
+        "period": "26 de enero – 15 de mayo de 2026",
         "highlights": [
             "Refactorización y optimización de workers en Python para mejorar "
-            "su estructura y legibilidad.",
+            "su estructura y legibilidad; comprobación mediante pruebas de "
+            "sus respuestas y comportamiento esperado. Apoyo de Codex con un "
+            "prompt base adaptado a cada worker.",
             "Dockerización de los workers que aún no estaban contenerizados y "
             "subida de los cambios a nuevas ramas en GitLab.",
             "Puesta en marcha en local de la API (versión anterior) de la "
@@ -110,6 +113,7 @@ SKILLS = {
         "Android Studio",
         "Visual Studio Code",
         "Consola",
+        "Codex",
     ],
     "concepts": [
         "Programación orientada a objetos",
@@ -118,6 +122,11 @@ SKILLS = {
         "Windows y Linux",
     ],
 }
+
+LANGUAGES = [
+    {"name": "Español", "level": "nativo"},
+    {"name": "Inglés", "level": "B2 (2022)"},
+]
 
 
 def seed(session: Session) -> None:
@@ -170,5 +179,8 @@ def seed(session: Session) -> None:
     for category, names in SKILLS.items():
         for position, name in enumerate(names):
             session.add(models.Skill(category=category, name=name, position=position))
+
+    for position, item in enumerate(LANGUAGES):
+        session.add(models.Language(**item, position=position))
 
     session.commit()
