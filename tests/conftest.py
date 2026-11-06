@@ -5,6 +5,7 @@ iniciales, así que no depende de cv.db ni lo modifica.
 """
 from collections.abc import Iterator
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -13,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app.rate_limit import chat_limits
 from app.seed import seed
 
 
@@ -38,3 +40,19 @@ def client(db_session: Session) -> Iterator[TestClient]:
     # Sin "with", TestClient no ejecuta el arranque de la app y no toca cv.db.
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def isolate_chat(monkeypatch) -> Iterator[None]:
+    """Ningún test debe llamar a las APIs reales ni depender de otro test."""
+
+    def blocked_post(*_args, **_kwargs):
+        raise AssertionError("Un test ha intentado llamar a una API real")
+
+    monkeypatch.setattr(httpx, "post", blocked_post)
+    monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    monkeypatch.delenv("CLIENT_IP_HEADER", raising=False)
+    chat_limits.reset()
+    yield
+    chat_limits.reset()
