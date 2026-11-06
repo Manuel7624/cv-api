@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manuel Sastre · Junior Backend Developer</title>
+  <meta name="description" content="Currículum de Manuel Sastre, desarrollador backend junior en Zaragoza.">
+  <meta property="og:title" content="Manuel Sastre · Junior Backend Developer">
+  <meta property="og:description" content="Currículum de Manuel Sastre, desarrollador backend junior en Zaragoza.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <img class="photo" src="/static/img/manuel-sastre.jpg" alt="Foto de Manuel Sastre" width="534" height="647">
+      <div class="hero-text">
+        <h1 id="name">Manuel Sastre</h1>
+        <p class="role" id="title"></p>
+        <p class="meta" id="meta"></p>
+        <p class="availability" id="availability" hidden></p>
+        <nav class="actions" aria-label="Enlaces principales">
+          <a class="button primary" href="/static/Manuel_Sastre_CV.pdf" download>Descargar CV (PDF)</a>
+          <a class="button" id="github" href="https://github.com/Manuel7624" target="_blank" rel="noopener">GitHub</a>
+          <a class="button" href="/docs">Documentación de la API</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <p class="status" id="status" role="status">Cargando el currículum…</p>
+    <noscript><p class="status">Esta web necesita JavaScript para mostrar el currículum. También puedes descargarlo en PDF.</p></noscript>
+
+    <div id="content" hidden>
+      <section aria-labelledby="profile-heading">
+        <h2 id="profile-heading">Perfil</h2>
+        <p id="summary"></p>
+      </section>
+
+      <section aria-labelledby="experience-heading">
+        <h2 id="experience-heading">Experiencia</h2>
+        <div id="experience"></div>
+      </section>
+
+      <section aria-labelledby="projects-heading">
+        <h2 id="projects-heading">Proyectos</h2>
+        <div id="projects"></div>
+      </section>
+
+      <section aria-labelledby="education-heading">
+        <h2 id="education-heading">Formación</h2>
+        <div id="education"></div>
+      </section>
+
+      <section aria-labelledby="skills-heading">
+        <h2 id="skills-heading">Habilidades</h2>
+        <div class="skills" id="skills"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>Los datos de esta web se leen de una API con FastAPI. <a href="/docs">Pruébala en la documentación</a>.</p>
+  </footer>
+</body>
+</html>

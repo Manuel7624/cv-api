@@ -1,20 +1,25 @@
 """API del currículum de Manuel Sastre.
 
 Para arrancarla:  uvicorn app.main:app --reload
+Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.database import Base, SessionLocal, engine, get_db
 from app.schemas import Education, Experience, Profile, Project, Skills
 from app.seed import seed
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 # Cada ruta que declara este tipo recibe una sesión abierta para esa petición.
 DbSession = Annotated[Session, Depends(get_db)]
@@ -36,11 +41,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/", include_in_schema=False)
-def root() -> RedirectResponse:
-    """La raíz lleva directamente a la documentación."""
-    return RedirectResponse(url="/docs")
+def root() -> FileResponse:
+    """La raíz muestra la web del currículum."""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/health", tags=["sistema"])
