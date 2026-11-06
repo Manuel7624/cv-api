@@ -9,14 +9,24 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import chat, crud
 from app.database import Base, SessionLocal, engine, get_db
-from app.schemas import Education, Experience, Language, Profile, Project, Skills
+from app.rate_limit import chat_limits, get_client_ip
+from app.schemas import (
+    ChatRequest,
+    ChatResponse,
+    Education,
+    Experience,
+    Language,
+    Profile,
+    Project,
+    Skills,
+)
 from app.seed import seed
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -84,3 +94,15 @@ def get_skills(db: DbSession) -> Skills:
 @app.get("/languages", response_model=list[Language], tags=["cv"])
 def get_languages(db: DbSession) -> list[Language]:
     return crud.get_languages(db)
+
+
+@app.post("/chat", response_model=ChatResponse, tags=["chat"])
+def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResponse:
+    """Responde preguntas sobre el perfil de Manuel, con límite de mensajes por IP."""
+    if not chat_limits.allow(get_client_ip(request)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Has enviado muchos mensajes. Espera un poco o escribe a Manuel "
+            "desde la sección de contacto.",
+        )
+    return ChatResponse(answer=chat.answer_question(db, payload.message))

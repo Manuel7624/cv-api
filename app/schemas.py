@@ -3,7 +3,11 @@
 FastAPI los usa para validar las respuestas y para generar la documentación
 automática en /docs.
 """
-from pydantic import BaseModel
+from typing import Annotated
+
+from pydantic import BaseModel, StringConstraints
+
+from app.chat_limits import MAX_MESSAGE_LENGTH
 
 
 class Contact(BaseModel):
@@ -53,3 +57,14 @@ class Skills(BaseModel):
 class Language(BaseModel):
     name: str
     level: str
+
+
+class ChatRequest(BaseModel):
+    message: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_MESSAGE_LENGTH),
+    ]
+
+
+class ChatResponse(BaseModel):
+    answer: str
