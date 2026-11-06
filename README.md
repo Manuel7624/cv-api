@@ -11,6 +11,7 @@ web-CV personal.
 
 | Método | Ruta          | Descripción                      |
 |--------|---------------|----------------------------------|
+| GET    | `/`           | Web del currículum               |
 | GET    | `/health`     | Comprobación de estado           |
 | GET    | `/profile`    | Perfil y contacto                |
 | GET    | `/experience` | Experiencia y prácticas          |
@@ -31,7 +32,8 @@ pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-Abre `http://127.0.0.1:8000/docs` en el navegador.
+Abre `http://127.0.0.1:8000/` para ver la web y `http://127.0.0.1:8000/docs` para
+probar la API.
 
 ## Base de datos
 
@@ -48,7 +50,13 @@ vuelvan a cargar.
 docker compose up --build
 ```
 
-La API queda en `http://localhost:8000`.
+La web queda en `http://localhost:8000`.
+
+## Despliegue
+
+El archivo `render.yaml` describe el servicio para Render: usa el `Dockerfile` y
+comprueba `/health`. En el plan gratuito el disco no es persistente, así que
+`cv.db` se vuelve a crear desde `app/seed.py` en cada arranque.
 
 ## Tests
 
@@ -65,16 +73,17 @@ app/
 ├── crud.py      Consultas a la base de datos
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
-└── seed.py      Datos iniciales del currículum
+├── seed.py      Datos iniciales del currículum
+└── static/      Web: HTML, CSS, JavaScript, foto y CV en PDF
 tests/           Pruebas automáticas
 Dockerfile       Imagen del servicio
+render.yaml      Configuración del despliegue en Render
 ```
 
 ## Próximos pasos
 
 - Pasar la base de datos de SQLite a PostgreSQL.
 - Chatbot que responda sobre mi perfil usando esta API.
-- Despliegue en la nube con integración continua.
 
 ## Autor
 
