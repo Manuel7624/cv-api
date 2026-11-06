@@ -47,6 +47,18 @@ def test_cv_matches_the_pdf(client):
     assert "Codex" in client.get("/skills").json()["tools"]
 
 
+def test_python_course_has_no_year(client):
+    course = client.get("/education").json()[1]
+    assert course["title"] == "Curso de Python"
+    assert course["period"] is None
+    assert course["status"] == "En curso"
+
+
+def test_profile_includes_linkedin(client):
+    contact = client.get("/profile").json()["contact"]
+    assert contact["linkedin"] == "https://www.linkedin.com/in/manuel-sastre-naranjo"
+
+
 def test_languages(client):
     assert client.get("/languages").json() == [
         {"name": "Español", "level": "nativo"},

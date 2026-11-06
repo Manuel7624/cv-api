@@ -94,7 +94,7 @@ class Education(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     institution: Mapped[str]
-    period: Mapped[str]
+    period: Mapped[str | None]
     status: Mapped[str]
     position: Mapped[int]
 

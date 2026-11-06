@@ -87,7 +87,11 @@ function renderEducation(items) {
     const block = createElement("article", "item");
     block.append(
       createElement("h3", "", item.title),
-      createElement("p", "item-meta", `${item.institution} · ${item.period} · ${item.status}`),
+      createElement(
+        "p",
+        "item-meta",
+        [item.institution, item.period, item.status].filter(Boolean).join(" · "),
+      ),
     );
     container.append(block);
   }

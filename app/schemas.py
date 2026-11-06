@@ -40,7 +40,7 @@ class Project(BaseModel):
 class Education(BaseModel):
     title: str
     institution: str
-    period: str
+    period: str | None
     status: str
 
 

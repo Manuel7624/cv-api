@@ -24,7 +24,7 @@ PROFILE = {
     "availability": "Disponibilidad inmediata",
     "email": "manusastrenar@gmail.com",
     "github": "https://github.com/Manuel7624",
-    "linkedin": None,  # Mientras no haya URL, la web no muestra el botón
+    "linkedin": "https://www.linkedin.com/in/manuel-sastre-naranjo",
 }
 
 EXPERIENCE = [
@@ -90,7 +90,7 @@ EDUCATION = [
     {
         "title": "Curso de Python",
         "institution": "Coddy",
-        "period": "2026",
+        "period": None,
         "status": "En curso",
     },
     {
