@@ -129,6 +129,62 @@ LANGUAGES = [
     {"name": "Inglés", "level": "B2 (2022)"},
 ]
 
+# Preguntas para el chatbot. Manuel debe escribir aquí sus respuestas, cambiando
+# None por el texto. Mientras una respuesta sea None, el chat no la usa y dice
+# que no lo sabe. No rellenar con nada que no sea verdad.
+EXTRA_INFO = [
+    {
+        "topic": "Motivación",
+        "question": "¿Por qué quieres dedicarte al backend?",
+        "answer": None,
+    },
+    {
+        "topic": "Prácticas",
+        "question": "¿Qué hacías en un día normal de prácticas y qué aprendiste?",
+        "answer": None,
+    },
+    {
+        "topic": "Prácticas",
+        "question": "¿Qué fue lo más difícil de las prácticas y cómo lo resolviste?",
+        "answer": None,
+    },
+    {
+        "topic": "Balancea",
+        "question": "¿Por qué hiciste Balancea y de qué estás más orgulloso?",
+        "answer": None,
+    },
+    {
+        "topic": "Balancea",
+        "question": "¿Qué cambiarías o mejorarías de Balancea hoy?",
+        "answer": None,
+    },
+    {
+        "topic": "Aprendizaje",
+        "question": "¿Qué estás aprendiendo ahora y cómo lo estudias?",
+        "answer": None,
+    },
+    {
+        "topic": "Disponibilidad",
+        "question": "¿Cuándo podrías empezar y qué jornada buscas?",
+        "answer": None,
+    },
+    {
+        "topic": "Disponibilidad",
+        "question": "¿Aceptas trabajo remoto, híbrido o presencial? ¿Te mudarías de Zaragoza?",
+        "answer": None,
+    },
+    {
+        "topic": "Inglés",
+        "question": "¿Cómo te manejas en inglés en el trabajo: documentación, reuniones, entrevistas?",
+        "answer": None,
+    },
+    {
+        "topic": "Personal",
+        "question": "¿Qué te gusta hacer fuera del trabajo o qué quieres que sepan de ti?",
+        "answer": None,
+    },
+]
+
 
 def seed(session: Session) -> None:
     """Carga los datos iniciales si la base está vacía.
@@ -183,5 +239,8 @@ def seed(session: Session) -> None:
 
     for position, item in enumerate(LANGUAGES):
         session.add(models.Language(**item, position=position))
+
+    for position, item in enumerate(EXTRA_INFO):
+        session.add(models.ExtraInfo(**item, position=position))
 
     session.commit()

@@ -108,6 +108,18 @@ class Skill(Base):
     position: Mapped[int]
 
 
+class ExtraInfo(Base):
+    """Información sobre Manuel que no está en el CV y solo usa el chatbot."""
+
+    __tablename__ = "extra_info"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic: Mapped[str]
+    question: Mapped[str]
+    answer: Mapped[str | None]  # None mientras esté pendiente de rellenar
+    position: Mapped[int]
+
+
 class Language(Base):
     __tablename__ = "language"
 
