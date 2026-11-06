@@ -16,5 +16,6 @@ COPY app ./app
 
 EXPOSE 8000
 
-# 0.0.0.0 para que sea accesible desde fuera del contenedor
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 0.0.0.0 para que sea accesible desde fuera del contenedor.
+# El puerto lo fija la plataforma de despliegue con PORT; en local, 8000.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

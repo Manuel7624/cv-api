@@ -1,0 +1,11 @@
+# Configuración del despliegue en Render (Blueprint).
+# Render construye la imagen con el Dockerfile y comprueba /health.
+services:
+  - type: web
+    name: manuel-sastre-cv
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
