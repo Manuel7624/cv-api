@@ -43,14 +43,15 @@ async function sendQuestion(question) {
   }
 
   answer.classList.remove("pending");
-  chatLog.scrollTop = chatLog.scrollHeight;
+  // Lleva al inicio de la respuesta, para que se lea desde el principio.
+  chatLog.scrollTop = answer.offsetTop - chatLog.offsetTop;
   chatSend.disabled = false;
-  chatInput.focus();
 }
 
-chatForm.addEventListener("submit", (event) => {
+chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  sendQuestion(chatInput.value);
+  await sendQuestion(chatInput.value);
+  chatInput.focus();
 });
 
 for (const button of document.querySelectorAll(".suggestion")) {
