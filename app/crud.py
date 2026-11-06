@@ -17,7 +17,11 @@ def get_profile(db: Session) -> schemas.Profile:
         location=profile.location,
         summary=profile.summary,
         availability=profile.availability,
-        contact=schemas.Contact(email=profile.email, github=profile.github),
+        contact=schemas.Contact(
+            email=profile.email,
+            github=profile.github,
+            linkedin=profile.linkedin,
+        ),
     )
 
 

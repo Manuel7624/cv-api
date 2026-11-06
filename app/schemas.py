@@ -9,6 +9,7 @@ from pydantic import BaseModel
 class Contact(BaseModel):
     email: str
     github: str
+    linkedin: str | None
 
 
 class Profile(BaseModel):

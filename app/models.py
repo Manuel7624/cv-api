@@ -23,6 +23,7 @@ class Profile(Base):
     availability: Mapped[str]
     email: Mapped[str]
     github: Mapped[str]
+    linkedin: Mapped[str | None]
 
 
 class Experience(Base):

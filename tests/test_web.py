@@ -9,6 +9,11 @@ def test_root_serves_the_web(client):
     assert "/static/styles.css" in response.text
 
 
+def test_web_has_contact_section(client):
+    assert 'id="contact"' in client.get("/").text
+    assert "renderContact" in client.get("/static/app.js").text
+
+
 def test_web_links_to_cv_github_and_docs(client):
     html = client.get("/").text
     assert 'href="/static/Manuel_Sastre_CV.pdf"' in html

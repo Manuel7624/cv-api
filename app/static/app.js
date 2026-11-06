@@ -25,6 +25,14 @@ async function getJson(path) {
   return response.json();
 }
 
+function createExternalButton(text, url) {
+  const link = createElement("a", "button", text);
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener";
+  return link;
+}
+
 function renderProfile(profile) {
   document.getElementById("name").textContent = profile.name;
   document.getElementById("title").textContent = profile.title;
@@ -99,6 +107,19 @@ function renderSkills(skills) {
   }
 }
 
+function renderContact(contact) {
+  const container = document.getElementById("contact");
+
+  const email = createElement("a", "button primary", "Enviar un correo");
+  email.href = `mailto:${contact.email}`;
+  container.append(email);
+
+  if (contact.linkedin) {
+    container.append(createExternalButton("LinkedIn", contact.linkedin));
+  }
+  container.append(createExternalButton("GitHub", contact.github));
+}
+
 function renderLanguages(items) {
   const names = items.map((item) => `${item.name} · ${item.level}`);
   document.getElementById("languages").append(createList(names, "plain-list"));
@@ -121,6 +142,7 @@ async function loadCv() {
     renderEducation(education);
     renderSkills(skills);
     renderLanguages(languages);
+    renderContact(profile.contact);
     status.hidden = true;
     document.getElementById("content").hidden = false;
   } catch (error) {

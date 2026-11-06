@@ -12,6 +12,11 @@ def test_profile(client):
     assert "github" in body["contact"]
 
 
+def test_profile_contact_fields(client):
+    contact = client.get("/profile").json()["contact"]
+    assert set(contact) == {"email", "github", "linkedin"}
+
+
 def test_profile_does_not_expose_phone(client):
     """El teléfono no debe aparecer en una API pública."""
     assert "phone" not in client.get("/profile").json()["contact"]

@@ -24,6 +24,7 @@ PROFILE = {
     "availability": "Disponibilidad inmediata",
     "email": "manusastrenar@gmail.com",
     "github": "https://github.com/Manuel7624",
+    "linkedin": None,  # Mientras no haya URL, la web no muestra el botón
 }
 
 EXPERIENCE = [
