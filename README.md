@@ -22,10 +22,10 @@ Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
 
 ## Ejecutarla en local (Windows)
 
-Requisitos: Python 3.12 o superior.
+Requisitos: Python 3.12.
 
 ```powershell
-python -m venv .venv
+py -V:3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
