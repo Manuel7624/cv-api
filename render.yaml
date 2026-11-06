@@ -9,3 +9,12 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     autoDeployTrigger: commit
+    envVars:
+      # sync: false hace que Render pida el valor en su panel: no está en Git.
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Render está detrás de Cloudflare, que escribe aquí la IP real.
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
