@@ -155,7 +155,7 @@ def test_keys_are_not_in_the_web_or_the_answers(client, fake_ai):
     send(client)
     public = [
         client.get(path).text
-        for path in ("/", "/static/app.js", "/static/styles.css", "/openapi.json")
+        for path in ("/", "/static/app.js", "/static/chat.js", "/openapi.json")
     ]
     public.append(fake_ai[0]["system_prompt"])
     for text in public:

@@ -1,4 +1,8 @@
+import re
+
 import pytest
+
+from app.chat_limits import MAX_MESSAGE_LENGTH
 
 
 def test_root_serves_the_web(client):
@@ -7,6 +11,31 @@ def test_root_serves_the_web(client):
     assert response.headers["content-type"].startswith("text/html")
     assert "/static/app.js" in response.text
     assert "/static/styles.css" in response.text
+
+
+def test_chat_comes_before_the_cv(client):
+    html = client.get("/").text
+    assert "Pregúntame lo que quieras sobre Manuel" in html
+    assert html.index('id="chat-form"') < html.index('id="experience"')
+
+
+def test_chat_input_uses_the_backend_limit(client):
+    assert f'maxlength="{MAX_MESSAGE_LENGTH}"' in client.get("/").text
+
+
+def test_web_explains_how_it_is_built(client):
+    html = client.get("/").text
+    assert "Cómo está hecha esta web" in html
+    for name in ("Navegador", "FastAPI", "SQLite", "Docker", "pytest"):
+        assert name in html
+
+
+def test_terminal_only_offers_real_get_routes(client):
+    html = client.get("/").text
+    routes = re.findall(r'<option value="([^"]+)"', html)
+    assert routes
+    for route in routes:
+        assert client.get(route).status_code == 200
 
 
 def test_web_has_contact_section(client):
@@ -25,6 +54,8 @@ def test_web_links_to_cv_github_and_docs(client):
     ("path", "content_type"),
     [
         ("/static/app.js", "javascript"),
+        ("/static/chat.js", "javascript"),
+        ("/static/terminal.js", "javascript"),
         ("/static/styles.css", "text/css"),
         ("/static/img/manuel-sastre.jpg", "image/jpeg"),
     ],
