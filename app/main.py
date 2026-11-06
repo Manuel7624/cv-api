@@ -3,16 +3,32 @@
 Para arrancarla:  uvicorn app.main:app --reload
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from app import data
+from app.database import Base, SessionLocal, engine
 from app.schemas import Education, Experience, Profile, Project, Skills
+from app.seed import seed
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Al arrancar, crea las tablas que falten y carga los datos iniciales."""
+    Base.metadata.create_all(engine)
+    with SessionLocal() as session:
+        seed(session)
+    yield
+
 
 app = FastAPI(
     title="CV API · Manuel Sastre",
     description="API REST que sirve mi currículum. Pruébala desde esta página.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 
