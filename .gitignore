@@ -7,5 +7,3 @@ __pycache__/
 .vscode/
 CLAUDE.md
 *.db
-# CV con telefono: no subir hasta decidir que version se publica
-app/static/Manuel_Sastre_CV.pdf

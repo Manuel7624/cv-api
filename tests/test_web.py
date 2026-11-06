@@ -1,9 +1,5 @@
 import pytest
 
-from app.main import STATIC_DIR
-
-CV_PDF = STATIC_DIR / "Manuel_Sastre_CV.pdf"
-
 
 def test_root_serves_the_web(client):
     response = client.get("/")
@@ -34,7 +30,6 @@ def test_static_files_are_served(client, path, content_type):
     assert content_type in response.headers["content-type"]
 
 
-@pytest.mark.skipif(not CV_PDF.exists(), reason="El PDF no está en esta copia del proyecto")
 def test_cv_pdf_is_served(client):
     response = client.get("/static/Manuel_Sastre_CV.pdf")
     assert response.status_code == 200
