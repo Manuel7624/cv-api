@@ -4,8 +4,8 @@ API REST desarrollada con **Python y FastAPI** que sirve mi currículum
 (perfil, experiencia, proyectos, formación y habilidades). Es la base de mi
 web-CV personal.
 
-> Estado: versión 0.1, esqueleto funcional. Los datos están en código; el
-> siguiente paso es moverlos a una base de datos.
+> Estado: en desarrollo. Los datos se guardan en SQLite; el siguiente paso de
+> la base de datos es pasar a PostgreSQL.
 
 ## Endpoints
 
@@ -33,6 +33,15 @@ uvicorn app.main:app --reload
 
 Abre `http://127.0.0.1:8000/docs` en el navegador.
 
+## Base de datos
+
+Al arrancar, la aplicación crea las tablas y, si la base está vacía, carga los
+datos de `app/seed.py`. Por defecto usa el archivo `cv.db`, que no se sube a Git.
+Para usar otra base, define la variable de entorno `DATABASE_URL`.
+
+Si cambias los datos de `app/seed.py`, borra `cv.db` y reinicia para que se
+vuelvan a cargar.
+
 ## Con Docker
 
 ```bash
@@ -52,15 +61,18 @@ pytest
 ```
 app/
 ├── main.py      Rutas de la API
-├── schemas.py   Modelos de datos (Pydantic)
-└── data.py      Datos del currículum
+├── schemas.py   Forma de las respuestas de la API (Pydantic)
+├── crud.py      Consultas a la base de datos
+├── models.py    Tablas de la base de datos (SQLAlchemy)
+├── database.py  Conexión con la base de datos
+└── seed.py      Datos iniciales del currículum
 tests/           Pruebas automáticas
 Dockerfile       Imagen del servicio
 ```
 
 ## Próximos pasos
 
-- Guardar los datos en una base de datos (SQLite y después PostgreSQL).
+- Pasar la base de datos de SQLite a PostgreSQL.
 - Chatbot que responda sobre mi perfil usando esta API.
 - Despliegue en la nube con integración continua.
 
