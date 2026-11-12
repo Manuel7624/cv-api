@@ -79,6 +79,23 @@ Las reglas del chat (no inventar nada, qué responder sobre teléfono, edad,
 tecnologías que no conoce o preguntas fuera de tema) están en `RULES`, en
 `app/chat.py`.
 
+## RAG: solo la información relacionada con cada pregunta
+
+Enviar las 70 respuestas extra en cada pregunta cuesta unos 7.600 tokens. Con RAG
+(`app/retrieval.py`) se envían siempre el CV, las reglas, las respuestas fijas y el
+historial, pero de la información extra solo las 12 respuestas más parecidas a la
+pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 tokens.
+
+- El parecido se mide con embeddings gratuitos de Gemini (`gemini-embedding-2`). Los
+  de las respuestas se calculan una vez al arrancar; en cada pregunta solo se
+  calcula el de la pregunta.
+- Plan B: si la similitud es baja, si la búsqueda falla o si la IA contesta que no
+  tiene la información, se repite la pregunta enviando todas las respuestas.
+- Para desactivarlo, `ENABLED = False` en `app/retrieval.py`.
+- El plan gratuito de embeddings permite 1.000 textos al día y 100 por minuto, y cada
+  arranque gasta 70. Si se agota, el RAG se desactiva solo y el chat sigue
+  funcionando con toda la información.
+
 ## Seguridad de la web
 
 - Los datos y las respuestas del chat se pintan siempre con `textContent`, nunca
@@ -119,6 +136,7 @@ app/
 ├── crud.py      Consultas a la base de datos
 ├── chat.py      Reglas del chatbot y datos que recibe
 ├── llm.py       Proveedores de IA (Gemini y Groq)
+├── retrieval.py  RAG: busca la información extra relacionada
 ├── rate_limit.py  Límites de mensajes
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
