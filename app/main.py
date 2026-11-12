@@ -31,6 +31,21 @@ from app.seed import seed
 
 STATIC_DIR = Path(__file__).parent / "static"
 
+# Cabeceras de seguridad para todas las respuestas.
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "DENY",
+}
+# Solo se permiten scripts, estilos y peticiones de esta misma web: aunque se
+# colara HTML en la página, no podría cargar ni ejecutar código de fuera.
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; img-src 'self' data:; object-src 'none'; "
+    "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+# /docs carga Swagger desde un CDN, así que esa política lo rompería.
+PATHS_WITHOUT_CSP = ("/docs", "/redoc")
+
 # Cada ruta que declara este tipo recibe una sesión abierta para esa petición.
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -52,6 +67,15 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.update(SECURITY_HEADERS)
+    if not request.url.path.startswith(PATHS_WITHOUT_CSP):
+        response.headers["Content-Security-Policy"] = CONTENT_SECURITY_POLICY
+    return response
 
 
 @app.get("/", include_in_schema=False)

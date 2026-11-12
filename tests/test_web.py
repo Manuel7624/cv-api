@@ -38,6 +38,28 @@ def test_terminal_only_offers_real_get_routes(client):
         assert client.get(route).status_code == 200
 
 
+@pytest.mark.parametrize("path", ["/static/app.js", "/static/chat.js", "/static/terminal.js"])
+def test_scripts_never_insert_html(client, path):
+    """Los datos y las respuestas del chat se pintan siempre como texto."""
+    script = client.get(path).text
+    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval("):
+        assert sink not in script
+
+
+def test_security_headers(client):
+    headers = client.get("/").headers
+    assert headers["X-Content-Type-Options"] == "nosniff"
+    assert headers["X-Frame-Options"] == "DENY"
+    assert "default-src 'self'" in headers["Content-Security-Policy"]
+    assert "Content-Security-Policy" in client.get("/profile").headers
+
+
+def test_docs_keep_working_without_csp(client):
+    response = client.get("/docs")
+    assert response.status_code == 200
+    assert "Content-Security-Policy" not in response.headers
+
+
 def test_web_has_contact_section(client):
     assert 'id="contact"' in client.get("/").text
     assert "renderContact" in client.get("/static/app.js").text
