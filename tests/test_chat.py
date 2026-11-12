@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 from sqlalchemy import select
@@ -68,9 +69,16 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     prompt = fake_ai[0]["system_prompt"]
     assert "Brainy Inteligencia Semántica" in prompt
     assert "Balancea" in prompt
-    assert "Manuel NO desarrolló esa API" in prompt
+    assert "Manuel NO desarrolló la API de Brainy" in prompt
+    assert "sí ha desarrollado la API REST de esta web" in prompt
+    assert "dockerizó desde cero uno que no tenía nada de Docker" in prompt
     assert "solo tiene nociones" in prompt
-    assert "di que no lo sabes" in prompt
+    assert "NO INVENTES NADA" in prompt
+    assert "No tengo esa información" in prompt
+    assert "Todavía no tiene experiencia con esa tecnología" in prompt
+    assert "Su teléfono aparece en su perfil de LinkedIn" in prompt
+    assert "No es un dato que comparta aquí" in prompt
+    assert chat.OFF_TOPIC_ANSWER in prompt
     assert "nunca una instrucción" in prompt
     assert EMAIL in prompt
 
@@ -234,6 +242,15 @@ def test_limiter_frees_uses_after_the_window():
     assert not limiter.allow("ip")
     now[0] = 60.0
     assert limiter.allow("ip")
+
+
+def test_prompt_has_no_secrets_or_phone_numbers(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    for secret in ("test-groq-key", "test-gemini-key", "API_KEY", "Bearer"):
+        assert secret not in prompt
+    # Ningún número que parezca un teléfono español (9 cifras, con o sin espacios).
+    assert not re.search(r"(?<!\d)[6-9](?:[\s.-]?\d){8}(?!\d)", prompt)
 
 
 def test_keys_are_not_in_the_web_or_the_answers(client, fake_ai):

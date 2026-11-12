@@ -149,7 +149,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "Háblame de ti",
-        "answer": "Soy Manuel, Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, de Zaragoza, y busco mi primer puesto como desarrollador backend junior. En mis prácticas en Brainy Inteligencia Semántica trabajé con Python, Docker y GitLab refactorizando y dockerizando workers, y mi proyecto final fue Balancea, una app Android de finanzas personales en Java con SQLite. Ahora estoy reforzando Python y he creado este proyecto: una API REST con FastAPI, base de datos, Docker y tests, que sirve esta web y este chat. Lo que más me gusta de programar es la lógica y resolver problemas, y tengo muchas ganas de seguir aprendiendo dentro de un equipo.",
+        "answer": "Soy Manuel, Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, de Zaragoza, y busco mi primer puesto como desarrollador backend junior. En mis prácticas en Brainy Inteligencia Semántica trabajé con Python, Docker y GitLab refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker, y mi proyecto final fue Balancea, una app Android de finanzas personales en Java con SQLite. Ahora estoy reforzando Python y he creado este proyecto: una API REST con FastAPI, base de datos, Docker y tests, que sirve esta web y este chat. Lo que más me gusta de programar es la lógica y resolver problemas, y tengo muchas ganas de seguir aprendiendo dentro de un equipo.",
         "fixed_answer": False,
     },
     {
@@ -167,7 +167,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Por qué deberían contratarte?",
-        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero y acabé refactorizando y dockerizando workers. Además, he construido por mi cuenta este proyecto completo, desde la API hasta el despliegue. También sé trabajar bien con herramientas de IA para programar: las uso paso a paso, explicando con claridad lo que necesito y revisando todo lo que generan, lo que me permite avanzar más rápido sin perder el control del código. Me adapto a la forma de trabajar de cada equipo, me tomo en serio la calidad de lo que entrego y tengo muchas ganas de crecer en la empresa.",
+        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero y acabé refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo, desde la API hasta la web y el chat. También sé trabajar bien con herramientas de IA para programar: las uso paso a paso, explicando con claridad lo que necesito y revisando todo lo que generan, lo que me permite avanzar más rápido sin perder el control del código. Me adapto a la forma de trabajar de cada equipo, me tomo en serio la calidad de lo que entrego y tengo muchas ganas de crecer en la empresa.",
         "fixed_answer": False,
     },
     {
@@ -215,7 +215,7 @@ EXTRA_INFO = [
     {
         "topic": "Más sobre cómo trabajo",
         "question": "¿Cómo sería tu entorno de trabajo ideal?",
-        "answer": "Un equipo en el que pueda preguntar y aprender de compañeros con más experiencia, como me pasó en las prácticas. En cuanto a modalidad, prefiero híbrido o remoto: en Zaragoza, híbrido o remoto; fuera de Zaragoza, remoto con alguna visita puntual a la oficina.",
+        "answer": "Un equipo en el que pueda preguntar y aprender de compañeros con más experiencia, como me pasó en las prácticas. En cuanto a modalidad: en Zaragoza acepto presencial, híbrido o remoto, aunque mi preferencia es híbrido o remoto. Fuera de Zaragoza, remoto.",
         "fixed_answer": False,
     },
     {
@@ -311,7 +311,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué hiciste en las prácticas?",
-        "answer": "Empecé conociendo el funcionamiento general de la plataforma de Brainy. Mi primera prueba fue poner en marcha en mi portátil una versión anterior de su API, conectada a un frontal y a una base de datos de pruebas que me proporcionó la empresa, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar y optimizar workers en Python para que su código fuera más limpio y mantenible. Para cada worker preparaba una prueba (por ejemplo, enviarle un documento de ejemplo y verificar que lo procesaba correctamente), comprobaba que funcionaba y, cuando todo estaba bien, subía los cambios a una nueva rama en GitLab desde la terminal. Al final también dockericé un worker antiguo que aún no estaba contenerizado.",
+        "answer": "Empecé conociendo el funcionamiento general de la plataforma de Brainy. Mi primera prueba fue poner en marcha en mi portátil una versión anterior de su API, conectada a un frontal y a una base de datos de pruebas que me proporcionó la empresa, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar y optimizar varios workers en Python que ya estaban dockerizados, para que su código fuera más limpio y mantenible. Para cada worker preparaba una prueba (por ejemplo, enviarle un documento de ejemplo y verificar que lo procesaba correctamente), comprobaba que funcionaba y, cuando todo estaba bien, subía los cambios a una nueva rama en GitLab desde la terminal. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
         "fixed_answer": False,
     },
     {
@@ -413,7 +413,7 @@ EXTRA_INFO = [
     {
         "topic": "Lo que busco",
         "question": "Disponibilidad y modalidad",
-        "answer": "Disponibilidad inmediata y jornada completa. Presencial o híbrido en Zaragoza, y en remoto para cualquier empresa de España. Ahora mismo no contemplo mudarme. Mi preferencia es estar contratado como empleado, aunque estoy abierto a escuchar otras fórmulas, como trabajar de contractor.",
+        "answer": "Disponibilidad inmediata y jornada completa. En Zaragoza acepto presencial, híbrido o remoto, aunque mi preferencia es híbrido o remoto. Fuera de Zaragoza, remoto. Ahora mismo no contemplo mudarme. Mi preferencia es estar contratado como empleado, aunque estoy abierto a escuchar otras fórmulas, como trabajar de contractor.",
         "fixed_answer": False,
     },
     {
@@ -432,6 +432,138 @@ EXTRA_INFO = [
         "topic": "Personal",
         "question": "¿Qué haces en tu tiempo libre?",
         "answer": "Juego al fútbol desde siempre y soy portero de fútbol sala. También me gusta estar con mis amigos, jugar a videojuegos y, sinceramente, programar y aprender cosas nuevas, porque es algo que me gusta.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué has hecho desde que terminaste las prácticas?",
+        "answer": "Al terminar a la vez el grado y las prácticas, me tomé el verano para descansar. Desde septiembre me he dedicado por completo a mi búsqueda de empleo: estoy terminando el curso de Python, he creado este proyecto (la API, la web y el chat) y he preparado mis perfiles profesionales.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Por qué no te quedaste en Brainy?",
+        "answer": "Terminé las prácticas con una valoración muy positiva de mi tutor y se habló de que continuara en la empresa, pero finalmente no se llegó a concretar una vacante para mí. Me llevo una muy buena experiencia y muchos aprendizajes.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Tienes referencias?",
+        "answer": "Sí, puedo facilitar referencias de mi etapa de prácticas en Brainy si una empresa las necesita. Para ello, lo mejor es escribirme al correo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Puedes trabajar en España o en la Unión Europea?",
+        "answer": "Sí. Tengo nacionalidad española, así que puedo trabajar en España y en cualquier país de la Unión Europea sin necesidad de visado ni permiso de trabajo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Cuándo terminas el curso de Python? ¿Tendrás certificado?",
+        "answer": "Me queda poco para terminarlo, y al acabar obtendré el certificado del curso.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Cómo te organizas trabajando en remoto?",
+        "answer": "De la misma forma que en las prácticas: para cada tarea apunto primero los pasos que necesito para completarla y voy marcando cada uno al terminarlo. Así tengo siempre claro mi progreso y en qué tengo que centrarme, aunque no esté en una oficina.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "Sobre este proyecto: ¿qué fue lo más difícil?",
+        "answer": "Es el primer proyecto que he desarrollado por mi cuenta con ayuda de IA, fuera de una empresa. Lo más difícil fue al principio: preparar y configurar yo solo todo el entorno de trabajo (Visual Studio Code, Docker, Claude Code) y aprender a usar estas herramientas de forma independiente.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "Sobre este proyecto: ¿qué has aprendido?",
+        "answer": "A trabajar con Claude Code dentro de Visual Studio Code, a usar Docker por mi cuenta y a construir paso a paso una aplicación completa: una API REST con FastAPI, una base de datos, una web que consume esa API y un chat conectado a modelos de IA.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué sabes hacer en Python?",
+        "answer": "Tengo un nivel básico: estructuras como listas, tuplas y arrays, y la lógica del lenguaje, que estoy reforzando con el curso de Coddy. En las prácticas trabajé sobre código Python real: leía y entendía los workers, los refactorizaba con ayuda de IA y comprobaba que funcionaban. Sé leer y entender código Python, y sigo mejorando a la hora de escribirlo por mi cuenta.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué nivel de Java tienes?",
+        "answer": "Java fue mi lenguaje principal en el grado, con programación orientada a objetos, y con él desarrollé Balancea, que está en mi GitHub y es la mejor muestra de mi nivel. No lo he usado en los últimos meses, así que lo tendría que retomar, pero es el lenguaje con el que más he programado.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué sabes hacer con Docker?",
+        "answer": "Sé leer y entender un Dockerfile y un docker-compose, y levantar y gestionar contenedores desde la terminal con docker compose. En las prácticas dockericé un worker que no tenía nada de Docker, y en este proyecto toda la aplicación funciona en un contenedor. Los archivos de configuración los escribo apoyándome en la IA y los reviso entendiendo qué hace cada parte.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Sabes HTML, CSS o JavaScript? ¿Harías frontend?",
+        "answer": "Mi nivel de frontend es básico, porque me centro en el backend. Tanto la interfaz de Balancea como la de esta web las hice con apoyo de IA. Si en un momento dado hiciera falta tocar algo de frontend, podría hacerlo con ese apoyo, aunque donde quiero crecer es en el backend.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Conoces la programación orientada a objetos y patrones de diseño?",
+        "answer": "Sí, la programación orientada a objetos es la base de lo que aprendí en el grado con Java, y Balancea está organizada así, con clases para los datos (usuario, movimiento), las pantallas y el acceso a la base de datos. También conozco la idea de MVC, que separa los datos (modelo), la interfaz (vista) y la lógica que los conecta (controlador): en Balancea tenía separados los modelos y el acceso a la base de datos de las pantallas, y en esta API separo las rutas, las consultas y los modelos de datos. Quiero seguir profundizando en patrones de diseño.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Has hecho tests?",
+        "answer": "Sí. En las prácticas, al refactorizar cada worker creaba un script de prueba en Python que le enviaba un documento de ejemplo; lo ejecutaba desde la terminal y mostraba mensajes según iba completando cada paso, para comprobar que el worker funcionaba. En este proyecto hay tests automáticos con pytest. En el grado no llegamos a ver testing.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Hiciste otros proyectos en el grado?",
+        "answer": "Sí, en mi centro, Océano Atlántico, nos evaluaban sobre todo mediante proyectos: nos daban los objetivos que había que conseguir y cada uno lo desarrollaba. Balancea es el único que he publicado porque es el que planteé y desarrollé completamente por mi cuenta, desde la idea hasta el final.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Cuál es tu mayor punto fuerte técnico?",
+        "answer": "Las APIs y Docker, que es donde más he trabajado en las prácticas y en este proyecto. Además, sé trabajar bien con herramientas de IA para programar, entendiendo y revisando lo que generan, lo que me permite avanzar más rápido.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué haces si cometes un error en el trabajo?",
+        "answer": "Lo reconozco, me disculpo si ha afectado a algún compañero e intento solucionarlo cuanto antes y de la mejor manera posible.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué haces si te mandan una tarea que no sabes hacer?",
+        "answer": "Primero investigo cómo se hace, buscando información y pidiendo a la IA que me lo explique. Con eso, intento entenderlo y desarrollarlo yo. Si aun así me atasco, me apoyo en la IA o pregunto a un compañero, como hacía en las prácticas.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Aceptarías unas prácticas, una beca o un contrato temporal?",
+        "answer": "No busco prácticas ni becas. Busco un contrato laboral como empleado, a jornada completa, preferiblemente indefinido.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "Si estudiaste DAM, ¿por qué backend y no aplicaciones móviles?",
+        "answer": "Porque en las prácticas descubrí el backend y es lo que más me ha gustado hasta ahora. Las aplicaciones móviles también me interesan: de hecho, Balancea es una app Android, y tengo pensado desarrollar otra app móvil por mi cuenta más adelante.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Dónde vives?",
+        "answer": "En Zaragoza capital.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué valoras más en una empresa?",
+        "answer": "El buen ambiente de trabajo, poder seguir aprendiendo y la estabilidad.",
         "fixed_answer": False,
     },
 ]
