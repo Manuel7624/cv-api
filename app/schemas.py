@@ -3,11 +3,11 @@
 FastAPI los usa para validar las respuestas y para generar la documentación
 automática en /docs.
 """
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from app.chat_limits import MAX_MESSAGE_LENGTH
+from app.chat_limits import MAX_ANSWER_LENGTH, MAX_HISTORY_MESSAGES, MAX_MESSAGE_LENGTH
 
 
 class Contact(BaseModel):
@@ -59,11 +59,28 @@ class Language(BaseModel):
     level: str
 
 
+class ChatTurn(BaseModel):
+    """Un mensaje anterior de la conversación, enviado por el navegador."""
+
+    role: Literal["user", "assistant"]
+    content: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_ANSWER_LENGTH),
+    ]
+
+    @model_validator(mode="after")
+    def check_user_length(self) -> "ChatTurn":
+        if self.role == "user" and len(self.content) > MAX_MESSAGE_LENGTH:
+            raise ValueError("pregunta demasiado larga")
+        return self
+
+
 class ChatRequest(BaseModel):
     message: Annotated[
         str,
         StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_MESSAGE_LENGTH),
     ]
+    history: list[ChatTurn] = Field(default_factory=list, max_length=MAX_HISTORY_MESSAGES)
 
 
 class ChatResponse(BaseModel):

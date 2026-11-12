@@ -3,6 +3,8 @@ import pytest
 
 from app import llm
 
+QUESTION = [{"role": "user", "content": "pregunta"}]
+
 
 def fake_response(text="Hola", status_code=200):
     return httpx.Response(
@@ -30,17 +32,22 @@ def use_fake_post(monkeypatch, responses):
 
 def test_groq_is_the_main_provider(monkeypatch):
     calls = use_fake_post(monkeypatch, {"groq": fake_response("De Groq")})
-    assert llm.ask_providers("reglas", "pregunta") == "De Groq"
+    assert llm.ask_providers("reglas", QUESTION) == "De Groq"
     assert [call["provider"] for call in calls] == ["groq"]
 
 
 def test_request_format(monkeypatch):
     calls = use_fake_post(monkeypatch, {"groq": fake_response()})
-    llm.ask_providers("reglas", "pregunta")
+    history = [
+        {"role": "user", "content": "¿Sabe Python?"},
+        {"role": "assistant", "content": "Sí, de las prácticas."},
+    ]
+    llm.ask_providers("reglas", [*history, *QUESTION])
     call = calls[0]
     assert call["headers"]["Authorization"] == "Bearer test-groq-key"
     assert call["json"]["messages"] == [
         {"role": "system", "content": "reglas"},
+        *history,
         {"role": "user", "content": "pregunta"},
     ]
     assert call["json"]["max_tokens"] == llm.MAX_ANSWER_TOKENS
@@ -62,14 +69,14 @@ def test_request_format(monkeypatch):
 )
 def test_gemini_answers_when_groq_fails(monkeypatch, failure):
     calls = use_fake_post(monkeypatch, {"groq": failure, "gemini": fake_response("De Gemini")})
-    assert llm.ask_providers("reglas", "pregunta") == "De Gemini"
+    assert llm.ask_providers("reglas", QUESTION) == "De Gemini"
     assert [call["provider"] for call in calls] == ["groq", "gemini"]
 
 
 def test_gemini_answers_when_groq_has_no_key(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY")
     calls = use_fake_post(monkeypatch, {"gemini": fake_response("De Gemini")})
-    assert llm.ask_providers("reglas", "pregunta") == "De Gemini"
+    assert llm.ask_providers("reglas", QUESTION) == "De Gemini"
     assert [call["provider"] for call in calls] == ["gemini"]
 
 
@@ -78,21 +85,21 @@ def test_returns_none_when_all_providers_fail(monkeypatch):
         monkeypatch,
         {"groq": fake_response(status_code=429), "gemini": httpx.ConnectError("sin conexión")},
     )
-    assert llm.ask_providers("reglas", "pregunta") is None
+    assert llm.ask_providers("reglas", QUESTION) is None
 
 
 def test_changing_providers_only_needs_the_list(monkeypatch):
     provider = llm.Provider("otro", "https://groq.example/chat", "GROQ_API_KEY", "modelo")
     monkeypatch.setattr(llm, "PROVIDERS", [provider])
     calls = use_fake_post(monkeypatch, {"groq": fake_response("Del nuevo")})
-    assert llm.ask_providers("reglas", "pregunta") == "Del nuevo"
+    assert llm.ask_providers("reglas", QUESTION) == "Del nuevo"
     assert calls[0]["json"]["model"] == "modelo"
 
 
 def test_errors_do_not_reveal_the_key(monkeypatch, caplog):
     use_fake_post(monkeypatch, {"groq": httpx.ConnectError("fallo"), "gemini": httpx.ConnectError("fallo")})
     with caplog.at_level("WARNING", logger="uvicorn.error"):
-        llm.ask_providers("reglas", "pregunta")
+        llm.ask_providers("reglas", QUESTION)
     assert "groq" in caplog.text
     assert "test-groq-key" not in caplog.text
     assert "test-gemini-key" not in caplog.text

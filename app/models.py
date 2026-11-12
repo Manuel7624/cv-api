@@ -116,7 +116,9 @@ class ExtraInfo(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     topic: Mapped[str]
     question: Mapped[str]
-    answer: Mapped[str | None]  # None mientras esté pendiente de rellenar
+    answer: Mapped[str]
+    # Tema delicado: el chat responde con este texto y nunca da cifras.
+    fixed_answer: Mapped[bool] = mapped_column(default=False)
     position: Mapped[int]
 
 

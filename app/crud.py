@@ -74,17 +74,16 @@ def get_skills(db: Session) -> schemas.Skills:
     return schemas.Skills(**skills)
 
 
-def get_answered_extra_info(db: Session) -> list[dict[str, str]]:
-    """Devuelve solo la información ya respondida: lo pendiente no existe para el chat."""
+def get_extra_info(db: Session, fixed_answer: bool) -> list[dict[str, str]]:
+    """Información extra para el chat: la normal o la de respuesta fija."""
     rows = db.scalars(
         select(models.ExtraInfo)
-        .where(models.ExtraInfo.answer.is_not(None))
+        .where(models.ExtraInfo.fixed_answer == fixed_answer)
         .order_by(models.ExtraInfo.position)
     )
     return [
         {"tema": row.topic, "pregunta": row.question, "respuesta": row.answer}
         for row in rows
-        if row.answer.strip()
     ]
 
 

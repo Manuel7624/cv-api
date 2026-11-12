@@ -30,8 +30,11 @@ class Provider:
     model: str
     extra_params: dict = field(default_factory=dict)
 
-    def complete(self, system_prompt: str, message: str) -> str:
-        """Envía la pregunta al proveedor y devuelve el texto de su respuesta."""
+    def complete(self, system_prompt: str, conversation: list[dict[str, str]]) -> str:
+        """Envía la conversación al proveedor y devuelve el texto de su respuesta.
+
+        `conversation` son los mensajes anteriores más la pregunta nueva, al final.
+        """
         api_key = os.getenv(self.api_key_env)
         if not api_key:
             raise ProviderError("falta la clave")
@@ -42,10 +45,7 @@ class Provider:
                 headers={"Authorization": f"Bearer {api_key}"},
                 json={
                     "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": message},
-                    ],
+                    "messages": [{"role": "system", "content": system_prompt}, *conversation],
                     "max_tokens": MAX_ANSWER_TOKENS,
                     "temperature": 0.2,
                     **self.extra_params,
@@ -84,11 +84,11 @@ PROVIDERS = [
 ]
 
 
-def ask_providers(system_prompt: str, message: str) -> str | None:
+def ask_providers(system_prompt: str, conversation: list[dict[str, str]]) -> str | None:
     """Prueba los proveedores en orden. Devuelve None si ninguno responde."""
     for provider in PROVIDERS:
         try:
-            return provider.complete(system_prompt, message)
+            return provider.complete(system_prompt, conversation)
         except ProviderError as error:
             logger.warning("El proveedor %s ha fallado: %s", provider.name, error)
     return None

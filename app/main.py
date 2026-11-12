@@ -105,4 +105,4 @@ def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResp
             detail="Has enviado muchos mensajes. Espera un poco o escribe a Manuel "
             "desde la sección de contacto.",
         )
-    return ChatResponse(answer=chat.answer_question(db, payload.message))
+    return ChatResponse(answer=chat.answer_question(db, payload.message, payload.history))
