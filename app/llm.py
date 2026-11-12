@@ -29,6 +29,7 @@ class Provider:
     api_key_env: str
     model: str
     extra_params: dict = field(default_factory=dict)
+    timeout_seconds: float = REQUEST_TIMEOUT_SECONDS
 
     def complete(self, system_prompt: str, conversation: list[dict[str, str]]) -> str:
         """Envía la conversación al proveedor y devuelve el texto de su respuesta.
@@ -50,7 +51,7 @@ class Provider:
                     "temperature": 0.2,
                     **self.extra_params,
                 },
-                timeout=REQUEST_TIMEOUT_SECONDS,
+                timeout=self.timeout_seconds,
             )
             response.raise_for_status()
             text = response.json()["choices"][0]["message"]["content"]
@@ -80,6 +81,8 @@ PROVIDERS = [
         api_key_env="GEMINI_API_KEY",
         model="gemini-3.5-flash-lite",
         extra_params={"reasoning_effort": "minimal"},
+        # Es la última opción y a veces tarda más de 10 segundos: mejor esperar que fallar.
+        timeout_seconds=30,
     ),
 ]
 

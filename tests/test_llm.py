@@ -103,3 +103,10 @@ def test_errors_do_not_reveal_the_key(monkeypatch, caplog):
     assert "groq" in caplog.text
     assert "test-groq-key" not in caplog.text
     assert "test-gemini-key" not in caplog.text
+
+
+def test_gemini_has_a_longer_timeout(monkeypatch):
+    calls = use_fake_post(monkeypatch, {"groq": fake_response(status_code=429), "gemini": fake_response()})
+    llm.ask_providers("reglas", QUESTION)
+    assert calls[0]["timeout"] == llm.REQUEST_TIMEOUT_SECONDS
+    assert calls[1]["timeout"] == 30
