@@ -18,6 +18,18 @@ function addChatMessage(text, author) {
   return message;
 }
 
+// Burbuja con puntos animados mientras llega la respuesta.
+function addTypingIndicator() {
+  const message = createElement("p", "chat-message assistant pending");
+  const dots = createElement("span", "typing-dots");
+  dots.setAttribute("aria-hidden", "true");
+  dots.append(createElement("span"), createElement("span"), createElement("span"));
+  message.append("Escribiendo", dots);
+  chatLog.append(message);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return message;
+}
+
 async function requestAnswer(question) {
   const response = await fetch("/chat", {
     method: "POST",
@@ -48,10 +60,11 @@ async function sendQuestion(question) {
   chatSend.disabled = true;
   chatInput.value = "";
   addChatMessage(text, "user");
-  const answer = addChatMessage("Pensando…", "assistant pending");
+  const answer = addTypingIndicator();
 
   try {
     const result = await requestAnswer(text);
+    // textContent: la respuesta se muestra siempre como texto, nunca como HTML.
     answer.textContent = result.text;
     if (result.ok) remember(text, result.text);
   } catch (error) {

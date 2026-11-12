@@ -60,6 +60,13 @@ def test_docs_keep_working_without_csp(client):
     assert "Content-Security-Policy" not in response.headers
 
 
+def test_chat_shows_a_typing_indicator(client):
+    script = client.get("/static/chat.js").text
+    assert "addTypingIndicator" in script
+    assert '"Escribiendo"' in script
+    assert ".typing-dots" in client.get("/static/styles.css").text
+
+
 def test_web_has_contact_section(client):
     assert 'id="contact"' in client.get("/").text
     assert "renderContact" in client.get("/static/app.js").text
