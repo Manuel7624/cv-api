@@ -74,8 +74,8 @@ PROVIDERS = [
         api_key_env="GEMINI_API_KEY",
         model="gemini-3.5-flash-lite",
         extra_params={"reasoning_effort": "minimal"},
-        # A veces tarda más de 10 segundos en responder.
-        timeout_seconds=20,
+        # Su tiempo de respuesta varía mucho (de 1 a casi 20 segundos en las pruebas).
+        timeout_seconds=25,
     ),
     Provider(
         name="groq",

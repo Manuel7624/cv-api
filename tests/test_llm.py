@@ -108,5 +108,5 @@ def test_errors_do_not_reveal_the_key(monkeypatch, caplog):
 def test_timeouts_per_provider(monkeypatch):
     calls = use_fake_post(monkeypatch, {"gemini": fake_response(status_code=429), "groq": fake_response()})
     llm.ask_providers("reglas", QUESTION)
-    assert calls[0]["timeout"] == 20
+    assert calls[0]["timeout"] == 25
     assert calls[1]["timeout"] == llm.REQUEST_TIMEOUT_SECONDS
