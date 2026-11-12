@@ -473,7 +473,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "Sobre este proyecto: ¿qué fue lo más difícil?",
-        "answer": "Es el primer proyecto que he desarrollado por mi cuenta con ayuda de IA, fuera de una empresa. Lo más difícil fue al principio: preparar y configurar yo solo todo el entorno de trabajo (Visual Studio Code, Docker, Claude Code) y aprender a usar estas herramientas de forma independiente.",
+        "answer": "Es el primer proyecto que he desarrollado de principio a fin trabajando con un agente de IA como Claude Code. En Balancea ya me apoyé en la IA para partes concretas, como las gráficas o la interfaz. Lo más difícil fue al principio: preparar y configurar yo solo todo el entorno de trabajo (Visual Studio Code, Docker, Claude Code) y aprender a usar estas herramientas de forma independiente.",
         "fixed_answer": False,
     },
     {
