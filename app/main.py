@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from app import chat, crud
+from app import chat, crud, retrieval
 from app.database import Base, SessionLocal, engine, get_db
 from app.rate_limit import chat_limits, get_client_ip
 from app.schemas import (
@@ -52,10 +52,11 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Al arrancar, crea las tablas que falten y carga los datos iniciales."""
+    """Al arrancar, crea las tablas, carga los datos y prepara la búsqueda del chat."""
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
         seed(session)
+        retrieval.build_index(crud.get_extra_info(session, fixed_answer=False))
     yield
 
 

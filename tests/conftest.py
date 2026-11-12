@@ -14,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app import retrieval
 from app.rate_limit import chat_limits
 from app.seed import seed
 
@@ -53,6 +54,7 @@ def isolate_chat(monkeypatch) -> Iterator[None]:
     monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
     monkeypatch.delenv("CLIENT_IP_HEADER", raising=False)
+    monkeypatch.setattr(retrieval, "index", None)
     chat_limits.reset()
     yield
     chat_limits.reset()

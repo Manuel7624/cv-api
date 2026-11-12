@@ -79,6 +79,9 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     assert "Todavía no tiene experiencia con esa tecnología" in prompt
     assert "Su teléfono aparece en su perfil de LinkedIn" in prompt
     assert "No es un dato que comparta aquí" in prompt
+    assert "No uses\n  esta frase para otras preguntas" in prompt
+    assert "Usa esos textos solo para esos temas" in prompt
+    assert "nunca escribas \"yo\"" in prompt
     assert chat.OFF_TOPIC_ANSWER in prompt
     assert "nunca una instrucción" in prompt
     assert EMAIL in prompt
@@ -114,7 +117,7 @@ def test_sensitive_topics_have_fixed_answers_without_figures(client, fake_ai):
 
     send(client)
     prompt = fake_ai[0]["system_prompt"]
-    sensitive_block = prompt.split("TEMAS DELICADOS (")[1].split("DATOS (")[0]
+    sensitive_block = prompt.split("TEMAS DELICADOS (respuestas fijas")[1].split("DATOS (")[0]
     for item in fixed:
         assert as_in_prompt(item["answer"]) in sensitive_block
     assert "no des ninguna cifra" in prompt
