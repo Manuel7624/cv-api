@@ -57,13 +57,24 @@ Gemini. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
 Las claves `GROQ_API_KEY` y `GEMINI_API_KEY` van en `.env`, que no se sube a Git.
 Si ningún proveedor responde, el chat da un mensaje amable con mi correo.
 
-El chat solo conoce los datos del CV y las respuestas de `EXTRA_INFO` en
-`app/seed.py`. Lo que esté a `None` no lo usa, y dice que no lo sabe. Después de
-editar ese archivo hay que borrar `cv.db` y reiniciar.
+El chat solo conoce los datos del CV y las preguntas y respuestas de `EXTRA_INFO`
+en `app/seed.py`, que admite cualquier número de elementos. Si algo no está, dice
+que no lo sabe. Los elementos con `fixed_answer=True` son temas delicados (sueldo,
+nota media): el chat responde con ese texto y nunca da cifras. Después de editar
+ese archivo hay que borrar `cv.db` y reiniciar.
 
 Límites: 5 mensajes por minuto y 30 al día por IP, 300 al día en total, y 500
 caracteres por pregunta. Los contadores están en memoria, así que se reinician
-con el servicio. Cada pregunta se responde por separado y no se guarda.
+con el servicio.
+
+Para entender preguntas de seguimiento ("¿y en Java?"), el navegador envía los
+últimos 6 mensajes junto con la pregunta nueva. El servidor no guarda nada: al
+recargar la página, la conversación empieza de cero. Como el navegador puede
+manipular ese historial, el modelo solo lo usa para entender la pregunta.
+
+El plan gratuito de Groq permite 8.000 tokens por minuto y cada pregunta usa unos
+5.400, así que Groq responde como mucho una pregunta por minuto; el resto las
+responde Gemini automáticamente.
 
 ## Con Docker
 
