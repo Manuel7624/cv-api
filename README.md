@@ -50,8 +50,8 @@ vuelvan a cargar.
 ## Chatbot
 
 El navegador llama a `POST /chat` y es el backend quien habla con la IA, así que
-las claves nunca llegan a la web. Se usa Groq y, si falla o agota su límite,
-Gemini. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
+las claves nunca llegan a la web. Se usa Gemini y, si falla o tarda más de 25
+segundos, Groq. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
 `app/llm.py`.
 
 Las claves `GROQ_API_KEY` y `GEMINI_API_KEY` van en `.env`, que no se sube a Git.
@@ -73,8 +73,21 @@ recargar la página, la conversación empieza de cero. Como el navegador puede
 manipular ese historial, el modelo solo lo usa para entender la pregunta.
 
 El plan gratuito de Groq permite 8.000 tokens por minuto y cada pregunta usa unos
-5.400, así que Groq responde como mucho una pregunta por minuto; el resto las
-responde Gemini automáticamente.
+5.400, así que como reserva solo puede responder en torno a una pregunta por minuto.
+
+Las reglas del chat (no inventar nada, qué responder sobre teléfono, edad,
+tecnologías que no conoce o preguntas fuera de tema) están en `RULES`, en
+`app/chat.py`.
+
+## Seguridad de la web
+
+- Los datos y las respuestas del chat se pintan siempre con `textContent`, nunca
+  como HTML, y un test comprueba que el JavaScript no usa `innerHTML`.
+- Todas las respuestas llevan cabeceras de seguridad, y la web una política de
+  contenido (CSP) que solo permite scripts y peticiones de la propia web. `/docs`
+  no la lleva porque Swagger se carga desde un CDN.
+- Las instrucciones del chat solo contienen datos públicos del CV: ni claves ni
+  teléfono.
 
 ## Con Docker
 
@@ -105,7 +118,7 @@ app/
 ├── schemas.py   Forma de las respuestas de la API (Pydantic)
 ├── crud.py      Consultas a la base de datos
 ├── chat.py      Reglas del chatbot y datos que recibe
-├── llm.py       Proveedores de IA (Groq y Gemini)
+├── llm.py       Proveedores de IA (Gemini y Groq)
 ├── rate_limit.py  Límites de mensajes
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
