@@ -72,6 +72,7 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     assert "Manuel NO desarrolló la API de Brainy" in prompt
     assert "sí ha desarrollado la API REST de esta web" in prompt
     assert "dockerizó desde cero uno que no tenía nada de Docker" in prompt
+    assert "Solo había UN worker sin Docker" in prompt
     assert "solo tiene nociones" in prompt
     assert "NO INVENTES NADA" in prompt
     assert "No tengo esa información" in prompt
