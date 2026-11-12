@@ -1,6 +1,6 @@
 """Proveedores de IA del chatbot.
 
-Groq y Gemini aceptan el mismo formato de petición (el de OpenAI), así que una
+Gemini y Groq aceptan el mismo formato de petición (el de OpenAI), así que una
 sola clase sirve para los dos. Para cambiar de proveedor o de modelo basta con
 editar la lista PROVIDERS: se prueban en orden hasta que uno responde.
 
@@ -69,20 +69,20 @@ class Provider:
 
 PROVIDERS = [
     Provider(
-        name="groq",
-        url="https://api.groq.com/openai/v1/chat/completions",
-        api_key_env="GROQ_API_KEY",
-        model="openai/gpt-oss-120b",
-        extra_params={"reasoning_effort": "low"},
-    ),
-    Provider(
         name="gemini",
         url="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         api_key_env="GEMINI_API_KEY",
         model="gemini-3.5-flash-lite",
         extra_params={"reasoning_effort": "minimal"},
-        # Es la última opción y a veces tarda más de 10 segundos: mejor esperar que fallar.
-        timeout_seconds=30,
+        # A veces tarda más de 10 segundos en responder.
+        timeout_seconds=20,
+    ),
+    Provider(
+        name="groq",
+        url="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        model="openai/gpt-oss-120b",
+        extra_params={"reasoning_effort": "low"},
     ),
 ]
 

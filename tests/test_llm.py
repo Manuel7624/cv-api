@@ -30,28 +30,27 @@ def use_fake_post(monkeypatch, responses):
     return calls
 
 
-def test_groq_is_the_main_provider(monkeypatch):
-    calls = use_fake_post(monkeypatch, {"groq": fake_response("De Groq")})
-    assert llm.ask_providers("reglas", QUESTION) == "De Groq"
-    assert [call["provider"] for call in calls] == ["groq"]
+def test_gemini_is_the_main_provider(monkeypatch):
+    calls = use_fake_post(monkeypatch, {"gemini": fake_response("De Gemini")})
+    assert llm.ask_providers("reglas", QUESTION) == "De Gemini"
+    assert [call["provider"] for call in calls] == ["gemini"]
 
 
 def test_request_format(monkeypatch):
-    calls = use_fake_post(monkeypatch, {"groq": fake_response()})
+    calls = use_fake_post(monkeypatch, {"gemini": fake_response()})
     history = [
         {"role": "user", "content": "¿Sabe Python?"},
         {"role": "assistant", "content": "Sí, de las prácticas."},
     ]
     llm.ask_providers("reglas", [*history, *QUESTION])
     call = calls[0]
-    assert call["headers"]["Authorization"] == "Bearer test-groq-key"
+    assert call["headers"]["Authorization"] == "Bearer test-gemini-key"
     assert call["json"]["messages"] == [
         {"role": "system", "content": "reglas"},
         *history,
         {"role": "user", "content": "pregunta"},
     ]
     assert call["json"]["max_tokens"] == llm.MAX_ANSWER_TOKENS
-    assert call["timeout"] == llm.REQUEST_TIMEOUT_SECONDS
 
 
 @pytest.mark.parametrize(
@@ -67,23 +66,23 @@ def test_request_format(monkeypatch):
         httpx.ConnectError("sin conexión"),
     ],
 )
-def test_gemini_answers_when_groq_fails(monkeypatch, failure):
-    calls = use_fake_post(monkeypatch, {"groq": failure, "gemini": fake_response("De Gemini")})
-    assert llm.ask_providers("reglas", QUESTION) == "De Gemini"
-    assert [call["provider"] for call in calls] == ["groq", "gemini"]
+def test_groq_answers_when_gemini_fails(monkeypatch, failure):
+    calls = use_fake_post(monkeypatch, {"gemini": failure, "groq": fake_response("De Groq")})
+    assert llm.ask_providers("reglas", QUESTION) == "De Groq"
+    assert [call["provider"] for call in calls] == ["gemini", "groq"]
 
 
-def test_gemini_answers_when_groq_has_no_key(monkeypatch):
-    monkeypatch.delenv("GROQ_API_KEY")
-    calls = use_fake_post(monkeypatch, {"gemini": fake_response("De Gemini")})
-    assert llm.ask_providers("reglas", QUESTION) == "De Gemini"
-    assert [call["provider"] for call in calls] == ["gemini"]
+def test_groq_answers_when_gemini_has_no_key(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY")
+    calls = use_fake_post(monkeypatch, {"groq": fake_response("De Groq")})
+    assert llm.ask_providers("reglas", QUESTION) == "De Groq"
+    assert [call["provider"] for call in calls] == ["groq"]
 
 
 def test_returns_none_when_all_providers_fail(monkeypatch):
     use_fake_post(
         monkeypatch,
-        {"groq": fake_response(status_code=429), "gemini": httpx.ConnectError("sin conexión")},
+        {"gemini": fake_response(status_code=429), "groq": httpx.ConnectError("sin conexión")},
     )
     assert llm.ask_providers("reglas", QUESTION) is None
 
@@ -94,19 +93,20 @@ def test_changing_providers_only_needs_the_list(monkeypatch):
     calls = use_fake_post(monkeypatch, {"groq": fake_response("Del nuevo")})
     assert llm.ask_providers("reglas", QUESTION) == "Del nuevo"
     assert calls[0]["json"]["model"] == "modelo"
+    assert calls[0]["timeout"] == llm.REQUEST_TIMEOUT_SECONDS
 
 
 def test_errors_do_not_reveal_the_key(monkeypatch, caplog):
     use_fake_post(monkeypatch, {"groq": httpx.ConnectError("fallo"), "gemini": httpx.ConnectError("fallo")})
     with caplog.at_level("WARNING", logger="uvicorn.error"):
         llm.ask_providers("reglas", QUESTION)
-    assert "groq" in caplog.text
+    assert "gemini" in caplog.text
     assert "test-groq-key" not in caplog.text
     assert "test-gemini-key" not in caplog.text
 
 
-def test_gemini_has_a_longer_timeout(monkeypatch):
-    calls = use_fake_post(monkeypatch, {"groq": fake_response(status_code=429), "gemini": fake_response()})
+def test_timeouts_per_provider(monkeypatch):
+    calls = use_fake_post(monkeypatch, {"gemini": fake_response(status_code=429), "groq": fake_response()})
     llm.ask_providers("reglas", QUESTION)
-    assert calls[0]["timeout"] == llm.REQUEST_TIMEOUT_SECONDS
-    assert calls[1]["timeout"] == 30
+    assert calls[0]["timeout"] == 20
+    assert calls[1]["timeout"] == llm.REQUEST_TIMEOUT_SECONDS

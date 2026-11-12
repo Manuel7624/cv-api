@@ -50,7 +50,7 @@
         <button class="button primary" id="chat-send" type="submit">Enviar</button>
       </form>
 
-      <p class="chat-note">Las respuestas las genera una IA y pueden contener errores. Tus mensajes se envían a Groq o a Google Gemini: no escribas datos personales.</p>
+      <p class="chat-note">Las respuestas las genera una IA y pueden contener errores. Tus mensajes se envían a Google Gemini o a Groq: no escribas datos personales.</p>
     </section>
 
     <p class="status" id="status" role="status">Cargando el currículum…</p>
@@ -101,7 +101,7 @@
           <li><strong>SQLite</strong><span>Datos con SQLAlchemy</span></li>
         </ol>
         <ul class="how-notes">
-          <li><strong>Chat:</strong> FastAPI llama a Groq y, si falla, a Gemini. Las claves se quedan en el servidor.</li>
+          <li><strong>Chat:</strong> FastAPI llama a Gemini y, si falla, a Groq. Las claves se quedan en el servidor.</li>
           <li><strong>Docker:</strong> la aplicación se ejecuta en un contenedor.</li>
           <li><strong>Tests:</strong> pytest comprueba la API, la web y el chat sin llamar a servicios reales.</li>
         </ul>
