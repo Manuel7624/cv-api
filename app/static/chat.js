@@ -6,6 +6,11 @@ const chatInput = document.getElementById("chat-input");
 const chatSend = document.getElementById("chat-send");
 const chatLog = document.getElementById("chat-log");
 
+// Últimos mensajes de la conversación. Solo viven en esta página: el servidor
+// no guarda nada, así que al recargar la conversación empieza de cero.
+const MAX_HISTORY_MESSAGES = 6;
+const chatHistory = [];
+
 function addChatMessage(text, author) {
   const message = createElement("p", `chat-message ${author}`, text);
   chatLog.append(message);
@@ -17,12 +22,23 @@ async function requestAnswer(question) {
   const response = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: question }),
+    body: JSON.stringify({ message: question, history: chatHistory }),
   });
   const data = await response.json();
-  if (response.ok) return data.answer;
-  if (response.status === 429) return data.detail;
-  return "No he podido procesar esa pregunta. Prueba a escribirla de otra forma.";
+  if (response.ok) return { ok: true, text: data.answer };
+  if (response.status === 429) return { ok: false, text: data.detail };
+  return {
+    ok: false,
+    text: "No he podido procesar esa pregunta. Prueba a escribirla de otra forma.",
+  };
+}
+
+function remember(question, answer) {
+  chatHistory.push(
+    { role: "user", content: question },
+    { role: "assistant", content: answer },
+  );
+  chatHistory.splice(0, Math.max(0, chatHistory.length - MAX_HISTORY_MESSAGES));
 }
 
 async function sendQuestion(question) {
@@ -35,7 +51,9 @@ async function sendQuestion(question) {
   const answer = addChatMessage("Pensando…", "assistant pending");
 
   try {
-    answer.textContent = await requestAnswer(text);
+    const result = await requestAnswer(text);
+    answer.textContent = result.text;
+    if (result.ok) remember(text, result.text);
   } catch (error) {
     console.error(error);
     answer.textContent =
