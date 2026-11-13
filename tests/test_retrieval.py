@@ -231,3 +231,61 @@ def test_no_retry_when_providers_are_down(client, db_session, fake_embed, monkey
 )
 def test_detects_answers_without_information(answer, expected):
     assert chat.says_no_information(answer) is expected
+
+
+# --- Vectores guardados en el repositorio -------------------------------------------
+
+
+def test_cached_vectors_avoid_calling_gemini(fake_embed):
+    data = items("Python", "Java")
+    retrieval.build_index(data)
+    assert len(fake_embed) == 1
+    fake_embed.clear()
+    retrieval.build_index(data)  # segundo arranque: todo está guardado
+    assert fake_embed == []
+    assert retrieval.index is not None
+
+
+def test_only_changed_answers_are_recalculated(fake_embed):
+    retrieval.build_index(items("Python", "Java"))
+    fake_embed.clear()
+    retrieval.build_index(items("Python", "Java y Docker"))
+    assert len(fake_embed) == 1
+    assert len(fake_embed[0]) == 1
+    assert "Java y Docker" in fake_embed[0][0]
+    # El archivo solo guarda las respuestas actuales.
+    saved = json.loads(retrieval.CACHE_PATH.read_text(encoding="utf-8"))
+    assert len(saved["vectors"]) == 2
+
+
+def test_cache_from_another_model_is_ignored(fake_embed, monkeypatch):
+    retrieval.build_index(items("Python"))
+    fake_embed.clear()
+    monkeypatch.setattr(retrieval, "EMBEDDING_MODEL", "otro-modelo")
+    retrieval.build_index(items("Python"))
+    assert len(fake_embed) == 1
+
+
+def test_broken_cache_file_is_ignored(fake_embed):
+    retrieval.CACHE_PATH.write_text("esto no es JSON", encoding="utf-8")
+    retrieval.build_index(items("Python"))
+    assert len(fake_embed) == 1
+    assert retrieval.index is not None
+
+
+def test_repository_cache_matches_the_current_answers(monkeypatch):
+    """Si cambias una respuesta en seed.py, regenera los vectores: python -m app.retrieval"""
+    from pathlib import Path
+
+    path = Path(retrieval.__file__).parent / "embeddings.json"
+    monkeypatch.setattr(retrieval, "CACHE_PATH", path)
+    cache = retrieval.load_cache()
+    assert cache, "falta app/embeddings.json o es de otro modelo"
+    answers = [
+        {"tema": i["topic"], "pregunta": i["question"], "respuesta": i["answer"]}
+        for i in EXTRA_INFO
+        if not i["fixed_answer"]
+    ]
+    missing = [a["pregunta"] for a in answers if retrieval.text_key(retrieval.document_text(a)) not in cache]
+    assert missing == []
+    assert all(len(vector) == retrieval.DIMENSIONS for vector in cache.values())

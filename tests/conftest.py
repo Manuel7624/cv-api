@@ -44,7 +44,7 @@ def client(db_session: Session) -> Iterator[TestClient]:
 
 
 @pytest.fixture(autouse=True)
-def isolate_chat(monkeypatch) -> Iterator[None]:
+def isolate_chat(monkeypatch, tmp_path) -> Iterator[None]:
     """Ningún test debe llamar a las APIs reales ni depender de otro test."""
 
     def blocked_post(*_args, **_kwargs):
@@ -55,6 +55,8 @@ def isolate_chat(monkeypatch) -> Iterator[None]:
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
     monkeypatch.delenv("CLIENT_IP_HEADER", raising=False)
     monkeypatch.setattr(retrieval, "index", None)
+    # Los tests nunca escriben en app/embeddings.json.
+    monkeypatch.setattr(retrieval, "CACHE_PATH", tmp_path / "embeddings.json")
     chat_limits.reset()
     yield
     chat_limits.reset()
