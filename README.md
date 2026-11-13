@@ -90,14 +90,17 @@ historial, pero de la información extra solo las 12 respuestas más parecidas a
 pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 tokens.
 
 - El parecido se mide con embeddings gratuitos de Gemini (`gemini-embedding-2`). Los
-  de las respuestas se calculan una vez al arrancar; en cada pregunta solo se
-  calcula el de la pregunta.
+  vectores de las respuestas están guardados en `app/embeddings.json`: al arrancar
+  se leen de ahí y solo se calculan los de las respuestas nuevas o cambiadas. En cada
+  pregunta solo se calcula el de la pregunta.
+- Si cambias `EXTRA_INFO`, regenera los vectores con `python -m app.retrieval` (con
+  las claves cargadas) y haz commit del archivo. Un test avisa si se te olvida.
 - Si la similitud es baja, si la búsqueda falla o si la IA contesta que no tiene la
   información, se repite la pregunta con toda la información (casos 3 y 4).
 - Para desactivarlo, `ENABLED = False` en `app/retrieval.py`.
-- El plan gratuito de embeddings permite 1.000 textos al día y 100 por minuto, y cada
-  arranque gasta 70. Si se agota, el RAG se desactiva solo y el chat sigue
-  funcionando con toda la información.
+- El plan gratuito de embeddings permite 1.000 textos al día y 100 por minuto. Gracias
+  a los vectores guardados, cada pregunta gasta uno y un arranque, ninguno. Si se
+  agota, el chat sigue funcionando con el orden de respaldo.
 
 ## Orden de respaldo del chat
 
