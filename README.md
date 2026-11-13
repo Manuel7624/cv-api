@@ -49,6 +49,9 @@ vuelvan a cargar.
 
 ## Chatbot
 
+El chat responde en primera persona, como si fuera yo, y la web avisa de forma
+visible de que es una IA que responde con mi información.
+
 El navegador llama a `POST /chat` y es el backend quien habla con la IA, así que
 las claves nunca llegan a la web. Se usa Gemini y, si falla o tarda más de 25
 segundos, Groq. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
