@@ -136,7 +136,7 @@ LANGUAGES = [
 EXTRA_INFO = [
     {
         "topic": "Temas que el chatbot NO debe responder con datos",
-        "question": "Expectativas salariales, sueldo o rango salarial",
+        "question": "Expectativas salariales: sueldo o rango salarial que busco ahora (no el de las prácticas)",
         "answer": "Es algo que prefiero hablar directamente, porque depende del puesto, la modalidad y las condiciones. Puedes escribirme a mi correo y lo comentamos.",
         "fixed_answer": True,
     },
@@ -582,6 +582,12 @@ EXTRA_INFO = [
         "topic": "Más técnico",
         "question": "¿Desde cuándo usas Python?",
         "answer": "Empecé con Python en las prácticas de Brainy, en enero de 2026, porque en el grado no se daba. En septiembre de 2026 empecé por mi cuenta el curso de Coddy para reforzarlo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Prácticas en Brainy Inteligencia Semántica",
+        "question": "¿Cobrabas en las prácticas?",
+        "answer": "No, eran las prácticas FCT del grado, que no son remuneradas.",
         "fixed_answer": False,
     },
 ]

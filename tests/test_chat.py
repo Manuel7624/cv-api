@@ -116,7 +116,7 @@ def test_extra_info_accepts_any_number_of_rows(client, fake_ai, db_session):
 def test_sensitive_topics_have_fixed_answers_without_figures(client, fake_ai):
     fixed = [item for item in EXTRA_INFO if item["fixed_answer"]]
     assert [item["question"] for item in fixed] == [
-        "Expectativas salariales, sueldo o rango salarial",
+        "Expectativas salariales: sueldo o rango salarial que busco ahora (no el de las prácticas)",
         "Nota media o calificaciones del grado",
     ]
     for item in fixed:
