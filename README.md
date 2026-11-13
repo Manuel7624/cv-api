@@ -92,12 +92,27 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
 - El parecido se mide con embeddings gratuitos de Gemini (`gemini-embedding-2`). Los
   de las respuestas se calculan una vez al arrancar; en cada pregunta solo se
   calcula el de la pregunta.
-- Plan B: si la similitud es baja, si la búsqueda falla o si la IA contesta que no
-  tiene la información, se repite la pregunta enviando todas las respuestas.
+- Si la similitud es baja, si la búsqueda falla o si la IA contesta que no tiene la
+  información, se repite la pregunta con toda la información (casos 3 y 4).
 - Para desactivarlo, `ENABLED = False` en `app/retrieval.py`.
 - El plan gratuito de embeddings permite 1.000 textos al día y 100 por minuto, y cada
   arranque gasta 70. Si se agota, el RAG se desactiva solo y el chat sigue
   funcionando con toda la información.
+
+## Orden de respaldo del chat
+
+1. RAG con Gemini.
+2. RAG con Groq.
+3. Sin embeddings: Gemini con toda la información.
+4. Sin embeddings y con Gemini caído: Groq. Como no admite toda la información
+   (límite de 8.000 tokens por petición), recibe las respuestas más relacionadas,
+   ordenadas por palabras clave en el propio servidor (`app/keywords.py`), tantas
+   como quepan. Sus instrucciones insisten en que, si no encuentra el dato, diga
+   que no lo sabe.
+5. Si todo falla: un mensaje amable con mi correo.
+
+Cada proveedor declara su límite (`max_request_tokens` en `app/llm.py`), así que el
+orden se ajusta solo si se cambia de proveedor.
 
 ## Seguridad de la web
 
@@ -140,6 +155,7 @@ app/
 ├── chat.py      Reglas del chatbot y datos que recibe
 ├── llm.py       Proveedores de IA (Gemini y Groq)
 ├── retrieval.py  RAG: busca la información extra relacionada
+├── keywords.py  Búsqueda por palabras clave (solo para el caso 4)
 ├── rate_limit.py  Límites de mensajes
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
