@@ -173,3 +173,11 @@ def test_case_4_uses_the_previous_question(client, providers):
     ask(client, "¿Y desde hace cuánto?", history)
     included = extras_in(calls[1]["prompt"])
     assert any(item["question"] == "¿Qué haces en tu tiempo libre?" for item in included)
+
+
+def test_keeps_the_rag_answer_if_the_retry_with_everything_fails(client, providers, rag_on):
+    """Si el RAG dijo que no lo sabe y el plan B no consigue respuesta, se usa la del RAG."""
+    script, calls = providers
+    script["gemini"].append(ok(NO_INFO))
+    assert ask(client) == NO_INFO
+    assert [c["provider"] for c in calls] == ["gemini", "gemini", "groq"]

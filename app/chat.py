@@ -239,6 +239,7 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
     previous_questions = [turn.content for turn in history if turn.role == "user"]
 
     # Casos 1 y 2: RAG, la misma información para los dos proveedores.
+    rag_answer = None
     selected = retrieval.select_extra_info(message, previous_questions)
     if selected is not None:
         answer = ask_providers(build_system_prompt(db, selected), conversation)
@@ -246,6 +247,7 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
             return fallback_message(email)
         if not says_no_information(answer):
             return limit_length(answer)
+        rag_answer = answer
         logger.info("Con RAG no había respuesta: se repite con toda la información")
 
     # Casos 3 y 4: toda la información a quien la admite; al resto, lo que quepa.
@@ -258,5 +260,8 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
 
     answer = ask_providers(prompt_for, conversation)
     if answer is None:
+        # Mejor la respuesta del RAG ("no tengo esa información") que ninguna.
+        if rag_answer is not None:
+            return limit_length(rag_answer)
         return fallback_message(email)  # caso 5
     return limit_length(answer)
