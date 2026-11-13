@@ -167,7 +167,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Por qué deberían contratarte?",
-        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero y acabé refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo, desde la API hasta la web y el chat. También sé trabajar bien con herramientas de IA para programar: las uso paso a paso, explicando con claridad lo que necesito y revisando todo lo que generan, lo que me permite avanzar más rápido sin perder el control del código. Me adapto a la forma de trabajar de cada equipo, me tomo en serio la calidad de lo que entrego y tengo muchas ganas de crecer en la empresa.",
+        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero y acabé refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo, desde la API hasta la web y el chat. También sé trabajar con herramientas de IA para programar con un método: primero entiendo el problema, pido un plan, tomo yo las decisiones, avanzo por pasos pequeños y reviso y pruebo todo lo que generan. La IA es una herramienta que dirijo y reviso, lo que me permite avanzar más rápido sin perder el control del código. Me adapto a la forma de trabajar de cada equipo, me tomo en serio la calidad de lo que entrego y tengo muchas ganas de crecer en la empresa.",
         "fixed_answer": False,
     },
     {
@@ -209,7 +209,7 @@ EXTRA_INFO = [
     {
         "topic": "Más sobre cómo trabajo",
         "question": "¿Cómo organizas tu trabajo del día?",
-        "answer": "En las prácticas me asignaban, por ejemplo, tres workers por semana. Los apuntaba en una lista y cada uno pasaba por tres fases: refactorización, comprobación y subida a Git. Marcaba cada fase al completarla, así veía el progreso de cada worker, y al terminar uno empezaba el siguiente.",
+        "answer": "En las prácticas me asignaban, por ejemplo, tres workers por semana. Los apuntaba en una lista y cada uno pasaba por varias fases: analizarlo y adaptar a él el prompt base, refactorizarlo con Codex, revisar el resultado y comprobarlo con mi script de prueba, y subirlo a una rama nueva en GitLab. Marcaba cada fase al completarla, así veía el progreso de cada worker, y al terminar uno empezaba el siguiente.",
         "fixed_answer": False,
     },
     {
@@ -311,7 +311,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué hiciste en las prácticas?",
-        "answer": "Empecé conociendo el funcionamiento general de la plataforma de Brainy. Mi primera prueba fue poner en marcha en mi portátil una versión anterior de su API, conectada a un frontal y a una base de datos de pruebas que me proporcionó la empresa, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar y optimizar varios workers en Python que ya estaban dockerizados, para que su código fuera más limpio y mantenible. Para cada worker preparaba una prueba (por ejemplo, enviarle un documento de ejemplo y verificar que lo procesaba correctamente), comprobaba que funcionaba y, cuando todo estaba bien, subía los cambios a una nueva rama en GitLab desde la terminal. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
+        "answer": "Empecé conociendo el funcionamiento general de la plataforma de Brainy. Mi primera prueba fue poner en marcha en mi portátil una versión anterior de su API, conectada a un frontal y a una base de datos de pruebas que me proporcionó la empresa, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar y optimizar varios workers en Python que ya estaban dockerizados, para que su código fuera más limpio y mantenible. Para cada worker, primero lo analizaba y adaptaba a él un prompt base, hacía la refactorización con Codex y revisaba lo que había generado. Después preparaba una prueba (por ejemplo, enviarle un documento de ejemplo y verificar que lo procesaba correctamente), comprobaba que funcionaba y, cuando todo estaba bien, subía los cambios a una nueva rama en GitLab desde la terminal. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
         "fixed_answer": False,
     },
     {
@@ -389,7 +389,19 @@ EXTRA_INFO = [
     {
         "topic": "Cómo trabajo",
         "question": "¿Usas IA para programar?",
-        "answer": "Sí. En las prácticas usaba Codex: adaptaba un prompt base a cada worker y después verificaba yo que el resultado funcionaba. Este proyecto (la web, la API y el chat) lo he desarrollado con ayuda de Claude Code. Mi forma de trabajar con IA es ir paso a paso: le explico claramente lo que quiero, reviso lo que hace y no la dejo trabajar sin control, para que no cometa errores.",
+        "answer": "Sí, pero con un método, no de cualquier manera. Primero entiendo el problema. Le doy a la IA contexto y reglas claras desde el principio y le pido un plan sin que toque nada. Reviso y ajusto ese plan, y las decisiones las tomo yo. La implementación se hace por pasos pequeños, y reviso lo que ha hecho y lo verifico con pruebas antes de guardarlo. La IA es una herramienta que dirijo y reviso, no la dejo trabajar sola. La usé en las prácticas (con Codex) y en este proyecto (con Claude Code).",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Cómo trabajo",
+        "question": "¿Cómo usabas la IA en las prácticas?",
+        "answer": "Usaba Codex para refactorizar los workers. Había un prompt base, pero para cada worker primero analizaba el worker y adaptaba ese prompt a él. Después hacía la refactorización con Codex, revisaba lo que había generado y lo comprobaba con mi script de prueba. Si funcionaba, lo subía a una rama nueva en GitLab.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Cómo trabajo",
+        "question": "¿Cómo has usado la IA en este proyecto? ¿Lo ha hecho todo la IA?",
+        "answer": "Lo he desarrollado con Claude Code, pero dirigiéndolo yo. Escribí un archivo de reglas para la IA, le pedí planes antes de cada cambio importante (la base de datos, la web, el chat, el RAG) y decidí yo cosas como qué datos personales no publicar o qué proveedores usar. Detecté y corregí contradicciones, y exigí pruebas con los proveedores reales antes de dar nada por bueno. La IA es una herramienta que dirijo y reviso, no la dejo trabajar sola.",
         "fixed_answer": False,
     },
     {
@@ -485,7 +497,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Qué sabes hacer en Python?",
-        "answer": "Tengo un nivel básico: estructuras como listas, tuplas y arrays, y la lógica del lenguaje, que estoy reforzando con el curso de Coddy. En las prácticas trabajé sobre código Python real: leía y entendía los workers, los refactorizaba con ayuda de IA y comprobaba que funcionaban. Sé leer y entender código Python, y sigo mejorando a la hora de escribirlo por mi cuenta.",
+        "answer": "Tengo un nivel básico: estructuras como listas, tuplas y arrays, y la lógica del lenguaje, que estoy reforzando con el curso de Coddy. En las prácticas trabajé sobre código Python real: leía y entendía los workers, los refactorizaba con Codex, revisaba lo que generaba y comprobaba que funcionaban. Sé leer y entender código Python, y sigo mejorando a la hora de escribirlo por mi cuenta.",
         "fixed_answer": False,
     },
     {
@@ -527,7 +539,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Cuál es tu mayor punto fuerte técnico?",
-        "answer": "Las APIs y Docker, que es donde más he trabajado en las prácticas y en este proyecto. Además, sé trabajar bien con herramientas de IA para programar, entendiendo y revisando lo que generan, lo que me permite avanzar más rápido.",
+        "answer": "Las APIs y Docker, que es donde más he trabajado en las prácticas y en este proyecto. Además, sé trabajar con herramientas de IA para programar con un método: pido un plan, decido yo, avanzo por pasos pequeños y reviso y pruebo lo que generan, lo que me permite avanzar más rápido.",
         "fixed_answer": False,
     },
     {
