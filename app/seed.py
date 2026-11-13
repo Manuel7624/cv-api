@@ -566,6 +566,12 @@ EXTRA_INFO = [
         "answer": "El buen ambiente de trabajo, poder seguir aprendiendo y la estabilidad.",
         "fixed_answer": False,
     },
+    {
+        "topic": "Más técnico",
+        "question": "¿Desde cuándo usas Python?",
+        "answer": "Empecé con Python en las prácticas de Brainy, en enero de 2026, porque en el grado no se daba. En septiembre de 2026 empecé por mi cuenta el curso de Coddy para reforzarlo.",
+        "fixed_answer": False,
+    },
 ]
 
 
