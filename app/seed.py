@@ -179,7 +179,7 @@ EXTRA_INFO = [
     {
         "topic": "Más sobre cómo trabajo",
         "question": "¿Algún logro personal del que estés orgulloso?",
-        "answer": "En el fútbol sala: llevo toda la vida jugando de portero y cada temporada noto que mejoro. Ver ese progreso gracias a la constancia es algo de lo que estoy orgulloso.",
+        "answer": "En el fútbol sala: juego al fútbol desde los 4 años, llevo toda la vida jugando de portero y cada temporada noto que mejoro. Ver ese progreso gracias a la constancia es algo de lo que estoy orgulloso.",
         "fixed_answer": False,
     },
     {
@@ -431,7 +431,7 @@ EXTRA_INFO = [
     {
         "topic": "Personal",
         "question": "¿Qué haces en tu tiempo libre?",
-        "answer": "Juego al fútbol desde siempre y soy portero de fútbol sala. También me gusta estar con mis amigos, jugar a videojuegos y, sinceramente, programar y aprender cosas nuevas, porque es algo que me gusta.",
+        "answer": "Juego al fútbol desde los 4 años y soy portero de fútbol sala. También me gusta estar con mis amigos, jugar a videojuegos y, sinceramente, programar y aprender cosas nuevas, porque es algo que me gusta.",
         "fixed_answer": False,
     },
     {
