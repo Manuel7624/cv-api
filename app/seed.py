@@ -137,7 +137,7 @@ EXTRA_INFO = [
     {
         "topic": "Temas que el chatbot NO debe responder con datos",
         "question": "Expectativas salariales, sueldo o rango salarial",
-        "answer": "Es algo que Manuel prefiere hablar directamente, porque depende del puesto, la modalidad y las condiciones. Puedes escribirle a su correo y lo comentáis.",
+        "answer": "Es algo que prefiero hablar directamente, porque depende del puesto, la modalidad y las condiciones. Puedes escribirme a mi correo y lo comentamos.",
         "fixed_answer": True,
     },
     {

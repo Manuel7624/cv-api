@@ -15,8 +15,15 @@ def test_root_serves_the_web(client):
 
 def test_chat_comes_before_the_cv(client):
     html = client.get("/").text
-    assert "Pregúntame lo que quieras sobre Manuel" in html
+    assert "Pregúntame lo que quieras</h2>" in html
     assert html.index('id="chat-form"') < html.index('id="experience"')
+
+
+def test_chat_warns_that_it_is_an_ai(client):
+    html = client.get("/").text
+    notice = html.split('class="ai-notice"')[1].split("</p>")[0]
+    assert "Esto es una IA" in notice
+    assert html.index('id="chat-heading"') < html.index('class="ai-notice"') < html.index('id="chat-form"')
 
 
 def test_chat_input_uses_the_backend_limit(client):

@@ -127,7 +127,7 @@ def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResp
     if not chat_limits.allow(get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Has enviado muchos mensajes. Espera un poco o escribe a Manuel "
+            detail="Has enviado muchos mensajes. Espera un poco o escríbeme "
             "desde la sección de contacto.",
         )
     return ChatResponse(answer=chat.answer_question(db, payload.message, payload.history))

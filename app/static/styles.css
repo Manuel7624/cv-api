@@ -242,8 +242,14 @@ section.chat {
   text-transform: none;
 }
 
-.chat-intro {
-  color: var(--muted);
+.ai-notice {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.9375rem;
 }
 
 .chat-log {

@@ -70,7 +70,7 @@ async function sendQuestion(question) {
   } catch (error) {
     console.error(error);
     answer.textContent =
-      "No he podido conectar. Puedes escribir a Manuel desde la sección de contacto.";
+      "No he podido conectar. Puedes escribirme desde la sección de contacto.";
   }
 
   answer.classList.remove("pending");
