@@ -22,7 +22,7 @@ def test_chat_comes_before_the_cv(client):
 def test_chat_warns_that_it_is_an_ai(client):
     html = client.get("/").text
     notice = html.split('class="ai-notice"')[1].split("</p>")[0]
-    assert "Esto es una IA" in notice
+    assert notice.endswith("Soy una IA que responde con la información de Manuel.")
     assert html.index('id="chat-heading"') < html.index('class="ai-notice"') < html.index('id="chat-form"')
 
 
