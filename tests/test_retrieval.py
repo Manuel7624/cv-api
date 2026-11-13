@@ -156,7 +156,7 @@ def fake_ai(monkeypatch):
     calls = []
     answers = []
 
-    def fake_ask(system_prompt, conversation):
+    def fake_ask(system_prompt, conversation, _steps=None):
         calls.append(resolve_prompt(system_prompt))
         return answers.pop(0) if answers else "Respuesta de prueba"
 

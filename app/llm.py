@@ -8,6 +8,7 @@ Las claves se leen de variables de entorno y solo se usan aquí, en el backend.
 """
 import logging
 import os
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -78,8 +79,8 @@ PROVIDERS = [
         api_key_env="GEMINI_API_KEY",
         model="gemini-3.5-flash-lite",
         extra_params={"reasoning_effort": "minimal"},
-        # Su tiempo de respuesta varía mucho (de 1 a casi 20 segundos en las pruebas).
-        timeout_seconds=25,
+        # Si tarda más de 10 segundos, es mejor pasar al siguiente proveedor.
+        timeout_seconds=10,
     ),
     Provider(
         name="groq",
@@ -96,16 +97,29 @@ PROVIDERS = [
 def ask_providers(
     system_prompt: str | Callable[[Provider], str],
     conversation: list[dict[str, str]],
+    steps: list[str] | None = None,
 ) -> str | None:
     """Prueba los proveedores en orden. Devuelve None si ninguno responde.
 
     `system_prompt` puede ser el mismo texto para todos o una función que prepara
     las instrucciones de cada proveedor (por ejemplo, según su límite de tokens).
+    En `steps` se apunta cada intento con su resultado y su duración, para los logs.
     """
     for provider in PROVIDERS:
         prompt = system_prompt(provider) if callable(system_prompt) else system_prompt
+        start = time.perf_counter()
         try:
-            return provider.complete(prompt, conversation)
+            answer = provider.complete(prompt, conversation)
         except ProviderError as error:
             logger.warning("El proveedor %s ha fallado: %s", provider.name, error)
+            note(steps, f"{provider.name} falla ({error})", start)
+            continue
+        note(steps, f"{provider.name} ok", start)
+        return answer
     return None
+
+
+def note(steps: list[str] | None, text: str, start: float) -> None:
+    """Apunta un paso con los segundos que han pasado desde `start`."""
+    if steps is not None:
+        steps.append(f"{text} {time.perf_counter() - start:.2f} s")

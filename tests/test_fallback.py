@@ -181,3 +181,15 @@ def test_keeps_the_rag_answer_if_the_retry_with_everything_fails(client, provide
     script["gemini"].append(ok(NO_INFO))
     assert ask(client) == NO_INFO
     assert [c["provider"] for c in calls] == ["gemini", "gemini", "groq"]
+
+
+def test_logs_time_and_path_without_the_question(client, providers, rag_on, caplog):
+    script, _calls = providers
+    script["gemini"] += [ok(NO_INFO), ok("Con toda la información")]
+    with caplog.at_level("INFO", logger="uvicorn.error"):
+        ask(client, "¿Tienes un perro llamado Toby?")
+    line = next(r.message for r in caplog.records if r.message.startswith("Chat:"))
+    assert "s en total" in line
+    assert "búsqueda RAG" in line and "RAG: | gemini ok" in line
+    assert "plan B: | gemini ok" in line
+    assert "Toby" not in caplog.text

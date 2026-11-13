@@ -8,12 +8,13 @@ El servidor no guarda ninguna conversación.
 import json
 import logging
 import math
+import time
 
 from sqlalchemy.orm import Session
 
 from app import crud, keywords, retrieval
 from app.chat_limits import MAX_ANSWER_LENGTH
-from app.llm import MAX_ANSWER_TOKENS, Provider, ask_providers
+from app.llm import MAX_ANSWER_TOKENS, Provider, ask_providers, note
 from app.schemas import ChatTurn
 
 logger = logging.getLogger("uvicorn.error")
@@ -244,6 +245,19 @@ def prompt_that_fits(
 
 
 def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
+    """Responde a la pregunta y deja en los logs cuánto ha tardado y qué camino ha
+    seguido. No se registra la pregunta ni nada de quien la hace."""
+    steps: list[str] = []
+    start = time.perf_counter()
+    try:
+        return find_answer(db, message, history, steps)
+    finally:
+        logger.info(
+            "Chat: %.2f s en total | %s", time.perf_counter() - start, " | ".join(steps)
+        )
+
+
+def find_answer(db: Session, message: str, history: list[ChatTurn], steps: list[str]) -> str:
     """Responde siguiendo este orden de respaldo:
 
     1. RAG con Gemini.  2. RAG con Groq.
@@ -258,9 +272,12 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
 
     # Casos 1 y 2: RAG, la misma información para los dos proveedores.
     rag_answer = None
+    search_start = time.perf_counter()
     selected = retrieval.select_extra_info(message, previous_questions)
+    note(steps, "búsqueda RAG" if selected is not None else "sin RAG", search_start)
     if selected is not None:
-        answer = ask_providers(build_system_prompt(db, selected), conversation)
+        steps.append("RAG:")
+        answer = ask_providers(build_system_prompt(db, selected), conversation, steps)
         if answer is None:
             return fallback_message(email)
         if not says_no_information(answer):
@@ -276,7 +293,8 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
             return build_system_prompt(db)
         return prompt_that_fits(db, provider, query, conversation)
 
-    answer = ask_providers(prompt_for, conversation)
+    steps.append("plan B:")
+    answer = ask_providers(prompt_for, conversation, steps)
     if answer is None:
         # Mejor la respuesta del RAG ("no tengo esa información") que ninguna.
         if rag_answer is not None:

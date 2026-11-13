@@ -31,7 +31,7 @@ def fake_ai(monkeypatch):
     """Sustituye a los proveedores y guarda lo que se les ha enviado."""
     calls = []
 
-    def fake_ask(system_prompt, conversation):
+    def fake_ask(system_prompt, conversation, _steps=None):
         calls.append({
             "system_prompt": resolve_prompt(system_prompt),
             "conversation": conversation,
