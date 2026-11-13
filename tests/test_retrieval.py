@@ -6,7 +6,7 @@ import re
 import httpx
 import pytest
 
-from app import chat, retrieval
+from app import chat, llm, retrieval
 from app.seed import EXTRA_INFO
 
 WORDS = ["python", "java", "docker", "carnet", "inglés", "balancea", "remoto", "sql"]
@@ -146,13 +146,18 @@ def test_normalize():
 # --- El chat con RAG -------------------------------------------------------------
 
 
+def resolve_prompt(system_prompt):
+    """El chat puede pasar una función que prepara el prompt de cada proveedor."""
+    return system_prompt(llm.PROVIDERS[0]) if callable(system_prompt) else system_prompt
+
+
 @pytest.fixture
 def fake_ai(monkeypatch):
     calls = []
     answers = []
 
     def fake_ask(system_prompt, conversation):
-        calls.append(system_prompt)
+        calls.append(resolve_prompt(system_prompt))
         return answers.pop(0) if answers else "Respuesta de prueba"
 
     monkeypatch.setattr(chat, "ask_providers", fake_ask)

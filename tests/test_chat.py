@@ -4,7 +4,7 @@ import re
 import pytest
 from sqlalchemy import select
 
-from app import chat, models
+from app import chat, llm, models
 from app.chat_limits import MAX_ANSWER_LENGTH, MAX_HISTORY_MESSAGES, MAX_MESSAGE_LENGTH
 from app.rate_limit import (
     MESSAGES_PER_MINUTE_PER_IP,
@@ -21,6 +21,11 @@ def as_in_prompt(text):
     return json.dumps(text, ensure_ascii=False)[1:-1]
 
 
+def resolve_prompt(system_prompt):
+    """El chat puede pasar una función que prepara el prompt de cada proveedor."""
+    return system_prompt(llm.PROVIDERS[0]) if callable(system_prompt) else system_prompt
+
+
 @pytest.fixture
 def fake_ai(monkeypatch):
     """Sustituye a los proveedores y guarda lo que se les ha enviado."""
@@ -28,7 +33,7 @@ def fake_ai(monkeypatch):
 
     def fake_ask(system_prompt, conversation):
         calls.append({
-            "system_prompt": system_prompt,
+            "system_prompt": resolve_prompt(system_prompt),
             "conversation": conversation,
             "message": conversation[-1]["content"],
         })

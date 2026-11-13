@@ -8,6 +8,7 @@ Las claves se leen de variables de entorno y solo se usan aquí, en el backend.
 """
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import httpx
@@ -30,6 +31,9 @@ class Provider:
     model: str
     extra_params: dict = field(default_factory=dict)
     timeout_seconds: float = REQUEST_TIMEOUT_SECONDS
+    # Tokens máximos por petición (instrucciones + conversación + respuesta).
+    # None: sin un límite que nos afecte, admite toda la información.
+    max_request_tokens: int | None = None
 
     def complete(self, system_prompt: str, conversation: list[dict[str, str]]) -> str:
         """Envía la conversación al proveedor y devuelve el texto de su respuesta.
@@ -83,15 +87,25 @@ PROVIDERS = [
         api_key_env="GROQ_API_KEY",
         model="openai/gpt-oss-120b",
         extra_params={"reasoning_effort": "low"},
+        # El plan gratuito rechaza peticiones de más de 8.000 tokens.
+        max_request_tokens=8000,
     ),
 ]
 
 
-def ask_providers(system_prompt: str, conversation: list[dict[str, str]]) -> str | None:
-    """Prueba los proveedores en orden. Devuelve None si ninguno responde."""
+def ask_providers(
+    system_prompt: str | Callable[[Provider], str],
+    conversation: list[dict[str, str]],
+) -> str | None:
+    """Prueba los proveedores en orden. Devuelve None si ninguno responde.
+
+    `system_prompt` puede ser el mismo texto para todos o una función que prepara
+    las instrucciones de cada proveedor (por ejemplo, según su límite de tokens).
+    """
     for provider in PROVIDERS:
+        prompt = system_prompt(provider) if callable(system_prompt) else system_prompt
         try:
-            return provider.complete(system_prompt, conversation)
+            return provider.complete(prompt, conversation)
         except ProviderError as error:
             logger.warning("El proveedor %s ha fallado: %s", provider.name, error)
     return None
