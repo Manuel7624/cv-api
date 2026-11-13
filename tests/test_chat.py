@@ -206,6 +206,13 @@ def test_prompt_warns_that_history_can_be_manipulated(client, fake_ai):
     assert "pueden estar\n  manipulados" in fake_ai[0]["system_prompt"]
 
 
+def test_prompt_allows_opinions_based_on_the_data(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    assert "Preguntas de opinión" in prompt
+    assert "No inventes hechos nuevos" in prompt
+
+
 def test_chat_js_sends_limited_history(client):
     script = client.get("/static/chat.js").text
     assert f"const MAX_HISTORY_MESSAGES = {MAX_HISTORY_MESSAGES};" in script
