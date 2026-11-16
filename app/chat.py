@@ -9,12 +9,13 @@ import json
 import logging
 import math
 import time
+from collections.abc import Iterator
 
 from sqlalchemy.orm import Session
 
 from app import crud, keywords, retrieval
 from app.chat_limits import MAX_ANSWER_LENGTH
-from app.llm import MAX_ANSWER_TOKENS, Provider, ask_providers, note
+from app.llm import MAX_ANSWER_TOKENS, RESTART, Provider, ask_providers, note
 from app.schemas import ChatTurn
 
 logger = logging.getLogger("uvicorn.error")
@@ -198,11 +199,19 @@ def fallback_message(email: str) -> str:
     )
 
 
-def limit_length(answer: str) -> str:
+def limit_length(events: Iterator[str | object]) -> Iterator[str | object]:
     """Corta la respuesta para que nunca pase de MAX_ANSWER_LENGTH caracteres."""
-    if len(answer) <= MAX_ANSWER_LENGTH:
-        return answer
-    return answer[: MAX_ANSWER_LENGTH - 1].rstrip() + "…"
+    length = 0
+    for event in events:
+        if event is RESTART:
+            length = 0
+        elif length + len(event) > MAX_ANSWER_LENGTH:
+            room = MAX_ANSWER_LENGTH - 1 - length
+            yield event[:room].rstrip() + "…"
+            return
+        else:
+            length += len(event)
+        yield event
 
 
 def says_no_information(answer: str) -> bool:
@@ -244,20 +253,71 @@ def prompt_that_fits(
     return build_system_prompt(db, chosen, partial=True)
 
 
+def join_answer(events: Iterator[str | object]) -> str:
+    """Une los trozos en la respuesta final (RESTART descarta lo anterior)."""
+    answer = ""
+    for event in events:
+        answer = "" if event is RESTART else answer + event
+    return answer.strip()
+
+
 def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
-    """Responde a la pregunta y deja en los logs cuánto ha tardado y qué camino ha
-    seguido. No se registra la pregunta ni nada de quien la hace."""
+    """Respuesta completa de una vez (la usa POST /chat)."""
+    return join_answer(stream_answer(db, message, history))
+
+
+def stream_answer(db: Session, message: str, history: list[ChatTurn]) -> Iterator[str | object]:
+    """Respuesta a trozos, según se genera (la usa POST /chat/stream).
+
+    Devuelve textos y, si hay que empezar de nuevo, RESTART. Deja en los logs cuánto
+    ha tardado y qué camino ha seguido, sin la pregunta ni nada de quien la hace.
+    """
     steps: list[str] = []
     start = time.perf_counter()
+    first_text = None
     try:
-        return find_answer(db, message, history, steps)
+        for event in limit_length(find_answer(db, message, history, steps)):
+            if first_text is None and event is not RESTART:
+                first_text = time.perf_counter() - start
+            yield event
     finally:
         logger.info(
-            "Chat: %.2f s en total | %s", time.perf_counter() - start, " | ".join(steps)
+            "Chat: %.2f s en total, primer texto a %s | %s",
+            time.perf_counter() - start,
+            "-" if first_text is None else f"{first_text:.2f} s",
+            " | ".join(steps),
         )
 
 
-def find_answer(db: Session, message: str, history: list[ChatTurn], steps: list[str]) -> str:
+# Con RAG, se guarda el principio de la respuesta antes de enviarlo: si dice que no
+# tiene la información, se repite con toda (plan B) sin haber mostrado nada.
+RAG_HOLD_CHARS = 80
+
+
+def relay_rag_answer(events: Iterator[str | object]):
+    """Reenvía la respuesta del RAG, salvo si dice que no tiene la información.
+
+    Devuelve (al terminar) el texto completo de la respuesta y si ya se ha enviado.
+    """
+    text, sent = "", False
+    for event in events:
+        if event is RESTART:  # el proveedor falló a medias: se empieza de nuevo
+            if sent:
+                yield RESTART
+            text, sent = "", False
+            continue
+        text += event
+        if sent:
+            yield event
+        elif len(text) >= RAG_HOLD_CHARS and not says_no_information(text):
+            sent = True
+            yield text
+    return text, sent
+
+
+def find_answer(
+    db: Session, message: str, history: list[ChatTurn], steps: list[str]
+) -> Iterator[str | object]:
     """Responde siguiendo este orden de respaldo:
 
     1. RAG con Gemini.  2. RAG con Groq.
@@ -277,12 +337,18 @@ def find_answer(db: Session, message: str, history: list[ChatTurn], steps: list[
     note(steps, "búsqueda RAG" if selected is not None else "sin RAG", search_start)
     if selected is not None:
         steps.append("RAG:")
-        answer = ask_providers(build_system_prompt(db, selected), conversation, steps)
-        if answer is None:
-            return fallback_message(email)
-        if not says_no_information(answer):
-            return limit_length(answer)
-        rag_answer = answer
+        events = ask_providers(build_system_prompt(db, selected), conversation, steps)
+        text, sent = yield from relay_rag_answer(events)
+        if not text:
+            yield fallback_message(email)
+            return
+        if not says_no_information(text):
+            if not sent:
+                yield text
+            return
+        if sent:  # el "no lo sé" estaba al final: se borra lo mostrado
+            yield RESTART
+        rag_answer = text
         logger.info("Con RAG no había respuesta: se repite con toda la información")
 
     # Casos 3 y 4: toda la información a quien la admite; al resto, lo que quepa.
@@ -294,10 +360,10 @@ def find_answer(db: Session, message: str, history: list[ChatTurn], steps: list[
         return prompt_that_fits(db, provider, query, conversation)
 
     steps.append("plan B:")
-    answer = ask_providers(prompt_for, conversation, steps)
-    if answer is None:
+    answered = False
+    for event in ask_providers(prompt_for, conversation, steps):
+        answered = event is not RESTART
+        yield event
+    if not answered:
         # Mejor la respuesta del RAG ("no tengo esa información") que ninguna.
-        if rag_answer is not None:
-            return limit_length(rag_answer)
-        return fallback_message(email)  # caso 5
-    return limit_length(answer)
+        yield rag_answer if rag_answer is not None else fallback_message(email)  # caso 5

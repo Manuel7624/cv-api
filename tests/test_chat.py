@@ -37,7 +37,7 @@ def fake_ai(monkeypatch):
             "conversation": conversation,
             "message": conversation[-1]["content"],
         })
-        return "Respuesta de prueba"
+        yield "Respuesta de prueba"
 
     monkeypatch.setattr(chat, "ask_providers", fake_ask)
     return calls
@@ -63,7 +63,7 @@ def test_message_is_sent_apart_from_the_rules(client, fake_ai):
 
 
 def test_friendly_message_with_email_when_no_provider_answers(client, monkeypatch):
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: None)
+    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(()))
     response = send(client)
     assert response.status_code == 200
     assert EMAIL in response.json()["answer"]
@@ -152,7 +152,7 @@ def test_longest_valid_message_is_accepted(client, fake_ai):
 
 
 def test_long_answers_are_cut(client, monkeypatch):
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: "x" * (MAX_ANSWER_LENGTH + 500))
+    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(["x" * 700, "x" * (MAX_ANSWER_LENGTH)]))
     answer = send(client).json()["answer"]
     assert len(answer) == MAX_ANSWER_LENGTH
     assert answer.endswith("…")

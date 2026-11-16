@@ -158,7 +158,7 @@ def fake_ai(monkeypatch):
 
     def fake_ask(system_prompt, conversation, _steps=None):
         calls.append(resolve_prompt(system_prompt))
-        return answers.pop(0) if answers else "Respuesta de prueba"
+        yield answers.pop(0) if answers else "Respuesta de prueba"
 
     monkeypatch.setattr(chat, "ask_providers", fake_ask)
     return calls, answers
@@ -211,7 +211,7 @@ def test_plan_b_when_similarity_is_low(client, db_session, fake_embed, fake_ai, 
 def test_no_retry_when_providers_are_down(client, db_session, fake_embed, monkeypatch):
     monkeypatch.setattr(retrieval, "MIN_SIMILARITY", -1)
     calls = []
-    monkeypatch.setattr(chat, "ask_providers", lambda *args: calls.append(args))
+    monkeypatch.setattr(chat, "ask_providers", lambda *args: calls.append(args) or iter(()))
     response = chat_with_rag(client, db_session, fake_embed)
     assert "Ahora mismo no puedo responder" in response.json()["answer"]
     assert len(calls) == 1

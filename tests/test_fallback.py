@@ -8,24 +8,13 @@ import json
 
 import httpx
 import pytest
+from fakes import failure, ok, stream_response, use_fake_stream
 
 from app import chat, crud, keywords, llm, retrieval
 from app.seed import EXTRA_INFO
 
 EXTRA = [item for item in EXTRA_INFO if not item["fixed_answer"]]
 NO_INFO = "No tengo esa información aquí, pero puedes escribirme a mi correo."
-
-
-def ok(text):
-    return httpx.Response(
-        200,
-        json={"choices": [{"message": {"content": text}}]},
-        request=httpx.Request("POST", "https://x.test"),
-    )
-
-
-def failure(status=500):
-    return httpx.Response(status, request=httpx.Request("POST", "https://x.test"))
 
 
 def extras_in(prompt):
@@ -36,17 +25,9 @@ def extras_in(prompt):
 def providers(monkeypatch):
     """Simula Gemini y Groq: cada uno responde con lo que haya en su lista, o falla."""
     script = {"gemini": [], "groq": []}
-    calls = []
-
-    def fake_post(url, **kwargs):
-        name = "groq" if "groq" in url else "gemini"
-        calls.append({"provider": name, "prompt": kwargs["json"]["messages"][0]["content"]})
-        result = script[name].pop(0) if script[name] else failure()
-        if isinstance(result, Exception):
-            raise result
-        return result
-
-    monkeypatch.setattr(httpx, "post", fake_post)
+    calls = use_fake_stream(
+        monkeypatch, lambda name: script[name].pop(0) if script[name] else failure()
+    )
     return script, calls
 
 
@@ -193,3 +174,60 @@ def test_logs_time_and_path_without_the_question(client, providers, rag_on, capl
     assert "búsqueda RAG" in line and "RAG: | gemini ok" in line
     assert "plan B: | gemini ok" in line
     assert "Toby" not in caplog.text
+
+
+def stream_events(client, message="¿Tienes carnet de conducir?"):
+    """Eventos de POST /chat/stream: textos y "RESTART"."""
+    response = client.post("/chat/stream", json={"message": message})
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    events = []
+    for block in response.text.split("\n\n"):
+        if block.startswith("data: "):
+            data = json.loads(block.removeprefix("data: "))
+            events.append("RESTART" if data.get("restart") else data["text"])
+    return events
+
+
+def test_stream_sends_the_answer_in_pieces(client, providers):
+    script, _calls = providers
+    script["gemini"].append(ok("Hola, soy la IA de Manuel"))
+    assert stream_events(client) == ["Hola, soy la", " IA de Manuel"]
+
+
+def test_stream_hides_the_rag_answer_that_has_no_information(client, providers, rag_on):
+    script, _calls = providers
+    script["gemini"] += [ok(NO_INFO), ok("Con toda la información")]
+    assert "".join(stream_events(client)) == "Con toda la información"
+
+
+def test_stream_restarts_if_the_rag_says_no_information_at_the_end(client, providers, rag_on):
+    script, _calls = providers
+    late = "Te cuento lo que sí sé de mis prácticas y de mis proyectos personales. " * 2 + NO_INFO
+    script["gemini"] += [ok(late), ok("Con toda la información")]
+    events = stream_events(client)
+    assert "RESTART" in events
+    after = events[len(events) - events[::-1].index("RESTART"):]
+    assert "".join(after) == "Con toda la información"
+
+
+def test_stream_restarts_if_gemini_fails_halfway(client, providers, rag_on):
+    script, calls = providers
+    text = stream_response("x" * 200, done=False).text + "\n\ndata: roto"
+    script["gemini"].append(
+        httpx.Response(200, content=text.encode(), request=httpx.Request("POST", "https://x.test"))
+    )
+    script["groq"].append(ok("Respuesta de Groq"))
+    events = stream_events(client)
+    assert events[0] == "x" * 200
+    assert events[1] == "RESTART"
+    assert "".join(events[2:]) == "Respuesta de Groq"
+    assert [c["provider"] for c in calls] == ["gemini", "groq"]
+
+
+def test_stream_has_the_same_limits_as_chat(client, providers, monkeypatch):
+    from app import rate_limit
+    monkeypatch.setattr(rate_limit.chat_limits, "allow", lambda _ip: False)
+    response = client.post("/chat/stream", json={"message": "Hola"})
+    assert response.status_code == 429
+    assert client.post("/chat/stream", json={"message": ""}).status_code == 422

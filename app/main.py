@@ -4,17 +4,19 @@ Para arrancarla:  uvicorn app.main:app --reload
 Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
-from collections.abc import AsyncIterator
+import json
+from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app import chat, crud, retrieval
+from app.llm import RESTART
 from app.database import Base, SessionLocal, engine, get_db
 from app.rate_limit import chat_limits, get_client_ip
 from app.schemas import (
@@ -121,13 +123,45 @@ def get_languages(db: DbSession) -> list[Language]:
     return crud.get_languages(db)
 
 
-@app.post("/chat", response_model=ChatResponse, tags=["chat"])
-def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResponse:
-    """Responde preguntas sobre el perfil de Manuel, con límite de mensajes por IP."""
+def check_chat_limits(request: Request) -> None:
+    """Límite de mensajes por IP y total; lanza un 429 si se ha superado."""
     if not chat_limits.allow(get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Has enviado muchos mensajes. Espera un poco o escríbeme "
             "desde la sección de contacto.",
         )
+
+
+@app.post("/chat", response_model=ChatResponse, tags=["chat"])
+def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResponse:
+    """Responde preguntas sobre el perfil de Manuel, con límite de mensajes por IP."""
+    check_chat_limits(request)
     return ChatResponse(answer=chat.answer_question(db, payload.message, payload.history))
+
+
+@app.post(
+    "/chat/stream",
+    tags=["chat"],
+    response_class=StreamingResponse,
+    responses={200: {"content": {"text/event-stream": {}}}},
+)
+def post_chat_stream(payload: ChatRequest, request: Request, db: DbSession) -> StreamingResponse:
+    """Igual que POST /chat, pero envía la respuesta a trozos según se genera.
+
+    Formato server-sent events: líneas `data: {"text": "..."}` con cada trozo y
+    `data: {"restart": true}` si hay que borrar lo recibido y empezar de nuevo.
+    """
+    check_chat_limits(request)
+
+    def events() -> Iterator[str]:
+        for event in chat.stream_answer(db, payload.message, payload.history):
+            data = {"restart": True} if event is RESTART else {"text": event}
+            yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        # Que ningún proxy guarde la respuesta entera antes de enviarla.
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

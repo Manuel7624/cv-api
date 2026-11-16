@@ -51,6 +51,7 @@ def isolate_chat(monkeypatch, tmp_path) -> Iterator[None]:
         raise AssertionError("Un test ha intentado llamar a una API real")
 
     monkeypatch.setattr(httpx, "post", blocked_post)
+    monkeypatch.setattr(httpx, "stream", blocked_post)
     monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
     monkeypatch.delenv("CLIENT_IP_HEADER", raising=False)
