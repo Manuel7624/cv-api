@@ -5,6 +5,7 @@ Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 import json
+import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -62,12 +63,15 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Al arrancar, crea las tablas, carga los datos y prepara la búsqueda del chat."""
+    """Al arrancar, crea las tablas, carga los datos, prepara la búsqueda del chat y
+    empieza a guardar las estadísticas. Al apagar, envía las que queden pendientes."""
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
         seed(session)
         retrieval.build_index(crud.get_extra_info(session, fixed_answer=False))
+    chat_stats.connect(os.getenv("STATS_DATABASE_URL"))
     yield
+    chat_stats.close()
 
 
 app = FastAPI(

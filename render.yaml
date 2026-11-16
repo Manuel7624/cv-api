@@ -22,6 +22,10 @@ services:
       # Usa un token largo y aleatorio (al menos 20 caracteres).
       - key: ADMIN_TOKEN
         sync: false
+      # PostgreSQL (Neon) solo para las estadísticas del chat, para que no se
+      # pierdan al reiniciar. Sin valor, las estadísticas quedan solo en memoria.
+      - key: STATS_DATABASE_URL
+        sync: false
       # Límites del chat. Para cambiarlos, edita el valor en el panel de Render.
       - key: CHAT_MESSAGES_PER_MINUTE_PER_IP
         value: "5"

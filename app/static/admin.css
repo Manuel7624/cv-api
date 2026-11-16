@@ -35,3 +35,16 @@ th[scope="row"] {
   text-align: left;
   font-weight: normal;
 }
+
+.notice {
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.notice.ok {
+  background: color-mix(in srgb, green 15%, transparent);
+}
+
+.notice.warning {
+  background: color-mix(in srgb, orange 25%, transparent);
+}

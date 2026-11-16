@@ -79,17 +79,32 @@ def stats_table(snapshot: dict) -> str:
     )
 
 
+def storage_notice(snapshot: dict) -> tuple[str, str]:
+    """Clase CSS y texto que explican de dónde salen los datos."""
+    if snapshot["source"] == "database":
+        return "ok", "Datos guardados en PostgreSQL: no se pierden al reiniciar el servicio."
+    if snapshot["database_configured"]:
+        return "warning", (
+            "Sin conexión con la base de datos de estadísticas. Se muestran solo los datos "
+            "en memoria desde el último arranque; se guardarán cuando vuelva la conexión."
+        )
+    return "warning", (
+        "STATS_DATABASE_URL no está definida: las estadísticas están solo en memoria y "
+        "se pierden si el servicio se reinicia."
+    )
+
+
 @router.get("/admin/stats", response_class=HTMLResponse, dependencies=[Depends(require_admin)])
 def admin_stats() -> HTMLResponse:
     snapshot = chat_stats.snapshot()
-    started = snapshot["started_at"].strftime("%d/%m/%Y %H:%M UTC")
+    notice = storage_notice(snapshot)
     limits = [
         ("Mensajes que quedan del tope global (últimas 24 h)",
          f"{chat_limits.remaining_total()} de {MESSAGES_PER_DAY_TOTAL}"),
         ("Límite por IP y minuto", MESSAGES_PER_MINUTE_PER_IP),
         ("Límite por IP y día", MESSAGES_PER_DAY_PER_IP),
         ("Longitud máxima de la pregunta", f"{MAX_MESSAGE_LENGTH} caracteres"),
-        ("Datos desde", started),
+        ("Datos desde", snapshot["since"]),
     ]
     limit_rows = "".join(
         f"<tr><th scope='row'>{escape(label)}</th><td>{escape(str(value))}</td></tr>"
@@ -107,8 +122,8 @@ def admin_stats() -> HTMLResponse:
 <body>
   <main>
     <h1>Estadísticas del chat</h1>
-    <p>Sin preguntas, IPs ni datos personales. Los días van en UTC y los datos se
-    pierden si el servicio se reinicia.</p>
+    <p>Sin preguntas, IPs ni datos personales. Los días van en UTC.</p>
+    <p class="notice {notice[0]}">{escape(notice[1])}</p>
     <h2>Límites</h2>
     <div class="table"><table><tbody>{limit_rows}</tbody></table></div>
     <h2>Uso</h2>

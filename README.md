@@ -156,7 +156,17 @@ preguntas, respuestas, IPs ni datos personales, y no aparece en `/docs`.
 - Se protege con `ADMIN_TOKEN` (al menos 20 caracteres). El navegador pide usuario y
   contraseña: el usuario da igual y la contraseña es el token. Sin token, la página
   no existe (404).
-- Como los límites, las estadísticas viven en memoria y se pierden al reiniciar.
+- **Se guardan en PostgreSQL** (Neon, plan gratuito) si está definida
+  `STATS_DATABASE_URL`, para que no se pierdan cuando Render reinicia o duerme el
+  servicio (`app/stats_store.py`). Solo esa tabla de contadores (día, nombre, valor) va
+  a PostgreSQL: el CV y el chat siguen en SQLite. El driver es `psycopg`.
+- El chat nunca espera a la base de datos: apunta en memoria y un hilo aparte envía
+  lo pendiente cada 5 segundos (y al apagar). Si Neon no responde o la cadena es
+  incorrecta, la web y el chat siguen igual, lo pendiente se guarda en cuanto vuelva
+  la conexión y la página avisa de que solo muestra los datos en memoria.
+- Los errores de conexión se registran solo por su tipo, sin la cadena de conexión.
+- Sin `STATS_DATABASE_URL`, las estadísticas viven solo en memoria y se pierden al
+  reiniciar.
 
 ## Seguridad de la web
 
@@ -202,7 +212,8 @@ app/
 ├── keywords.py  Búsqueda por palabras clave (solo para el caso 4)
 ├── rate_limit.py  Límites de mensajes
 ├── chat_limits.py  Valores de los límites (configurables por entorno)
-├── stats.py     Estadísticas de uso del chat (en memoria)
+├── stats.py     Estadísticas de uso del chat (en memoria y envío a PostgreSQL)
+├── stats_store.py  Guardado de las estadísticas en PostgreSQL (Neon)
 ├── admin.py     Página privada de estadísticas
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
