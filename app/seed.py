@@ -12,7 +12,7 @@ from app import models
 
 PROFILE = {
     "name": "Manuel Sastre",
-    "title": "Junior Backend Developer",
+    "title": "Backend Developer",
     "location": "Zaragoza, España",
     "summary": (
         "Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, con "
