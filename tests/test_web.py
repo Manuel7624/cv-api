@@ -195,3 +195,17 @@ def test_unfinished_answers_show_a_caret_and_are_announced_at_the_end(client):
     assert 'classList.add("streaming")' in script
     assert script.index('classList.remove("streaming")') < script.index("announce(finalText)")
     assert ".message-assistant.streaming .bubble::after" in client.get("/static/styles.css").text
+
+
+def test_web_shows_the_ai_work_method(client):
+    html = client.get("/").text
+    assert (
+        "La he desarrollado yo desde cero con un método de trabajo con IA: defino los "
+        "requisitos y las reglas del proyecto, pido a Claude Code un plan para cada tarea "
+        "que reviso y ajusto yo, la implementa por pasos pequeños y yo reviso el "
+        "resultado, lo pruebo y decido qué se queda."
+    ) in html
+    card = html.split('aria-label="Tecnologías">')[1].split("</ul>")[0]
+    assert "<li>Claude Code</li>" in card and "<li>Codex</li>" in card
+    assert 'data-question="¿Cómo usas la IA para programar?"' in html
+    assert "¿Cuál es tu disponibilidad?" not in html
