@@ -329,7 +329,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué fue lo más difícil y cómo lo resolviste?",
-        "answer": "Dos cosas. Primero, poner en marcha la API en local: en el grado no habíamos visto qué es una API, así que al principio iba bastante perdido. Lo resolví con paciencia, explorando cada parte del proyecto hasta entender cómo encajaba todo. Segundo, dockerizar el último worker, que no tenía ni Dockerfile ni docker-compose. Fue el que más me costó (casi una semana); lo resolví comparándolo con los workers que ya estaban dockerizados para ver qué archivos y cambios le faltaban.",
+        "answer": "Dos cosas. Primero, poner en marcha la API en local: en el grado no habíamos visto qué es una API, así que al principio iba bastante perdido. Lo resolví con paciencia, explorando cada parte del proyecto hasta entender cómo encajaba todo. Segundo, dockerizar desde cero el worker que me asignaron, que no tenía ni Dockerfile ni docker-compose. Fue el que más me costó (casi una semana); lo resolví comparándolo con los workers que ya estaban dockerizados para ver qué archivos y cambios le faltaban.",
         "fixed_answer": False,
     },
     {
