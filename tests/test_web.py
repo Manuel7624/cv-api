@@ -116,3 +116,10 @@ def test_static_does_not_expose_app_code(client):
 def test_api_docs_still_work(client):
     assert client.get("/docs").status_code == 200
     assert "/profile" in client.get("/openapi.json").json()["paths"]
+
+
+def test_chat_types_the_answer_as_text(client):
+    script = client.get("/static/chat.js").text
+    assert "createTypewriter" in script
+    assert "prefers-reduced-motion" in script
+    assert "innerHTML" not in script and "insertAdjacentHTML" not in script

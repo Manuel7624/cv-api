@@ -64,6 +64,82 @@ async function requestAnswer(question, onText) {
   return text ? { ok: true, text } : { ok: false, text: ERROR_TEXT };
 }
 
+// Efecto de escritura: la respuesta llega a trozos (a veces casi de golpe) y se
+// muestra poco a poco a un ritmo suave. Si se acumula texto pendiente, acelera,
+// y cuando la respuesta ha terminado, lo que falte se reparte a ritmo constante
+// en un segundo como mucho. Siempre con textContent, nunca como HTML.
+const MIN_CHARS_PER_FRAME = 3; // unas 180 letras por segundo a 60 fotogramas
+const CATCH_UP_FRAMES = 60; // mientras llega: alcanzar lo recibido en ~1 s
+const FINISH_FRAMES = 60; // al terminar: lo que falte, en ~1 s como mucho
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function createTypewriter(element) {
+  let target = ""; // todo lo recibido hasta ahora
+  let shown = 0; // letras ya mostradas
+  let frame = null;
+  let finishing = false;
+  let finishRate = 0; // letras por fotograma desde que termina la respuesta
+  let onDone = null;
+
+  function render() {
+    element.classList.remove("pending");
+    // Vacío tras un reinicio: se borra lo mostrado hasta que llegue el texto nuevo.
+    element.textContent = target ? target.slice(0, shown) : "Un momento…";
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function step() {
+    const pending = target.length - shown;
+    if (pending <= 0) {
+      frame = null;
+      if (finishing && onDone) onDone();
+      return;
+    }
+    const rate = finishing
+      ? finishRate
+      : Math.max(MIN_CHARS_PER_FRAME, Math.ceil(pending / CATCH_UP_FRAMES));
+    shown += rate;
+    shown = Math.min(shown, target.length);
+    render();
+    frame = requestAnimationFrame(step);
+  }
+
+  function showAllNow() {
+    if (frame !== null) cancelAnimationFrame(frame);
+    frame = null;
+    shown = target.length;
+    if (target) render();
+  }
+
+  return {
+    update(text) {
+      // Si el texto nuevo no continúa lo mostrado, es un reinicio: se empieza de cero.
+      if (!text.startsWith(target.slice(0, shown))) shown = 0;
+      target = text;
+      if (reduceMotion || document.hidden) return showAllNow();
+      if (!target) return render();
+      if (frame === null) frame = requestAnimationFrame(step);
+    },
+    // Termina de mostrar lo que falte; la promesa se cumple al acabar.
+    finish() {
+      finishing = true;
+      const pending = target.length - shown;
+      finishRate = Math.max(MIN_CHARS_PER_FRAME, Math.ceil(pending / FINISH_FRAMES));
+      if (document.hidden || frame === null) {
+        showAllNow();
+        return Promise.resolve();
+      }
+      return new Promise((resolve) => {
+        onDone = resolve;
+      });
+    },
+    stop() {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+    },
+  };
+}
+
 function remember(question, answer) {
   chatHistory.push(
     { role: "user", content: question },
@@ -81,20 +157,21 @@ async function sendQuestion(question) {
   addChatMessage(text, "user");
   const answer = addTypingIndicator();
 
-  // textContent: la respuesta se muestra siempre como texto, nunca como HTML.
-  const show = (partial) => {
-    // Vacío tras un reinicio: se borra lo mostrado hasta que llegue el texto nuevo.
-    answer.classList.remove("pending");
-    answer.textContent = partial || "Un momento…";
-    chatLog.scrollTop = chatLog.scrollHeight;
-  };
+  const typewriter = createTypewriter(answer);
 
   try {
-    const result = await requestAnswer(text, show);
+    const result = await requestAnswer(text, typewriter.update);
+    if (result.ok) {
+      await typewriter.finish();
+      remember(text, result.text);
+    } else {
+      typewriter.stop();
+    }
+    // textContent: la respuesta se muestra siempre como texto, nunca como HTML.
     answer.textContent = result.text;
-    if (result.ok) remember(text, result.text);
   } catch (error) {
     console.error(error);
+    typewriter.stop();
     answer.textContent =
       "No he podido conectar. Puedes escribirme desde la sección de contacto.";
   }
