@@ -20,6 +20,7 @@ de mi web-CV personal, que incluye un chatbot sobre mi perfil.
 | GET    | `/skills`     | Habilidades técnicas             |
 | GET    | `/languages`  | Idiomas                          |
 | POST   | `/chat`       | Pregunta al chatbot              |
+| POST   | `/chat/stream`| Igual, con la respuesta a trozos |
 
 Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
 
@@ -52,10 +53,31 @@ vuelvan a cargar.
 El chat responde en primera persona, como si fuera yo, y la web avisa de forma
 visible de que es una IA que responde con mi información.
 
-El navegador llama a `POST /chat` y es el backend quien habla con la IA, así que
-las claves nunca llegan a la web. Se usa Gemini y, si falla o tarda más de 25
+El navegador llama a `POST /chat/stream` y es el backend quien habla con la IA, así
+que las claves nunca llegan a la web. Se usa Gemini y, si falla o tarda más de 10
 segundos, Groq. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
 `app/llm.py`.
+
+**Streaming:** la respuesta llega a trozos (server-sent events: `data: {"text": "..."}`)
+y la web la va mostrando según se genera, siempre con `textContent`, nunca como HTML.
+Si un proveedor falla a mitad, o si el RAG acaba diciendo que no tiene el dato, se
+envía `data: {"restart": true}`: la web borra lo recibido y sigue con la respuesta
+nueva. Con RAG, los primeros 80 caracteres se retienen para comprobar si la respuesta
+es "no tengo esa información" y, en ese caso, pasar al plan B sin mostrarla.
+`POST /chat` sigue devolviendo la respuesta completa de una vez (por ejemplo, para
+probarla desde `/docs`).
+
+**Logs:** cada pregunta deja una línea con el tiempo total, el tiempo hasta el primer
+texto y el camino seguido (búsqueda RAG, cada proveedor con su resultado y duración,
+plan B). No se registra la pregunta ni la IP. Ejemplo:
+`Chat: 2.05 s en total, primer texto a 1.94 s | búsqueda RAG 0.75 s | RAG: | gemini ok (primer texto 1.03 s) 1.15 s`
+
+**Orden de proveedores:** se comparó Gemini primero frente a Groq primero con
+proveedores reales (44 preguntas por orden: normales, en ráfaga, de plan B y trampas).
+Groq es más rápido cuando responde, pero su plan gratuito (8.000 tokens por minuto)
+devolvió 429 en 32 de las 44 preguntas, y en sus respuestas contestó en inglés a una
+pregunta en español y usó una frase fija equivocada. Con Gemini primero, la mediana
+hasta el primer texto fue 1,94 s (frente a 2,17 s) y sin fallos, así que se mantiene.
 
 Las claves `GROQ_API_KEY` y `GEMINI_API_KEY` van en `.env`, que no se sube a Git.
 Si ningún proveedor responde, el chat da un mensaje amable con mi correo.
