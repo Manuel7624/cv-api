@@ -1,7 +1,11 @@
-"""Estadísticas de uso del chat, para decidir si hay que cambiar los límites.
+"""Estadísticas de uso del chat y registro de preguntas.
 
-Solo se guardan contadores y tiempos, agrupados por día (UTC). Nunca se guarda
-la pregunta, la respuesta, la IP ni ningún dato de quien escribe.
+- Contadores y tiempos, agrupados por día (UTC), para decidir si hay que cambiar
+  los límites.
+- Registro de preguntas: cada pregunta con su respuesta, la fecha, el proveedor y
+  cómo terminó (respondida, rechazada, sin información o error), para ver qué falta
+  en los datos. Se conservan QUESTION_DAYS días y después se borran solas.
+Nunca se guarda la IP ni ningún dato que identifique a quien escribe.
 
 Si STATS_DATABASE_URL está definida, se guardan también en PostgreSQL (Neon, ver
 app/stats_store.py) para que no se pierdan al reiniciar. El chat solo apunta en
@@ -10,9 +14,10 @@ se siguen guardando en memoria y se envían cuando vuelva.
 """
 import logging
 import threading
-from collections import Counter
-from collections.abc import Callable
-from datetime import datetime, timezone
+import time
+from collections import Counter, deque
+from collections.abc import Callable, Iterable
+from datetime import datetime, timedelta, timezone
 
 from app.llm import PROVIDERS
 from app.stats_store import StatsStore
@@ -23,6 +28,20 @@ logger = logging.getLogger("uvicorn.error")
 DAYS_KEPT = 90
 # Cada cuántos segundos se envía lo pendiente a la base de datos.
 FLUSH_SECONDS = 5
+# Días que se guardan las preguntas; las más antiguas se borran (como mucho, una vez
+# por hora, en el mismo hilo que envía lo pendiente).
+QUESTION_DAYS = 30
+CLEANUP_SECONDS = 60 * 60
+# Preguntas que se guardan en memoria (sin base de datos, o mientras falla).
+MAX_QUESTIONS_IN_MEMORY = 1000
+
+# Cómo terminó cada pregunta y cómo se muestra en la página privada.
+QUESTION_STATUSES = {
+    "answered": "Respondida",
+    "rejected": "Rechazada (fuera de tema)",
+    "no_information": "Sin información",
+    "error": "Sin respuesta (fallaron los proveedores)",
+}
 
 # Nombre de cada contador y cómo se muestra en la página de estadísticas. Los de
 # cada proveedor salen de la lista PROVIDERS, así que se ajustan si cambia.
@@ -35,7 +54,7 @@ COUNTERS = {
     "unanswered": "Sin respuesta de ningún proveedor (mensaje con el correo)",
     "rag": "Con búsqueda RAG",
     "plan_b": "Con plan B (toda la información)",
-    "plan_b_no_information": "Plan B porque el RAG no tenía el dato",
+    "plan_b_no_information": "Plan B porque el RAG no tenía el dato o rechazó la pregunta",
     "keywords": "Con búsqueda por palabras clave (Groq)",
     "restarts": "Respuestas reiniciadas a mitad",
     **{f"errors_{p.name}": f"Errores de {p.label}" for p in PROVIDERS},
@@ -74,6 +93,12 @@ class ChatStats:
         self.memory: dict[str, Counter] = {}
         # Lo que falta por guardar en la base de datos: {(día, nombre): valor}.
         self.pending: Counter = Counter()
+        # Preguntas: las últimas en memoria y las que faltan por guardar.
+        self.recent_questions: deque[dict] = deque(maxlen=MAX_QUESTIONS_IN_MEMORY)
+        self.pending_questions: deque[dict] = deque(maxlen=MAX_QUESTIONS_IN_MEMORY)
+        self.last_cleanup: float | None = None  # time.monotonic() del último borrado
+        # Para que el hilo y la página privada no envíen lo mismo a la vez.
+        self.flush_lock = threading.Lock()
         self.store: StatsStore | None = None
         self.connected: bool | None = None  # None: aún no se ha probado
         self.flusher: threading.Thread | None = None
@@ -103,6 +128,22 @@ class ChatStats:
         seconds_name, count_name = timing_names(name)
         self._add(seconds_name, seconds)
         self._add(count_name, 1)
+
+    def log_question(self, question: str, answer: str, provider: str | None, status: str) -> None:
+        """Apunta una pregunta con su respuesta (sin nada de quien la hace)."""
+        if status not in QUESTION_STATUSES:
+            raise KeyError(status)
+        row = {
+            "asked_at": self.clock(),
+            "question": question,
+            "answer": answer,
+            "provider": provider,
+            "status": status,
+        }
+        with self.lock:
+            self.recent_questions.append(row)
+            if self.store is not None:
+                self.pending_questions.append(row)
 
     # --- Base de datos ---
 
@@ -135,18 +176,33 @@ class ChatStats:
         """
         if self.store is None:
             return False
-        with self.lock:
-            batch = dict(self.pending)
-        if not batch:
-            return True
-        try:
-            self.store.add(batch)
-        except Exception as error:  # cualquier fallo de red o de la base de datos
-            self._set_connected(False, error)
-            return False
-        with self.lock:
-            self.pending.subtract(batch)
-            self.pending = Counter({key: value for key, value in self.pending.items() if value})
+        with self.flush_lock:
+            with self.lock:
+                batch = dict(self.pending)
+                questions = list(self.pending_questions)
+            cleanup = (
+                self.last_cleanup is None
+                or time.monotonic() - self.last_cleanup >= CLEANUP_SECONDS
+            )
+            if not batch and not questions and not cleanup:
+                return True
+            try:
+                self.store.add(
+                    batch,
+                    questions,
+                    delete_before=self.questions_since() if cleanup else None,
+                )
+            except Exception as error:  # cualquier fallo de red o de la base de datos
+                self._set_connected(False, error)
+                return False
+            with self.lock:
+                self.pending.subtract(batch)
+                self.pending = Counter({key: value for key, value in self.pending.items() if value})
+                # Las guardadas son las primeras; detrás puede haber otras nuevas.
+                for _ in questions:
+                    self.pending_questions.popleft()
+            if cleanup:
+                self.last_cleanup = time.monotonic()
         self._set_connected(True)
         return True
 
@@ -213,11 +269,52 @@ class ChatStats:
             "total": summary(total),
         }
 
+    def questions_since(self) -> datetime:
+        """Fecha a partir de la cual se conservan las preguntas."""
+        return self.clock() - timedelta(days=QUESTION_DAYS)
+
+    def questions(
+        self, statuses: Iterable[str] | None = None, page: int = 1, per_page: int = 50
+    ) -> dict:
+        """Una página de preguntas, de la más reciente a la más antigua.
+
+        Con base de datos, primero se envía lo pendiente para que salga todo. Si la
+        base de datos no responde, las que hay en memoria desde el arranque.
+        """
+        since = self.questions_since()
+        offset = (page - 1) * per_page
+        statuses = None if statuses is None else set(statuses)
+        if self.store is not None:
+            self.flush()
+            try:
+                rows, total = self.store.questions(since, statuses, per_page, offset)
+            except Exception as error:
+                self._set_connected(False, error)
+            else:
+                self._set_connected(True)
+                for row in rows:  # SQLite devuelve las fechas sin zona horaria
+                    if row["asked_at"].tzinfo is None:
+                        row["asked_at"] = row["asked_at"].replace(tzinfo=timezone.utc)
+                return {"source": "database", "rows": rows, "total": total}
+        with self.lock:
+            matching = [
+                row for row in reversed(self.recent_questions)
+                if row["asked_at"] >= since and (statuses is None or row["status"] in statuses)
+            ]
+        return {
+            "source": "memory",
+            "rows": matching[offset:offset + per_page],
+            "total": len(matching),
+        }
+
     def reset(self) -> None:
         with self.lock:
             self.started_at = self.clock()
             self.memory.clear()
             self.pending.clear()
+            self.recent_questions.clear()
+            self.pending_questions.clear()
+            self.last_cleanup = None
 
 
 def summary(values: dict[str, float]) -> dict:

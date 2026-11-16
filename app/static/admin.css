@@ -48,3 +48,26 @@ th[scope="row"] {
 .notice.warning {
   background: color-mix(in srgb, orange 25%, transparent);
 }
+
+/* Registro de preguntas: textos largos, así que se parten en varias líneas. */
+table.questions td {
+  text-align: left;
+  white-space: normal;
+  vertical-align: top;
+  min-width: 90px;
+}
+
+table.questions td:nth-child(2),
+table.questions td:nth-child(3) {
+  min-width: 260px;
+}
+
+table.questions td.nowrap {
+  white-space: nowrap;
+}
+
+.pages {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}

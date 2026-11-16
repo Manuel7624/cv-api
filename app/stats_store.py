@@ -1,14 +1,35 @@
 """Guardado de las estadísticas del chat en PostgreSQL (Neon), para que no se
 pierdan cuando Render reinicia o duerme el servicio.
 
-Solo se guardan contadores por día: una fila por día y nombre (por ejemplo,
-"2026-11-16" y "messages") con su valor. Nada de preguntas, IPs ni datos
-personales. Los datos del CV y del chat siguen en SQLite (app/database.py).
+Se guardan dos cosas:
+- Contadores por día: una fila por día y nombre (por ejemplo, "2026-11-16" y
+  "messages") con su valor.
+- Las preguntas del chat con su respuesta, la fecha, el proveedor y cómo terminó,
+  para ver qué falta en los datos. Se borran solas a los 30 días. Nunca la IP ni
+  nada que identifique a quien pregunta.
+Los datos del CV siguen en SQLite (app/database.py).
 
 La cadena de conexión se lee de STATS_DATABASE_URL y no se muestra nunca: los
 errores se registran solo con su tipo.
 """
-from sqlalchemy import Column, Float, MetaData, String, Table, create_engine, select, text
+from collections.abc import Iterable
+from datetime import datetime
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    create_engine,
+    delete,
+    func,
+    select,
+    text,
+)
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.engine import Connection, Engine
 
@@ -25,6 +46,17 @@ stats_table = Table(
     Column("day", String(10), primary_key=True),  # AAAA-MM-DD, en UTC
     Column("name", String(64), primary_key=True),
     Column("value", Float, nullable=False),
+)
+
+questions_table = Table(
+    "chat_questions",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("asked_at", DateTime(timezone=True), nullable=False, index=True),  # UTC
+    Column("question", Text, nullable=False),
+    Column("answer", Text, nullable=False),
+    Column("provider", String(32)),  # None: no respondió ningún proveedor
+    Column("status", String(16), nullable=False),  # ver QUESTION_STATUSES en app/stats.py
 )
 
 
@@ -66,26 +98,67 @@ class StatsStore:
             metadata.create_all(self.engine)
             self.table_ready = True
 
-    def add(self, deltas: dict[tuple[str, str], float]) -> None:
-        """Suma los valores a los que ya hay, en una sola transacción.
+    def add(
+        self,
+        deltas: dict[tuple[str, str], float],
+        questions: list[dict] | None = None,
+        delete_before: datetime | None = None,
+    ) -> None:
+        """Guarda todo en una sola transacción: si falla, no se guarda nada y se
+        puede repetir más tarde con los mismos datos.
 
-        `deltas` asocia (día, nombre) con lo que hay que sumar. Si falla, no se
-        guarda nada y se puede repetir más tarde con los mismos valores.
+        `deltas` asocia (día, nombre) con lo que hay que sumar a lo guardado.
+        `questions` son preguntas nuevas (filas de questions_table, sin id).
+        Si se indica `delete_before`, se borran las preguntas anteriores a esa fecha.
         """
-        if not deltas:
+        if not deltas and not questions and delete_before is None:
             return
         self._ensure_table()
-        rows = [{"day": day, "name": name, "value": value} for (day, name), value in deltas.items()]
-        dialect = postgresql if self.engine.dialect.name == "postgresql" else sqlite
-        insert = dialect.insert(stats_table).values(rows)
-        # Si la fila ya existe, se suma el valor nuevo al guardado.
-        upsert = insert.on_conflict_do_update(
-            index_elements=["day", "name"],
-            set_={"value": stats_table.c.value + insert.excluded.value},
+        with self.engine.begin() as connection:
+            self._limit_time(connection)
+            if deltas:
+                rows = [
+                    {"day": day, "name": name, "value": value}
+                    for (day, name), value in deltas.items()
+                ]
+                dialect = postgresql if self.engine.dialect.name == "postgresql" else sqlite
+                insert = dialect.insert(stats_table).values(rows)
+                # Si la fila ya existe, se suma el valor nuevo al guardado.
+                upsert = insert.on_conflict_do_update(
+                    index_elements=["day", "name"],
+                    set_={"value": stats_table.c.value + insert.excluded.value},
+                )
+                connection.execute(upsert)
+            if questions:
+                connection.execute(questions_table.insert(), questions)
+            if delete_before is not None:
+                connection.execute(
+                    delete(questions_table).where(questions_table.c.asked_at < delete_before)
+                )
+
+    def questions(
+        self, since: datetime, statuses: Iterable[str] | None, limit: int, offset: int
+    ) -> tuple[list[dict], int]:
+        """Preguntas desde `since`, de la más reciente a la más antigua, y cuántas hay
+        en total. `statuses` limita a esos estados (None: todos)."""
+        self._ensure_table()
+        condition = questions_table.c.asked_at >= since
+        if statuses is not None:
+            condition = condition & questions_table.c.status.in_(list(statuses))
+        query = (
+            select(questions_table)
+            .where(condition)
+            .order_by(questions_table.c.asked_at.desc(), questions_table.c.id.desc())
+            .limit(limit)
+            .offset(offset)
         )
         with self.engine.begin() as connection:
             self._limit_time(connection)
-            connection.execute(upsert)
+            total = connection.scalar(
+                select(func.count()).select_from(questions_table).where(condition)
+            )
+            rows = [dict(row._mapping) for row in connection.execute(query)]
+        return rows, total
 
     def load(self) -> dict[str, dict[str, float]]:
         """Todos los valores guardados, por día."""

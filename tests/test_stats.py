@@ -109,7 +109,7 @@ def test_admin_page_asks_for_the_token(client, monkeypatch):
     assert client.get("/admin/stats", auth=("admin", "otro-token-cualquiera-123")).status_code == 401
 
 
-def test_admin_page_shows_stats_without_personal_data(client, providers, rag_on, monkeypatch):
+def test_admin_page_shows_stats_and_questions_without_the_ip(client, providers, rag_on, monkeypatch):
     monkeypatch.setenv("ADMIN_TOKEN", TOKEN)
     monkeypatch.setenv("CLIENT_IP_HEADER", "CF-Connecting-IP")
     providers["gemini"].append(ok("Respuesta de Gemini"))
@@ -123,9 +123,10 @@ def test_admin_page_shows_stats_without_personal_data(client, providers, rag_on,
         assert label in page
     assert "Mensajes que quedan del tope global" in page
     assert f"{limits.remaining_total()} de {chat_limits.MESSAGES_PER_DAY_TOTAL}" in page
-    assert "Toby" not in page
+    # La pregunta y su respuesta salen en el registro; la IP, nunca.
+    assert "Toby" in page
+    assert "Respuesta de Gemini" in page
     assert "203.0.113.7" not in page
-    assert "Respuesta de Gemini" not in page
 
 
 def test_admin_page_is_not_in_the_docs(client):

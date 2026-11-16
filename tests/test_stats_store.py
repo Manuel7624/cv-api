@@ -67,7 +67,7 @@ def test_without_database_everything_keeps_working_in_memory(broken_url):
 def test_pending_is_sent_when_the_database_comes_back(url, monkeypatch):
     stats_ = connected_stats(url)
     real_add = stats_.store.add
-    monkeypatch.setattr(stats_.store, "add", lambda _deltas: (_ for _ in ()).throw(OSError("caída")))
+    monkeypatch.setattr(stats_.store, "add", lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("caída")))
     stats_.count("messages", 2)
     assert not stats_.flush()
     monkeypatch.setattr(stats_.store, "add", real_add)
@@ -78,7 +78,7 @@ def test_pending_is_sent_when_the_database_comes_back(url, monkeypatch):
 def test_counting_never_touches_the_database(url, monkeypatch):
     stats_ = connected_stats(url)
 
-    def fail(*_args):
+    def fail(*_args, **_kwargs):
         raise AssertionError("el chat no debe esperar a la base de datos")
 
     monkeypatch.setattr(stats_.store, "add", fail)
@@ -107,7 +107,7 @@ def test_invalid_url_means_memory_only(caplog):
 def test_errors_never_show_the_connection_string(caplog, monkeypatch):
     stats_ = connected_stats(SECRET_URL)
 
-    def fail(*_args):  # como los errores de psycopg, que pueden incluir la cadena
+    def fail(*_args, **_kwargs):  # como los errores de psycopg, que pueden incluir la cadena
         raise OSError(f"no se pudo conectar a {SECRET_URL}")
 
     monkeypatch.setattr(stats_.store, "add", fail)

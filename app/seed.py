@@ -244,8 +244,20 @@ EXTRA_INFO = [
     },
     {
         "topic": "Más sobre cómo trabajo",
-        "question": "¿Disponibilidad para viajar, horario o guardias?",
-        "answer": "Puedo viajar de forma puntual. Mi preferencia sería un horario fijo de mañana, aunque lo hablaría según el puesto. Las guardias también las valoraría según el puesto y las condiciones.",
+        "question": "¿Disponibilidad para viajar? ¿Podrías viajar para reuniones?",
+        "answer": "Puedo viajar de forma puntual para reuniones. Ir varios días a la semana a otra ciudad de forma habitual lo valoraría según las condiciones.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Más sobre cómo trabajo",
+        "question": "¿Horario o guardias?",
+        "answer": "Mi preferencia sería un horario fijo de mañana, aunque lo hablaría según el puesto. Las guardias también las valoraría según el puesto y las condiciones.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Más sobre cómo trabajo",
+        "question": "¿Podrías salir de Zaragoza temporalmente, por ejemplo para una formación? (no es mudarse)",
+        "answer": "Una formación temporal fuera de Zaragoza la valoraría según las condiciones. Lo que no contemplo es mudarme de forma permanente.",
         "fixed_answer": False,
     },
     {
@@ -418,6 +430,12 @@ EXTRA_INFO = [
     },
     {
         "topic": "Lo que busco",
+        "question": "¿En qué sector te gustaría trabajar?",
+        "answer": "No tengo un sector cerrado. Lo que me importa es trabajar en lo que me gusta: desarrollo backend, a ser posible con Python y APIs, en un equipo donde pueda aprender y aportar.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Lo que busco",
         "question": "¿Dónde te ves en unos años?",
         "answer": "Como desarrollador backend con más experiencia, idealmente en Python, habiendo crecido dentro de un equipo hasta llegar a un perfil senior.",
         "fixed_answer": False,
@@ -442,7 +460,7 @@ EXTRA_INFO = [
     },
     {
         "topic": "Personal",
-        "question": "¿Qué haces en tu tiempo libre?",
+        "question": "¿Qué haces en tu tiempo libre? ¿Cuáles son tus hobbies o aficiones?",
         "answer": "Juego al fútbol desde los 4 años y soy portero de fútbol sala. También me gusta estar con mis amigos, jugar a videojuegos y, sinceramente, programar y aprender cosas nuevas, porque es algo que me gusta.",
         "fixed_answer": False,
     },

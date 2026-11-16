@@ -80,7 +80,7 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     assert "Solo había UN worker sin Docker" in prompt
     assert "solo tiene nociones" in prompt
     assert "NO INVENTES NADA" in prompt
-    assert "No tengo esa información aquí" in prompt
+    assert "Eso no lo tengo por aquí, pero escríbeme a" in prompt
     assert "Todavía no tengo experiencia con esa tecnología" in prompt
     assert "Mi teléfono aparece en mi perfil de LinkedIn" in prompt
     assert "respondes en su nombre, en primera\npersona" in prompt
