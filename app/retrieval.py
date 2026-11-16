@@ -10,7 +10,11 @@ de Gemini: vectores de números que representan el significado de un texto.
   Para regenerarlos a mano: python -m app.retrieval
 - En cada pregunta se calcula el vector de la pregunta (y de las anteriores, para
   entender las de seguimiento) y se eligen las respuestas más parecidas.
-- Si algo falla o el parecido es bajo, se devuelve None y el chat envía todas.
+- Aunque el parecido sea bajo (saludos, texto sin sentido, preguntas que no tratan
+  de Manuel), se envían igualmente las más parecidas: esas preguntas se responden
+  con las reglas, sin datos extra. Si la IA dice que no tiene el dato, el chat
+  repite la pregunta con toda la información (plan B).
+- Si la búsqueda falla, se devuelve None y el chat envía todas.
 """
 import hashlib
 import json
@@ -35,7 +39,8 @@ DIMENSIONS = 768
 MAX_TEXTS_PER_REQUEST = 100
 TIMEOUT_SECONDS = 10
 
-# Cuántas respuestas se envían y parecido mínimo (de -1 a 1) para fiarse de la búsqueda.
+# Cuántas respuestas se envían. Por debajo de MIN_SIMILARITY (de -1 a 1) se avisa en
+# los logs de que el parecido es bajo, pero se envían igual.
 TOP_K = 12
 MIN_SIMILARITY = 0.65
 # Vectores ya calculados, guardados por el texto exacto de cada respuesta.
@@ -130,15 +135,15 @@ class ExtraInfoIndex:
             save_cache({text_key(text): cached[text_key(text)] for text in texts})
         return cls(items, [cached[text_key(text)] for text in texts])
 
-    def search(self, message: str, previous_questions: list[str]) -> list[dict[str, str]] | None:
-        """Devuelve las TOP_K respuestas más parecidas, o None si ninguna se parece."""
+    def search(
+        self, message: str, previous_questions: list[str]
+    ) -> tuple[list[dict[str, str]], float]:
+        """Devuelve las TOP_K respuestas más parecidas y el parecido de la mejor."""
         query = embed([query_text(message, previous_questions)])[0]
         scores = [similarity(query, vector) for vector in self.vectors]
         best = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:TOP_K]
-        if not best or scores[best[0]] < MIN_SIMILARITY:
-            return None
         # Se mantienen en su orden original para que el texto se lea con sentido.
-        return [self.items[i] for i in sorted(best)]
+        return [self.items[i] for i in sorted(best)], scores[best[0]] if best else -1.0
 
 
 def text_key(text: str) -> str:
@@ -190,18 +195,16 @@ def build_index(items: list[dict[str, str]]) -> None:
 
 
 def select_extra_info(message: str, previous_questions: list[str]) -> list[dict[str, str]] | None:
-    """Respuestas extra para esta pregunta, o None para enviar todas (plan B)."""
+    """Respuestas extra para esta pregunta, o None si no hay búsqueda (plan B)."""
     if index is None:
         return None
     try:
-        selected = index.search(message, previous_questions)
+        selected, best_score = index.search(message, previous_questions)
     except RetrievalError as error:
         logger.warning("La búsqueda del RAG ha fallado: %s", error)
         return None
-    if selected is None:
-        logger.info("RAG: similitud baja, se envía toda la información")
-    else:
-        logger.info("RAG: %d respuestas elegidas", len(selected))
+    low = ", similitud baja" if best_score < MIN_SIMILARITY else ""
+    logger.info("RAG: %d respuestas elegidas (mejor parecido %.2f%s)", len(selected), best_score, low)
     return selected
 
 

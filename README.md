@@ -107,7 +107,8 @@ El plan gratuito de Groq permite 8.000 tokens por minuto y cada pregunta usa uno
 5.400, así que como reserva solo puede responder en torno a una pregunta por minuto.
 
 Las reglas del chat (no inventar nada, qué responder sobre teléfono, edad,
-tecnologías que no conoce o preguntas fuera de tema) están en `RULES`, en
+tecnologías que no conoce, preguntas fuera de tema, saludos, texto sin sentido o
+preguntas cortas con siglas como "¿SQL?") están en `RULES`, en
 `app/chat.py`.
 
 ## RAG: solo la información relacionada con cada pregunta
@@ -123,8 +124,11 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
   pregunta solo se calcula el de la pregunta.
 - Si cambias `EXTRA_INFO`, regenera los vectores con `python -m app.retrieval` (con
   las claves cargadas) y haz commit del archivo. Un test avisa si se te olvida.
-- Si la similitud es baja, si la búsqueda falla o si la IA contesta que no tiene la
-  información, se repite la pregunta con toda la información (casos 3 y 4).
+- Si la búsqueda falla o si la IA contesta que no tiene la información, se repite la
+  pregunta con toda la información (casos 3 y 4).
+- Si el parecido es bajo (saludos, texto sin sentido, preguntas que no tratan de mí),
+  se envían igualmente las 12 más parecidas: esos mensajes se responden con las
+  reglas en una sola llamada, sin pasar al plan B.
 - Para desactivarlo, `ENABLED = False` en `app/retrieval.py`.
 - El plan gratuito de embeddings permite 1.000 textos al día y 100 por minuto. Gracias
   a los vectores guardados, cada pregunta gasta uno y un arranque, ninguno. Si se

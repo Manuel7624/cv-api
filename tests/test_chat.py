@@ -281,3 +281,16 @@ def test_keys_are_not_in_the_web_or_the_answers(client, fake_ai):
     for text in public:
         assert "test-groq-key" not in text
         assert "test-gemini-key" not in text
+
+
+def test_rules_cover_messages_that_are_not_questions(client, fake_ai):
+    send(client, "asdewq")
+    prompt = fake_ai[0]["system_prompt"]
+    assert chat.GIBBERISH_ANSWER in prompt
+    assert "Saludos, agradecimientos y despedidas" in prompt
+    assert "trátalo como pregunta" in prompt
+
+
+def test_gibberish_answer_does_not_trigger_plan_b():
+    """La frase de texto sin sentido no debe parecer un "no tengo esa información"."""
+    assert not chat.says_no_information(chat.GIBBERISH_ANSWER)

@@ -61,10 +61,15 @@ def test_follow_up_questions_use_the_previous_question(fake_embed):
     assert "¿Habla inglés? ¿y qué tal?" in fake_embed[-1][0]
 
 
-def test_low_similarity_means_plan_b(fake_embed, monkeypatch):
-    monkeypatch.setattr(retrieval, "MIN_SIMILARITY", 0.9)
+def test_low_similarity_still_sends_the_closest(fake_embed, monkeypatch, caplog):
+    """Saludos o texto sin sentido no se parecen a nada: se responden con las reglas,
+    sin pasar al plan B (que enviaría toda la información)."""
+    monkeypatch.setattr(retrieval, "MIN_SIMILARITY", 2)
     retrieval.build_index(items("Python", "Java"))
-    assert retrieval.select_extra_info("¿Cuál es la capital de Francia?", []) is None
+    with caplog.at_level("INFO", logger="uvicorn.error"):
+        selected = retrieval.select_extra_info("asdewq", [])
+    assert len(selected) == 2
+    assert "similitud baja" in caplog.text
 
 
 def test_search_errors_mean_plan_b(fake_embed, monkeypatch):
@@ -199,13 +204,13 @@ def test_plan_b_when_the_ai_has_no_information(client, db_session, fake_embed, f
     assert all(in_prompt(item, prompts[1]) for item in extra)
 
 
-def test_plan_b_when_similarity_is_low(client, db_session, fake_embed, fake_ai, monkeypatch):
+def test_low_similarity_is_one_call_with_the_closest(client, db_session, fake_embed, fake_ai, monkeypatch):
     monkeypatch.setattr(retrieval, "MIN_SIMILARITY", 2)
     chat_with_rag(client, db_session, fake_embed)
     prompts, _ = fake_ai
     assert len(prompts) == 1
     extra = [item for item in EXTRA_INFO if not item["fixed_answer"]]
-    assert all(in_prompt(item, prompts[0]) for item in extra)
+    assert sum(in_prompt(item, prompts[0]) for item in extra) == retrieval.TOP_K
 
 
 def test_no_retry_when_providers_are_down(client, db_session, fake_embed, monkeypatch):
