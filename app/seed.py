@@ -590,6 +590,18 @@ EXTRA_INFO = [
         "answer": "No, eran las prácticas FCT del grado, que no son remuneradas.",
         "fixed_answer": False,
     },
+    {
+        "topic": "Experiencia",
+        "question": "¿Cuánta experiencia tienes?",
+        "answer": "Como perfil junior, mi experiencia profesional son mis prácticas en Brainy Inteligencia Semántica, del 26 de enero al 15 de mayo de 2026. Además, he desarrollado mi proyecto final, Balancea, y este proyecto personal con API, web y chat.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Experiencia",
+        "question": "¿Cuánto tiempo llevas programando?",
+        "answer": "Programo desde que empecé DAM en 2024, aunque tuve un primer contacto muy básico en 4.º de la ESO. Python lo empecé en las prácticas, en enero de 2026.",
+        "fixed_answer": False,
+    },
 ]
 
 
