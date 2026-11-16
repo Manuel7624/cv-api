@@ -1,37 +1,104 @@
-// Chat "Habla con mi CV". Envía cada pregunta a POST /chat/stream: la clave de la
-// IA está en el servidor, nunca aquí. La respuesta llega a trozos y se va
-// mostrando según se genera. Usa createElement, definida en app.js.
+// Chat "Pregúntame lo que quieras". Envía cada pregunta a POST /chat/stream: la
+// clave de la IA está en el servidor, nunca aquí. La respuesta llega a trozos y
+// se va mostrando según se genera, siempre con textContent (nunca como HTML),
+// para que ningún texto pueda inyectar código en la página.
 
+const chatSection = document.getElementById("chat");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const chatSend = document.getElementById("chat-send");
 const chatLog = document.getElementById("chat-log");
+const chatAnnouncer = document.getElementById("chat-announcer");
+
+const AVATAR_SRC = "/static/img/manuel-sastre.jpg";
+const ERROR_TEXT = "No he podido procesar esa pregunta. Prueba a escribirla de otra forma.";
+const CONNECTION_ERROR_TEXT =
+  "No he podido conectar. Puedes escribirme desde la sección de contacto.";
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Últimos mensajes de la conversación. Solo viven en esta página: el servidor
 // no guarda nada, así que al recargar la conversación empieza de cero.
 const MAX_HISTORY_MESSAGES = 6;
 const chatHistory = [];
+let waitingAnswer = false;
 
-function addChatMessage(text, author) {
-  const message = createElement("p", `chat-message ${author}`, text);
-  chatLog.append(message);
-  chatLog.scrollTop = chatLog.scrollHeight;
-  return message;
+function createElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
 }
 
-// Burbuja con puntos animados mientras llega la respuesta.
-function addTypingIndicator() {
-  const message = createElement("p", "chat-message assistant pending");
-  const dots = createElement("span", "typing-dots");
-  dots.setAttribute("aria-hidden", "true");
+// --- Scroll del área de mensajes ---
+
+// Baja sola al último mensaje, salvo que el usuario haya subido a leer algo.
+let followLatest = true;
+
+chatLog.addEventListener("scroll", () => {
+  const distanceToBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight;
+  followLatest = distanceToBottom < 40;
+});
+
+function scrollToLatest(force = false) {
+  if (force) followLatest = true;
+  if (followLatest) chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// --- Mensajes ---
+
+function addUserMessage(text) {
+  const message = createElement("div", "message message-user");
+  message.append(createElement("p", "bubble", text));
+  chatLog.append(message);
+  scrollToLatest(true);
+}
+
+function createTypingDots() {
+  const dots = createElement("div", "bubble typing");
+  dots.setAttribute("role", "img");
+  dots.setAttribute("aria-label", "Escribiendo");
   dots.append(createElement("span"), createElement("span"), createElement("span"));
-  message.append("Escribiendo", dots);
-  chatLog.append(message);
-  chatLog.scrollTop = chatLog.scrollHeight;
-  return message;
+  return dots;
 }
 
-const ERROR_TEXT = "No he podido procesar esa pregunta. Prueba a escribirla de otra forma.";
+// Mensaje de la IA: avatar decorativo (alt="") y, de momento, los tres puntos.
+function addAssistantMessage() {
+  const message = createElement("div", "message message-assistant");
+  const avatar = createElement("img", "avatar");
+  avatar.src = AVATAR_SRC;
+  avatar.alt = "";
+  avatar.width = 32;
+  avatar.height = 32;
+  const dots = createTypingDots();
+  message.append(avatar, dots);
+  chatLog.append(message);
+  scrollToLatest();
+
+  const bubble = createElement("p", "bubble");
+  return {
+    message,
+    // Muestra texto en lugar de los puntos (o los puntos otra vez, si está vacío).
+    setText(text) {
+      if (!text) {
+        if (bubble.isConnected) bubble.replaceWith(dots);
+        return;
+      }
+      if (!bubble.isConnected) dots.replaceWith(bubble);
+      bubble.textContent = text;
+      scrollToLatest();
+    },
+  };
+}
+
+// La respuesta se anuncia entera al terminar, no palabra a palabra.
+function announce(text) {
+  chatAnnouncer.textContent = "";
+  window.setTimeout(() => {
+    chatAnnouncer.textContent = text;
+  }, 50);
+}
+
+// --- Petición al servidor ---
 
 // Pide la respuesta y llama a onText(textoHastaAhora) cada vez que llega un trozo.
 // El servidor envía líneas "data: {json}" separadas por una línea en blanco.
@@ -64,16 +131,16 @@ async function requestAnswer(question, onText) {
   return text ? { ok: true, text } : { ok: false, text: ERROR_TEXT };
 }
 
-// Efecto de escritura: la respuesta llega a trozos (a veces casi de golpe) y se
-// muestra poco a poco a un ritmo suave. Si se acumula texto pendiente, acelera,
-// y cuando la respuesta ha terminado, lo que falte se reparte a ritmo constante
-// en un segundo como mucho. Siempre con textContent, nunca como HTML.
+// --- Efecto de escritura ---
+
+// La respuesta llega a trozos (a veces casi de golpe) y se muestra poco a poco a
+// un ritmo suave. Si se acumula texto pendiente, acelera, y cuando la respuesta ha
+// terminado, lo que falte se reparte a ritmo constante en un segundo como mucho.
 const MIN_CHARS_PER_FRAME = 3; // unas 180 letras por segundo a 60 fotogramas
 const CATCH_UP_FRAMES = 60; // mientras llega: alcanzar lo recibido en ~1 s
 const FINISH_FRAMES = 60; // al terminar: lo que falte, en ~1 s como mucho
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function createTypewriter(element) {
+function createTypewriter(answer) {
   let target = ""; // todo lo recibido hasta ahora
   let shown = 0; // letras ya mostradas
   let frame = null;
@@ -81,12 +148,8 @@ function createTypewriter(element) {
   let finishRate = 0; // letras por fotograma desde que termina la respuesta
   let onDone = null;
 
-  function render() {
-    element.classList.remove("pending");
-    // Vacío tras un reinicio: se borra lo mostrado hasta que llegue el texto nuevo.
-    element.textContent = target ? target.slice(0, shown) : "Un momento…";
-    chatLog.scrollTop = chatLog.scrollHeight;
-  }
+  // Vacío tras un reinicio: vuelven los tres puntos hasta que llegue el texto nuevo.
+  const render = () => answer.setText(target.slice(0, shown));
 
   function step() {
     const pending = target.length - shown;
@@ -98,8 +161,7 @@ function createTypewriter(element) {
     const rate = finishing
       ? finishRate
       : Math.max(MIN_CHARS_PER_FRAME, Math.ceil(pending / CATCH_UP_FRAMES));
-    shown += rate;
-    shown = Math.min(shown, target.length);
+    shown = Math.min(shown + rate, target.length);
     render();
     frame = requestAnimationFrame(step);
   }
@@ -108,7 +170,7 @@ function createTypewriter(element) {
     if (frame !== null) cancelAnimationFrame(frame);
     frame = null;
     shown = target.length;
-    if (target) render();
+    render();
   }
 
   return {
@@ -148,17 +210,23 @@ function remember(question, answer) {
   chatHistory.splice(0, Math.max(0, chatHistory.length - MAX_HISTORY_MESSAGES));
 }
 
+// --- Enviar una pregunta ---
+
 async function sendQuestion(question) {
   const text = question.trim();
-  if (!text || chatSend.disabled) return;
+  // Ni mensajes vacíos ni otro mensaje mientras llega una respuesta.
+  if (!text || waitingAnswer) return;
 
+  waitingAnswer = true;
   chatSend.disabled = true;
+  chatSection.classList.add("started"); // en el móvil, oculta las sugerencias
   chatInput.value = "";
-  addChatMessage(text, "user");
-  const answer = addTypingIndicator();
-
+  resizeInput();
+  addUserMessage(text);
+  const answer = addAssistantMessage();
   const typewriter = createTypewriter(answer);
 
+  let finalText;
   try {
     const result = await requestAnswer(text, typewriter.update);
     if (result.ok) {
@@ -166,28 +234,52 @@ async function sendQuestion(question) {
       remember(text, result.text);
     } else {
       typewriter.stop();
+      answer.message.classList.add("message-error");
     }
-    // textContent: la respuesta se muestra siempre como texto, nunca como HTML.
-    answer.textContent = result.text;
+    finalText = result.text;
   } catch (error) {
     console.error(error);
     typewriter.stop();
-    answer.textContent =
-      "No he podido conectar. Puedes escribirme desde la sección de contacto.";
+    answer.message.classList.add("message-error");
+    finalText = CONNECTION_ERROR_TEXT;
   }
 
-  answer.classList.remove("pending");
-  // Lleva al inicio de la respuesta, para que se lea desde el principio.
-  chatLog.scrollTop = answer.offsetTop - chatLog.offsetTop;
+  answer.setText(finalText);
+  announce(finalText);
+  waitingAnswer = false;
   chatSend.disabled = false;
 }
 
-chatForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await sendQuestion(chatInput.value);
-  chatInput.focus();
+// --- Caja de escribir ---
+
+// Crece con el texto hasta 4 líneas (el máximo lo pone el CSS); después, scroll.
+function resizeInput() {
+  chatInput.style.height = "auto";
+  chatInput.style.height = `${chatInput.scrollHeight + 2}px`;
+}
+
+chatInput.addEventListener("input", resizeInput);
+
+// Intro envía; Mayúsculas+Intro hace un salto de línea.
+chatInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+    event.preventDefault();
+    chatForm.requestSubmit();
+  }
 });
 
-for (const button of document.querySelectorAll(".suggestion")) {
-  button.addEventListener("click", () => sendQuestion(button.textContent));
+chatForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  sendQuestion(chatInput.value);
+});
+
+// --- Sugerencias y preguntas de las tarjetas ---
+
+// Sube hasta el chat y envía la pregunta como si la hubiera escrito el usuario.
+for (const button of document.querySelectorAll("[data-question]")) {
+  button.addEventListener("click", () => {
+    if (waitingAnswer) return;
+    chatSection.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    sendQuestion(button.dataset.question);
+  });
 }

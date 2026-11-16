@@ -5,7 +5,9 @@ Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 import json
+import mimetypes
 import os
+import re
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -36,6 +38,8 @@ from app.seed import seed
 from app.stats import chat_stats
 
 STATIC_DIR = Path(__file__).parent / "static"
+# Windows no siempre conoce el tipo de las fuentes woff2.
+mimetypes.add_type("font/woff2", ".woff2")
 
 # Cabeceras de seguridad para todas las respuestas.
 SECURITY_HEADERS = {
@@ -95,9 +99,29 @@ async def add_security_headers(request: Request, call_next):
 
 
 @app.get("/", include_in_schema=False)
-def root() -> HTMLResponse:
+def root(request: Request) -> HTMLResponse:
     """La raíz muestra la web del currículum."""
-    return HTMLResponse(INDEX_HTML)
+    return HTMLResponse(INDEX_HTML.replace("{{BASE_URL}}", public_base_url(request)))
+
+
+# Solo nombres de host normales (letras, números, puntos, guiones y puerto).
+VALID_HOST = re.compile(r"^[A-Za-z0-9.-]+(:[0-9]{1,5})?$")
+
+
+def public_base_url(request: Request) -> str:
+    """Dirección pública de la web, para la imagen al compartir en LinkedIn (que
+    necesita una URL completa). Se puede fijar con PUBLIC_URL; si no, se deduce de
+    la petición. Detrás del proxy de Render, el esquema llega en X-Forwarded-Proto."""
+    configured = os.getenv("PUBLIC_URL", "").strip().rstrip("/")
+    if configured:
+        return configured
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip()
+    if scheme not in ("http", "https"):
+        scheme = "https"
+    host = request.headers.get("host", "")
+    if not VALID_HOST.match(host):
+        return ""  # sin host fiable, la ruta relativa (vale para todo salvo la vista previa)
+    return f"{scheme}://{host}"
 
 
 @app.get("/health", tags=["sistema"])

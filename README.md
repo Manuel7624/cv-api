@@ -172,6 +172,23 @@ preguntas, respuestas, IPs ni datos personales, y no aparece en `/docs`.
 - Sin `STATS_DATABASE_URL`, las estadísticas viven solo en memoria y se pierden al
   reiniciar.
 
+## La web
+
+Una sola página (`app/static/index.html`, `styles.css` y `chat.js`, sin
+frameworks): cabecera con foto y enlaces, el chat, el resumen del perfil, cómo está
+hecha la web y contacto. El móvil usa el mismo HTML; con `@media (max-width: 600px)`
+la foto se pone al lado del nombre y los botones pasan debajo del chat.
+
+- La fuente Plus Jakarta Sans está dentro de la web (`static/fonts`, licencia OFL),
+  para no cargar nada de fuera y no tener que abrir la CSP.
+- El chat crece hasta un máximo y después hace scroll por dentro; baja solo al último
+  mensaje salvo que hayas subido a leer. Intro envía y Mayúsculas+Intro salta de línea.
+- Accesibilidad: todo se usa con teclado y foco visible, zonas de toque de 44 px, el
+  área de mensajes con `role="log"` y la respuesta anunciada entera al terminar (no
+  palabra a palabra), y sin animaciones con `prefers-reduced-motion`.
+- Al compartir el enlace (LinkedIn, WhatsApp...) se ve `static/img/og-image.png`. Su
+  URL tiene que ser completa: se toma de `PUBLIC_URL` si existe o de la petición.
+
 ## Seguridad de la web
 
 - Los datos y las respuestas del chat se pintan siempre con `textContent`, nunca
@@ -222,7 +239,7 @@ app/
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
 ├── seed.py      Datos iniciales del currículum
-└── static/      Web: HTML, CSS, JavaScript, foto y CV en PDF
+└── static/      Web: HTML, CSS, JavaScript, fuente, imágenes y CV en PDF
 tests/           Pruebas automáticas
 Dockerfile       Imagen del servicio
 render.yaml      Configuración del despliegue en Render

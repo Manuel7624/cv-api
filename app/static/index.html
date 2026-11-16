@@ -4,131 +4,193 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Manuel Sastre · Backend Developer</title>
-  <meta name="description" content="Currículum de Manuel Sastre, desarrollador backend junior en Zaragoza.">
+  <meta name="description" content="Backend Developer en Zaragoza: Python, Docker y APIs. Pregúntale lo que quieras a la IA de mi web.">
+
+  <!-- Vista previa al compartir el enlace (LinkedIn, WhatsApp, X...). -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_ES">
   <meta property="og:title" content="Manuel Sastre · Backend Developer">
-  <meta property="og:description" content="Currículum de Manuel Sastre, desarrollador backend junior en Zaragoza.">
-  <link rel="icon" href="data:,">
+  <meta property="og:description" content="Backend Developer en Zaragoza: Python, Docker y APIs. Pregúntale lo que quieras a la IA de mi web.">
+  <meta property="og:image" content="{{BASE_URL}}/static/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Manuel Sastre, Backend Developer. Pregúntame lo que quieras.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Manuel Sastre · Backend Developer">
+  <meta name="twitter:description" content="Backend Developer en Zaragoza: Python, Docker y APIs. Pregúntale lo que quieras a la IA de mi web.">
+  <meta name="twitter:image" content="{{BASE_URL}}/static/img/og-image.png">
+
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/styles.css">
-  <script src="/static/app.js" defer></script>
   <script src="/static/chat.js" defer></script>
-  <script src="/static/terminal.js" defer></script>
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-inner">
-      <img class="photo" src="/static/img/manuel-sastre.jpg" alt="Foto de Manuel Sastre" width="534" height="647">
-      <div class="hero-text">
-        <h1 id="name">Manuel Sastre</h1>
-        <p class="role" id="title"></p>
-        <p class="meta" id="meta"></p>
-        <p class="availability" id="availability" hidden></p>
-        <nav class="actions" aria-label="Enlaces principales">
-          <a class="button primary" href="/static/Manuel_Sastre_CV.pdf" download>Descargar CV (PDF)</a>
-          <a class="button" id="github" href="https://github.com/Manuel7624" target="_blank" rel="noopener">GitHub</a>
-          <a class="button" href="/docs">Documentación de la API</a>
-        </nav>
+  <main class="page">
+    <!-- Cabecera y chat comparten esta rejilla: en el móvil, los botones pasan
+         debajo del chat solo con CSS, sin duplicar el HTML. -->
+    <div class="intro">
+      <img class="photo" src="/static/img/manuel-sastre.jpg" alt="Foto de Manuel Sastre" width="148" height="148">
+
+      <div class="intro-top">
+        <div class="name-row">
+          <h1>Manuel Sastre</h1>
+          <span class="badge">Disponibilidad inmediata</span>
+        </div>
+        <p class="role">Backend Developer</p>
       </div>
+
+      <p class="intro-description">Técnico Superior en DAM · Python, Docker y APIs · Zaragoza, híbrido o remoto</p>
+
+      <nav class="links" aria-label="Contacto y descargas">
+        <a class="button button-primary" href="/static/Manuel_Sastre_CV.pdf" download>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Descargar CV (PDF)
+        </a>
+        <a class="button" href="mailto:manusastrenar@gmail.com">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <span class="text-long">Enviar un correo</span><span class="text-short">Correo</span>
+        </a>
+        <a class="button" href="https://www.linkedin.com/in/manuel-sastre-naranjo" target="_blank" rel="noopener">
+          <svg class="icon icon-brand" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          LinkedIn
+        </a>
+        <a class="button" href="https://github.com/Manuel7624" target="_blank" rel="noopener">
+          <svg class="icon icon-brand" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.23c-3.34.73-4.04-1.42-4.04-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .32.21.69.82.57A12 12 0 0 0 12 .3"/></svg>
+          GitHub
+        </a>
+      </nav>
+
+      <section class="chat" id="chat" aria-labelledby="chat-heading">
+        <div class="chat-card">
+          <h2 id="chat-heading">Pregúntame lo que quieras</h2>
+
+          <!-- aria-live="off": la respuesta no se lee palabra a palabra mientras
+               llega; se anuncia entera al terminar en #chat-announcer. -->
+          <div class="chat-log" id="chat-log" role="log" aria-live="off" aria-label="Conversación" tabindex="0">
+            <div class="message message-assistant">
+              <img class="avatar" src="/static/img/manuel-sastre.jpg" alt="" width="32" height="32">
+              <p class="bubble">¡Hola! Soy la IA de Manuel. Pregúntame lo que quieras sobre él.</p>
+            </div>
+          </div>
+          <div class="visually-hidden" id="chat-announcer" aria-live="polite"></div>
+
+          <div class="suggestions" id="suggestions" aria-label="Preguntas de ejemplo" role="group">
+            <button class="suggestion" type="button" data-question="¿Qué experiencia tienes?">¿Qué experiencia tienes?</button>
+            <button class="suggestion" type="button" data-question="¿Por qué deberíamos contratarte?">¿Por qué deberíamos contratarte?</button>
+            <button class="suggestion" type="button" data-question="¿Cuál es tu disponibilidad?">¿Cuál es tu disponibilidad?</button>
+            <button class="suggestion" type="button" data-question="¿Qué tecnologías conoces?">¿Qué tecnologías conoces?</button>
+          </div>
+
+          <form class="chat-form" id="chat-form">
+            <label class="visually-hidden" for="chat-input">Escribe tu pregunta</label>
+            <textarea id="chat-input" rows="1" maxlength="{{MAX_MESSAGE_LENGTH}}" enterkeyhint="send" autocomplete="off" placeholder="Escribe tu pregunta…"></textarea>
+            <button class="send" id="chat-send" type="submit">Enviar</button>
+          </form>
+        </div>
+        <p class="chat-note">Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas datos personales.</p>
+      </section>
     </div>
-  </header>
 
-  <main>
-    <section class="chat" aria-labelledby="chat-heading">
-      <h2 id="chat-heading">Pregúntame lo que quieras</h2>
-      <p class="ai-notice" role="note">Soy una IA que responde con la información de Manuel.</p>
+    <section class="section" aria-labelledby="summary-heading">
+      <h2 id="summary-heading">Resumen de mi perfil</h2>
+      <div class="cards">
+        <article class="card">
+          <div class="card-body">
+            <span class="card-label">Experiencia</span>
+            <strong class="card-title">Prácticas de desarrollo</strong>
+            <span class="card-text">Brainy Inteligencia Semántica, 2026. Python, Docker y GitLab en un equipo real.</span>
+          </div>
+          <button class="card-question" type="button" data-question="¿Qué hiciste en las prácticas?" aria-label="Preguntar al chat: ¿Qué hiciste en las prácticas?">
+            <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            ¿Qué hiciste en las prácticas?
+          </button>
+        </article>
 
-      <div class="chat-log" id="chat-log" role="log" aria-live="polite"></div>
+        <article class="card">
+          <div class="card-body">
+            <span class="card-label">Proyectos</span>
+            <strong class="card-title">Esta web y Balancea</strong>
+            <span class="card-text">Mi propia API con este chat de IA, y una app Android de finanzas personales.</span>
+          </div>
+          <button class="card-question" type="button" data-question="¿Qué hace Balancea?" aria-label="Preguntar al chat: ¿Qué hace Balancea?">
+            <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            ¿Qué hace Balancea?
+          </button>
+        </article>
 
-      <div class="suggestions" aria-label="Preguntas de ejemplo">
-        <button class="suggestion" type="button">¿Qué hiciste en las prácticas?</button>
-        <button class="suggestion" type="button">¿Qué tecnologías conoces?</button>
-        <button class="suggestion" type="button">¿Qué es Balancea?</button>
+        <article class="card">
+          <div class="card-body">
+            <span class="card-label">Formación</span>
+            <strong class="card-title">Técnico Superior en DAM</strong>
+            <span class="card-text">Desarrollo de Aplicaciones Multiplataforma. Océano Atlántico, 2024 – 2026.</span>
+            <span class="card-text card-extra"><strong>Idiomas:</strong> inglés B2</span>
+          </div>
+          <button class="card-question" type="button" data-question="¿Qué aprendiste en el grado?" aria-label="Preguntar al chat: ¿Qué aprendiste en el grado?">
+            <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            ¿Qué aprendiste en el grado?
+          </button>
+        </article>
+
+        <article class="card">
+          <div class="card-body card-body-wide-gap">
+            <span class="card-label">Tecnologías</span>
+            <ul class="tags tags-strong" aria-label="Tecnologías">
+              <li>Python</li>
+              <li>Java</li>
+              <li>SQL</li>
+              <li>Docker</li>
+              <li>Git</li>
+              <li>GitLab</li>
+            </ul>
+          </div>
+          <button class="card-question" type="button" data-question="¿Con cuál has trabajado más?" aria-label="Preguntar al chat: ¿Con cuál has trabajado más?">
+            <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+            ¿Con cuál has trabajado más?
+          </button>
+        </article>
       </div>
-
-      <form class="chat-form" id="chat-form">
-        <label class="visually-hidden" for="chat-input">Tu pregunta</label>
-        <input id="chat-input" type="text" maxlength="{{MAX_MESSAGE_LENGTH}}" autocomplete="off" placeholder="Escribe tu pregunta" required>
-        <button class="button primary" id="chat-send" type="submit">Enviar</button>
-      </form>
-
-      <p class="chat-note">Puede contener errores. Tus mensajes se procesan con Google Gemini o Groq: no escribas datos personales.</p>
+      <a class="button-soft download-full" href="/static/Manuel_Sastre_CV.pdf" download>
+        <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Descargar CV completo
+      </a>
     </section>
 
-    <p class="status" id="status" role="status">Cargando el currículum…</p>
-    <noscript><p class="status">Esta web necesita JavaScript para mostrar el currículum. También puedes descargarlo en PDF.</p></noscript>
-
-    <div id="content" hidden>
-      <section aria-labelledby="profile-heading">
-        <h2 id="profile-heading">Perfil</h2>
-        <p id="summary"></p>
-      </section>
-
-      <section aria-labelledby="experience-heading">
-        <h2 id="experience-heading">Experiencia</h2>
-        <div id="experience"></div>
-      </section>
-
-      <section aria-labelledby="projects-heading">
-        <h2 id="projects-heading">Proyectos</h2>
-        <div id="projects"></div>
-      </section>
-
-      <section aria-labelledby="education-heading">
-        <h2 id="education-heading">Formación</h2>
-        <div id="education"></div>
-      </section>
-
-      <section aria-labelledby="skills-heading">
-        <h2 id="skills-heading">Habilidades</h2>
-        <div class="skills" id="skills"></div>
-      </section>
-
-      <section aria-labelledby="languages-heading">
-        <h2 id="languages-heading">Idiomas</h2>
-        <div id="languages"></div>
-      </section>
-
-      <section aria-labelledby="contact-heading">
-        <h2 id="contact-heading">Contacto</h2>
-        <p>Si quieres hablar conmigo, escríbeme.</p>
-        <div class="actions" id="contact"></div>
-      </section>
-
-      <section aria-labelledby="how-heading">
-        <h2 id="how-heading">Cómo está hecha esta web</h2>
-        <ol class="flow">
-          <li><strong>Navegador</strong><span>HTML, CSS y JavaScript</span></li>
-          <li><strong>FastAPI</strong><span>API en Python</span></li>
-          <li><strong>SQLite</strong><span>Datos con SQLAlchemy</span></li>
-        </ol>
-        <ul class="how-notes">
-          <li><strong>Chat:</strong> FastAPI llama a Gemini y, si falla, a Groq. Las claves se quedan en el servidor.</li>
-          <li><strong>Docker:</strong> la aplicación se ejecuta en un contenedor.</li>
-          <li><strong>Tests:</strong> pytest comprueba la API, la web y el chat sin llamar a servicios reales.</li>
-        </ul>
-
-        <h3>Prueba la API</h3>
-        <div class="terminal">
-          <form class="terminal-bar" id="terminal-form">
-            <label class="visually-hidden" for="terminal-path">Ruta de la API</label>
-            <select id="terminal-path">
-              <option value="/skills">GET /skills</option>
-              <option value="/profile">GET /profile</option>
-              <option value="/experience">GET /experience</option>
-              <option value="/projects">GET /projects</option>
-              <option value="/education">GET /education</option>
-              <option value="/languages">GET /languages</option>
-              <option value="/health">GET /health</option>
-            </select>
-            <button id="terminal-run" type="submit">Ejecutar</button>
-          </form>
-          <pre class="terminal-output" id="terminal-output" tabindex="0">$ Elige una ruta y pulsa Ejecutar</pre>
+    <section class="section section-how" aria-labelledby="how-heading">
+      <h2 id="how-heading">Cómo está hecha esta web</h2>
+      <div class="how">
+        <div class="how-text">
+          <p>La he programado yo desde cero. Por dentro es una API hecha con Python y FastAPI que guarda mi información en una base de datos. Cuando preguntas algo, el chat busca primero los datos sobre mí que tienen que ver con tu pregunta y responde solo con ellos, para no inventarse cosas. Si un proveedor de IA falla, pasa automáticamente a otro. Todo funciona en Docker y está comprobado con tests automáticos.</p>
+          <ul class="tags" aria-label="Tecnologías de esta web">
+            <li>Python</li>
+            <li>FastAPI</li>
+            <li>SQLite</li>
+            <li>PostgreSQL</li>
+            <li>Docker</li>
+            <li>RAG</li>
+            <li>Tests con pytest</li>
+            <li>Gemini y Groq con respaldo</li>
+          </ul>
         </div>
-      </section>
-    </div>
-  </main>
+        <div class="how-buttons">
+          <a class="button-soft" href="/docs">Probar la API</a>
+          <a class="button-soft" href="https://github.com/Manuel7624/Curriculum-Avanzado" target="_blank" rel="noopener">Ver el código en GitHub</a>
+        </div>
+      </div>
+    </section>
 
-  <footer>
-    <p>Los datos de esta web se leen de una API con FastAPI. <a href="/docs">Pruébala en la documentación</a>.</p>
-  </footer>
+    <section class="section section-contact" aria-labelledby="contact-heading">
+      <div class="contact">
+        <div class="contact-row">
+          <h2 id="contact-heading">¿Hablamos?</h2>
+          <a class="button button-primary" href="mailto:manusastrenar@gmail.com">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            Enviar un correo
+          </a>
+        </div>
+        <p class="contact-text">manusastrenar@gmail.com · Zaragoza, presencial, híbrido o remoto</p>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
