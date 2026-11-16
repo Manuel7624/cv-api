@@ -11,11 +11,13 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app import chat, crud, retrieval
+from app.admin import router as admin_router
+from app.chat_limits import MAX_MESSAGE_LENGTH
 from app.llm import RESTART
 from app.database import Base, SessionLocal, engine, get_db
 from app.rate_limit import chat_limits, get_client_ip
@@ -30,6 +32,7 @@ from app.schemas import (
     Skills,
 )
 from app.seed import seed
+from app.stats import chat_stats
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -47,6 +50,11 @@ CONTENT_SECURITY_POLICY = (
 )
 # /docs carga Swagger desde un CDN, así que esa política lo rompería.
 PATHS_WITHOUT_CSP = ("/docs", "/redoc")
+
+# La portada lleva la longitud máxima de la pregunta, que se puede configurar.
+INDEX_HTML = (STATIC_DIR / "index.html").read_text(encoding="utf-8").replace(
+    "{{MAX_MESSAGE_LENGTH}}", str(MAX_MESSAGE_LENGTH)
+)
 
 # Cada ruta que declara este tipo recibe una sesión abierta para esa petición.
 DbSession = Annotated[Session, Depends(get_db)]
@@ -70,6 +78,7 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.include_router(admin_router)
 
 
 @app.middleware("http")
@@ -82,9 +91,9 @@ async def add_security_headers(request: Request, call_next):
 
 
 @app.get("/", include_in_schema=False)
-def root() -> FileResponse:
+def root() -> HTMLResponse:
     """La raíz muestra la web del currículum."""
-    return FileResponse(STATIC_DIR / "index.html")
+    return HTMLResponse(INDEX_HTML)
 
 
 @app.get("/health", tags=["sistema"])
@@ -125,7 +134,9 @@ def get_languages(db: DbSession) -> list[Language]:
 
 def check_chat_limits(request: Request) -> None:
     """Límite de mensajes por IP y total; lanza un 429 si se ha superado."""
-    if not chat_limits.allow(get_client_ip(request)):
+    blocked = chat_limits.check(get_client_ip(request))
+    if blocked:
+        chat_stats.count(f"blocked_{blocked}")
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Has enviado muchos mensajes. Espera un poco o escríbeme "

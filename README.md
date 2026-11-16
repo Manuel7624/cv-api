@@ -88,9 +88,12 @@ que no lo sabe. Los elementos con `fixed_answer=True` son temas delicados (sueld
 nota media): el chat responde con ese texto y nunca da cifras. Después de editar
 ese archivo hay que borrar `cv.db` y reiniciar.
 
-Límites: 5 mensajes por minuto y 30 al día por IP, 300 al día en total, y 500
-caracteres por pregunta. Los contadores están en memoria, así que se reinician
-con el servicio.
+Límites (por defecto): 5 mensajes por minuto y 30 al día por IP, 300 al día en
+total, y 500 caracteres por pregunta. Se cambian con variables de entorno, sin tocar
+el código: `CHAT_MESSAGES_PER_MINUTE_PER_IP`, `CHAT_MESSAGES_PER_DAY_PER_IP`,
+`CHAT_MESSAGES_PER_DAY_TOTAL` y `CHAT_MAX_MESSAGE_LENGTH` (ver `.env.example` y
+`render.yaml`). Un valor no válido detiene el arranque. Los contadores están en
+memoria, así que se reinician con el servicio.
 
 Para entender preguntas de seguimiento ("¿y en Java?"), el navegador envía los
 últimos 6 mensajes junto con la pregunta nueva. El servidor no guarda nada: al
@@ -139,6 +142,19 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
 Cada proveedor declara su límite (`max_request_tokens` en `app/llm.py`), así que el
 orden se ajusta solo si se cambia de proveedor.
 
+## Estadísticas de uso (privadas)
+
+`GET /admin/stats` muestra, por día (UTC) y en total: mensajes respondidos, los que
+quedan del tope global, cuántos respondió cada proveedor, cuántas veces se usó el
+RAG, el plan B y la búsqueda por palabras clave, tiempos medios, mensajes bloqueados
+por cada límite y errores (por proveedor, 429, tiempo agotado, internos). No guarda
+preguntas, respuestas, IPs ni datos personales, y no aparece en `/docs`.
+
+- Se protege con `ADMIN_TOKEN` (al menos 20 caracteres). El navegador pide usuario y
+  contraseña: el usuario da igual y la contraseña es el token. Sin token, la página
+  no existe (404).
+- Como los límites, las estadísticas viven en memoria y se pierden al reiniciar.
+
 ## Seguridad de la web
 
 - Los datos y las respuestas del chat se pintan siempre con `textContent`, nunca
@@ -182,6 +198,9 @@ app/
 ├── retrieval.py  RAG: busca la información extra relacionada
 ├── keywords.py  Búsqueda por palabras clave (solo para el caso 4)
 ├── rate_limit.py  Límites de mensajes
+├── chat_limits.py  Valores de los límites (configurables por entorno)
+├── stats.py     Estadísticas de uso del chat (en memoria)
+├── admin.py     Página privada de estadísticas
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
 ├── seed.py      Datos iniciales del currículum

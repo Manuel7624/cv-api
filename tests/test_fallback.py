@@ -227,7 +227,7 @@ def test_stream_restarts_if_gemini_fails_halfway(client, providers, rag_on):
 
 def test_stream_has_the_same_limits_as_chat(client, providers, monkeypatch):
     from app import rate_limit
-    monkeypatch.setattr(rate_limit.chat_limits, "allow", lambda _ip: False)
+    monkeypatch.setattr(rate_limit.chat_limits, "check", lambda _ip: "per_minute")
     response = client.post("/chat/stream", json={"message": "Hola"})
     assert response.status_code == 429
     assert client.post("/chat/stream", json={"message": ""}).status_code == 422

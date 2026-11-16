@@ -18,3 +18,16 @@ services:
       # Render está detrás de Cloudflare, que escribe aquí la IP real.
       - key: CLIENT_IP_HEADER
         value: CF-Connecting-IP
+      # Página privada de estadísticas (/admin/stats). Sin valor, la página no existe.
+      # Usa un token largo y aleatorio (al menos 20 caracteres).
+      - key: ADMIN_TOKEN
+        sync: false
+      # Límites del chat. Para cambiarlos, edita el valor en el panel de Render.
+      - key: CHAT_MESSAGES_PER_MINUTE_PER_IP
+        value: "5"
+      - key: CHAT_MESSAGES_PER_DAY_PER_IP
+        value: "30"
+      - key: CHAT_MESSAGES_PER_DAY_TOTAL
+        value: "300"
+      - key: CHAT_MAX_MESSAGE_LENGTH
+        value: "500"

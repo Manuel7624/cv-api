@@ -1,0 +1,37 @@
+/* Estilos de la página privada de estadísticas (/admin/stats). */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.table {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 6px 10px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+th[scope="row"] {
+  text-align: left;
+  font-weight: normal;
+}

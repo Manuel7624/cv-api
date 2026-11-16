@@ -11,13 +11,14 @@ from collections.abc import Callable
 
 from fastapi import Request
 
+from app.chat_limits import (
+    MESSAGES_PER_DAY_PER_IP,
+    MESSAGES_PER_DAY_TOTAL,
+    MESSAGES_PER_MINUTE_PER_IP,
+)
+
 SECONDS_PER_MINUTE = 60
 SECONDS_PER_DAY = 24 * 60 * 60
-
-MESSAGES_PER_MINUTE_PER_IP = 5
-MESSAGES_PER_DAY_PER_IP = 30
-# Tope global: protege el cupo de los proveedores aunque lleguen muchas IP.
-MESSAGES_PER_DAY_TOTAL = 300
 
 
 class SlidingWindowLimiter:
@@ -46,9 +47,23 @@ class SlidingWindowLimiter:
             uses.append(now)
             return True
 
+    def remaining(self, key: str) -> int:
+        """Usos que le quedan a `key` en la ventana actual."""
+        now = self.clock()
+        with self.lock:
+            recent = sum(1 for use in self.uses.get(key, ()) if now - use < self.window_seconds)
+        return max(0, self.limit - recent)
+
     def reset(self) -> None:
         with self.lock:
             self.uses.clear()
+
+
+# Motivos por los que se bloquea un mensaje (los usan también las estadísticas).
+BLOCKED_PER_MINUTE = "per_minute"
+BLOCKED_PER_DAY = "per_day"
+BLOCKED_TOTAL = "total"
+TOTAL_KEY = "all"
 
 
 class ChatLimits:
@@ -59,8 +74,19 @@ class ChatLimits:
         self.per_day = SlidingWindowLimiter(MESSAGES_PER_DAY_PER_IP, SECONDS_PER_DAY)
         self.total = SlidingWindowLimiter(MESSAGES_PER_DAY_TOTAL, SECONDS_PER_DAY)
 
-    def allow(self, ip: str) -> bool:
-        return self.per_minute.allow(ip) and self.per_day.allow(ip) and self.total.allow("all")
+    def check(self, ip: str) -> str | None:
+        """Devuelve None si el mensaje está permitido, o el motivo del bloqueo."""
+        if not self.per_minute.allow(ip):
+            return BLOCKED_PER_MINUTE
+        if not self.per_day.allow(ip):
+            return BLOCKED_PER_DAY
+        if not self.total.allow(TOTAL_KEY):
+            return BLOCKED_TOTAL
+        return None
+
+    def remaining_total(self) -> int:
+        """Mensajes que quedan del tope global en las últimas 24 horas."""
+        return self.total.remaining(TOTAL_KEY)
 
     def reset(self) -> None:
         self.per_minute.reset()

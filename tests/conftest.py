@@ -17,6 +17,7 @@ from app.main import app
 from app import retrieval
 from app.rate_limit import chat_limits
 from app.seed import seed
+from app.stats import chat_stats
 
 
 @pytest.fixture
@@ -58,6 +59,9 @@ def isolate_chat(monkeypatch, tmp_path) -> Iterator[None]:
     monkeypatch.setattr(retrieval, "index", None)
     # Los tests nunca escriben en app/embeddings.json.
     monkeypatch.setattr(retrieval, "CACHE_PATH", tmp_path / "embeddings.json")
+    monkeypatch.delenv("ADMIN_TOKEN", raising=False)
     chat_limits.reset()
+    chat_stats.reset()
     yield
     chat_limits.reset()
+    chat_stats.reset()

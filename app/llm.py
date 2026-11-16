@@ -130,10 +130,25 @@ PROVIDERS = [
 RESTART = object()
 
 
+@dataclass
+class Attempt:
+    """Un intento con un proveedor, para los logs y las estadísticas."""
+
+    provider: str
+    seconds: float
+    first_text_seconds: float | None  # None si no llegó a enviar texto
+    error: str | None = None  # None si respondió bien
+
+    def describe(self) -> str:
+        if self.error is None:
+            return f"{self.provider} ok (primer texto {self.first_text_seconds:.2f} s) {self.seconds:.2f} s"
+        return f"{self.provider} falla ({self.error}) {self.seconds:.2f} s"
+
+
 def ask_providers(
     system_prompt: str | Callable[[Provider], str],
     conversation: list[dict[str, str]],
-    steps: list[str] | None = None,
+    attempts: list[Attempt] | None = None,
 ) -> Iterator[str | object]:
     """Prueba los proveedores en orden y devuelve a trozos la respuesta del primero
     que responde. Si ninguno responde, no devuelve ningún texto.
@@ -142,7 +157,7 @@ def ask_providers(
     las instrucciones de cada proveedor (por ejemplo, según su límite de tokens).
     Si un proveedor falla, se pasa al siguiente al momento, sin reintentos: también
     con un 429 (límite superado) o un 413 (petición demasiado grande).
-    En `steps` se apunta cada intento con su resultado y su duración, para los logs.
+    En `attempts` se apunta cada intento con su resultado y su duración.
     """
     for provider in PROVIDERS:
         prompt = system_prompt(provider) if callable(system_prompt) else system_prompt
@@ -155,15 +170,13 @@ def ask_providers(
                 yield text
         except ProviderError as error:
             logger.warning("El proveedor %s ha fallado: %s", provider.name, error)
-            note(steps, f"{provider.name} falla ({error})", start)
+            if attempts is not None:
+                attempts.append(
+                    Attempt(provider.name, time.perf_counter() - start, first_text, str(error))
+                )
             if first_text is not None:
                 yield RESTART
             continue
-        note(steps, f"{provider.name} ok (primer texto {first_text:.2f} s)", start)
+        if attempts is not None:
+            attempts.append(Attempt(provider.name, time.perf_counter() - start, first_text))
         return
-
-
-def note(steps: list[str] | None, text: str, start: float) -> None:
-    """Apunta un paso con los segundos que han pasado desde `start`."""
-    if steps is not None:
-        steps.append(f"{text} {time.perf_counter() - start:.2f} s")

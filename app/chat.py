@@ -10,13 +10,15 @@ import logging
 import math
 import time
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 
 from sqlalchemy.orm import Session
 
 from app import crud, keywords, retrieval
 from app.chat_limits import MAX_ANSWER_LENGTH
-from app.llm import MAX_ANSWER_TOKENS, RESTART, Provider, ask_providers, note
+from app.llm import MAX_ANSWER_TOKENS, RESTART, Attempt, Provider, ask_providers
 from app.schemas import ChatTurn
+from app.stats import chat_stats
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -272,27 +274,87 @@ def answer_question(db: Session, message: str, history: list[ChatTurn]) -> str:
     return join_answer(stream_answer(db, message, history))
 
 
+@dataclass
+class Trace:
+    """Camino que ha seguido una pregunta, para los logs y las estadísticas.
+
+    No guarda la pregunta, la respuesta ni nada de quien escribe.
+    """
+
+    search_seconds: float = 0.0
+    used_rag: bool = False
+    rag_attempts: list[Attempt] = field(default_factory=list)
+    used_plan_b: bool = False
+    plan_b_because_no_information: bool = False
+    used_keywords: bool = False
+    plan_b_attempts: list[Attempt] = field(default_factory=list)
+    answered_by: str | None = None  # proveedor de la respuesta final; None: ninguno
+
+    def describe(self) -> str:
+        search = "búsqueda RAG" if self.used_rag else "sin RAG"
+        parts = [f"{search} {self.search_seconds:.2f} s"]
+        if self.used_rag:
+            parts += ["RAG:", *(attempt.describe() for attempt in self.rag_attempts)]
+        if self.used_plan_b:
+            parts += ["plan B:", *(attempt.describe() for attempt in self.plan_b_attempts)]
+        return " | ".join(parts)
+
+    def record_stats(self) -> None:
+        if self.used_rag:
+            chat_stats.count("rag")
+        if self.used_plan_b:
+            chat_stats.count("plan_b")
+        if self.plan_b_because_no_information:
+            chat_stats.count("plan_b_no_information")
+        if self.used_keywords:
+            chat_stats.count("keywords")
+        chat_stats.count(f"answered_{self.answered_by}" if self.answered_by else "unanswered")
+        for attempt in [*self.rag_attempts, *self.plan_b_attempts]:
+            if attempt.error is None:
+                continue
+            chat_stats.count(f"errors_{attempt.provider}")
+            if "429" in attempt.error:
+                chat_stats.count("errors_429")
+            elif "Timeout" in attempt.error:
+                chat_stats.count("errors_timeout")
+
+
 def stream_answer(db: Session, message: str, history: list[ChatTurn]) -> Iterator[str | object]:
     """Respuesta a trozos, según se genera (la usa POST /chat/stream).
 
-    Devuelve textos y, si hay que empezar de nuevo, RESTART. Deja en los logs cuánto
-    ha tardado y qué camino ha seguido, sin la pregunta ni nada de quien la hace.
+    Devuelve textos y, si hay que empezar de nuevo, RESTART. Deja en los logs y en
+    las estadísticas cuánto ha tardado y qué camino ha seguido, sin la pregunta ni
+    nada de quien la hace.
     """
-    steps: list[str] = []
+    trace = Trace()
     start = time.perf_counter()
     first_text = None
+    finished = False
     try:
-        for event in limit_length(find_answer(db, message, history, steps)):
-            if first_text is None and event is not RESTART:
+        for event in limit_length(find_answer(db, message, history, trace)):
+            if event is RESTART:
+                chat_stats.count("restarts")
+            elif first_text is None:
                 first_text = time.perf_counter() - start
             yield event
+        finished = True
+    except Exception:
+        chat_stats.count("internal_errors")
+        raise
     finally:
+        total = time.perf_counter() - start
         logger.info(
             "Chat: %.2f s en total, primer texto a %s | %s",
-            time.perf_counter() - start,
+            total,
             "-" if first_text is None else f"{first_text:.2f} s",
-            " | ".join(steps),
+            trace.describe(),
         )
+        if finished:  # si el visitante cerró la página a medias, no cuenta
+            chat_stats.count("messages")
+            trace.record_stats()
+            chat_stats.add_time("total", total)
+            if first_text is not None:
+                chat_stats.add_time("first_text", first_text)
 
 
 # Con RAG, se guarda el principio de la respuesta antes de enviarlo: si dice que no
@@ -321,8 +383,15 @@ def relay_rag_answer(events: Iterator[str | object]):
     return text, sent
 
 
+def answered_by(attempts: list[Attempt]) -> str | None:
+    """Proveedor que respondió (el último intento, si no falló)."""
+    if attempts and attempts[-1].error is None:
+        return attempts[-1].provider
+    return None
+
+
 def find_answer(
-    db: Session, message: str, history: list[ChatTurn], steps: list[str]
+    db: Session, message: str, history: list[ChatTurn], trace: Trace
 ) -> Iterator[str | object]:
     """Responde siguiendo este orden de respaldo:
 
@@ -340,21 +409,24 @@ def find_answer(
     rag_answer = None
     search_start = time.perf_counter()
     selected = retrieval.select_extra_info(message, previous_questions)
-    note(steps, "búsqueda RAG" if selected is not None else "sin RAG", search_start)
+    trace.search_seconds = time.perf_counter() - search_start
     if selected is not None:
-        steps.append("RAG:")
-        events = ask_providers(build_system_prompt(db, selected), conversation, steps)
+        trace.used_rag = True
+        prompt = build_system_prompt(db, selected)
+        events = ask_providers(prompt, conversation, trace.rag_attempts)
         text, sent = yield from relay_rag_answer(events)
         if not text:
             yield fallback_message(email)
             return
         if not says_no_information(text):
+            trace.answered_by = answered_by(trace.rag_attempts)
             if not sent:
                 yield text
             return
         if sent:  # el "no lo sé" estaba al final: se borra lo mostrado
             yield RESTART
         rag_answer = text
+        trace.plan_b_because_no_information = True
         logger.info("Con RAG no había respuesta: se repite con toda la información")
 
     # Casos 3 y 4: toda la información a quien la admite; al resto, lo que quepa.
@@ -363,13 +435,19 @@ def find_answer(
     def prompt_for(provider: Provider) -> str:
         if provider.max_request_tokens is None:
             return build_system_prompt(db)
+        trace.used_keywords = True
         return prompt_that_fits(db, provider, query, conversation)
 
-    steps.append("plan B:")
+    trace.used_plan_b = True
     answered = False
-    for event in ask_providers(prompt_for, conversation, steps):
+    for event in ask_providers(prompt_for, conversation, trace.plan_b_attempts):
         answered = event is not RESTART
         yield event
-    if not answered:
+    if answered:
+        trace.answered_by = answered_by(trace.plan_b_attempts)
+    elif rag_answer is not None:
         # Mejor la respuesta del RAG ("no tengo esa información") que ninguna.
-        yield rag_answer if rag_answer is not None else fallback_message(email)  # caso 5
+        trace.answered_by = answered_by(trace.rag_attempts)
+        yield rag_answer
+    else:
+        yield fallback_message(email)  # caso 5

@@ -129,9 +129,10 @@ def test_timeouts_per_provider(monkeypatch):
     assert [c["provider"] for c in calls] == ["gemini", "groq"]
 
 
-def test_steps_record_each_attempt(monkeypatch):
+def test_each_attempt_is_recorded(monkeypatch):
     use_providers(monkeypatch, {"gemini": failure(429), "groq": ok("Hola")})
-    steps = []
-    ask("reglas", QUESTION, steps)
-    assert steps[0].startswith("gemini falla (respuesta 429)")
-    assert steps[1].startswith("groq ok (primer texto")
+    attempts = []
+    ask("reglas", QUESTION, attempts)
+    assert [(a.provider, a.error) for a in attempts] == [("gemini", "respuesta 429"), ("groq", None)]
+    assert attempts[0].describe().startswith("gemini falla (respuesta 429)")
+    assert attempts[1].describe().startswith("groq ok (primer texto")
