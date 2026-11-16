@@ -128,7 +128,8 @@ def test_sensitive_topics_have_fixed_answers_without_figures(client, fake_ai):
     sensitive_block = prompt.split("TEMAS DELICADOS (respuestas fijas")[1].split("DATOS (")[0]
     for item in fixed:
         assert as_in_prompt(item["answer"]) in sensitive_block
-    assert "no des ninguna cifra" in prompt
+    assert "Sueldo y nota media: responde con el texto de ese tema" in prompt
+    assert "aunque insistan" in prompt
 
 
 def test_extra_info_has_no_salary_or_grade_figures():

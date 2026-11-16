@@ -135,13 +135,13 @@ LANGUAGES = [
 # ninguna cifra y responde con ese texto.
 EXTRA_INFO = [
     {
-        "topic": "Temas que el chatbot NO debe responder con datos",
+        "topic": "Temas con respuesta fija",
         "question": "Expectativas salariales: sueldo o rango salarial que busco ahora (no el de las prácticas)",
         "answer": "Es algo que prefiero hablar directamente, porque depende del puesto, la modalidad y las condiciones. Puedes escribirme a mi correo y lo comentamos.",
         "fixed_answer": True,
     },
     {
-        "topic": "Temas que el chatbot NO debe responder con datos",
+        "topic": "Temas con respuesta fija",
         "question": "Nota media o calificaciones del grado",
         "answer": "Más que en la nota, durante el grado me centré en aprender y en que mis proyectos funcionaran bien. El resultado se puede ver en Balancea, mi proyecto final, y en este mismo proyecto.",
         "fixed_answer": True,
@@ -161,7 +161,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Cuál es tu punto débil?",
-        "answer": "Por naturaleza no soy la persona más organizada, así que en el trabajo me apoyo en métodos concretos. En las prácticas, por ejemplo, llevaba una lista con cada tarea dividida en fases y marcaba cada paso al completarlo, para tener siempre claro en qué punto estaba.",
+        "answer": "La organización es algo que trabajo de forma consciente, así que me apoyo en métodos concretos. En las prácticas, por ejemplo, llevaba una lista con cada tarea dividida en fases y marcaba cada paso al completarlo, para tener siempre claro en qué punto estaba.",
         "fixed_answer": False,
     },
     {
@@ -263,7 +263,7 @@ EXTRA_INFO = [
     {
         "topic": "Más sobre cómo trabajo",
         "question": "¿Carnet de conducir?",
-        "answer": "De momento no tengo carnet ni coche; me lo estoy sacando.",
+        "answer": "Ahora mismo me estoy sacando el carnet de conducir.",
         "fixed_answer": False,
     },
     {
@@ -275,7 +275,7 @@ EXTRA_INFO = [
     {
         "topic": "Más técnico",
         "question": "¿Has trabajado con metodologías ágiles?",
-        "answer": "Las vi en teoría en el grado. En Brainy no seguíamos Scrum de forma formal, pero trabajábamos de forma parecida: el responsable asignaba las tareas en una plataforma donde se veía su estado (en progreso, pausadas, terminadas), y teníamos dos reuniones semanales, los lunes para planificar la semana y los viernes para revisar cómo había ido.",
+        "answer": "Las vi en teoría en el grado. En Brainy no seguíamos Scrum de forma formal, pero trabajábamos de forma parecida: tareas asignadas en una plataforma con su estado y reuniones semanales para planificar y revisar.",
         "fixed_answer": False,
     },
     {
@@ -335,7 +335,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Cómo era el equipo?",
-        "answer": "Éramos unas seis personas, cada una con su área (frontend, CI/CD, backend…). Mi tutor de prácticas era el responsable de la empresa, y en el día a día me guiaba la desarrolladora backend, que era quien más me enseñaba y a quien consultaba mis dudas. En los últimos meses ya recibía mis tareas directamente a través de la plataforma de gestión de tareas del equipo.",
+        "answer": "Un equipo pequeño, de unas seis personas, cada una con su área (frontend, CI/CD, backend…). Tenía un tutor y compañeros a los que consultar mis dudas, y en los últimos meses recibía las tareas a través de la plataforma del equipo.",
         "fixed_answer": False,
     },
     {
@@ -365,7 +365,7 @@ EXTRA_INFO = [
     {
         "topic": "Balancea (proyecto final)",
         "question": "¿Qué mejorarías?",
-        "answer": "La mejora más importante, que además me señalaron en la defensa del proyecto, es poder eliminar o editar un movimiento si te equivocas al introducirlo. También guardaría las contraseñas cifradas en lugar de en texto plano, y añadiría copia de seguridad en la nube.",
+        "answer": "Poder editar o eliminar un movimiento, mejorar la seguridad de cómo se guardan las contraseñas y añadir copia en la nube.",
         "fixed_answer": False,
     },
     {
@@ -377,7 +377,7 @@ EXTRA_INFO = [
     {
         "topic": "Cómo trabajo",
         "question": "¿Qué haces cuando te atascas?",
-        "answer": "Intento verlo desde otra perspectiva y repasar todas las posibles soluciones antes de actuar. Si sigo atascado, pregunto: en las prácticas consultaba a mi compañera de backend.",
+        "answer": "Intento verlo desde otra perspectiva y repasar todas las posibles soluciones antes de actuar. Si sigo atascado, pregunto a un compañero, como hacía en las prácticas.",
         "fixed_answer": False,
     },
     {
@@ -485,7 +485,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Puedes trabajar en España o en la Unión Europea?",
-        "answer": "Sí. Tengo nacionalidad española, así que puedo trabajar en España y en cualquier país de la Unión Europea sin necesidad de visado ni permiso de trabajo.",
+        "answer": "Sí, puedo trabajar en España y en cualquier país de la UE sin visado ni permiso de trabajo.",
         "fixed_answer": False,
     },
     {
@@ -587,7 +587,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Dónde vives?",
-        "answer": "En Zaragoza capital.",
+        "answer": "En Zaragoza.",
         "fixed_answer": False,
     },
     {
