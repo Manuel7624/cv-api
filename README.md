@@ -65,8 +65,13 @@ seguidas, se salta durante 5 minutos para no esperar 10 segundos en cada pregunt
 y la web la va mostrando según se genera, siempre con `textContent`, nunca como HTML.
 Si un proveedor falla a mitad, o si el RAG acaba diciendo que no tiene el dato, se
 envía `data: {"restart": true}`: la web borra lo recibido y sigue con la respuesta
-nueva. Con RAG, los primeros 80 caracteres se retienen para comprobar si la respuesta
-es "no tengo esa información" y, en ese caso, pasar al plan B sin mostrarla.
+nueva: quita el texto a medias y vuelve a mostrar los tres puntos. Mientras la
+respuesta sigue llegando, un cursor parpadea detrás del texto, para que una respuesta
+parada a medias (por ejemplo, si Gemini deja de enviar trozos y a los 10 s entra la
+reserva) no parezca terminada; el lector de pantalla solo la anuncia al final. Con
+RAG, los primeros 80 caracteres se retienen para comprobar si la respuesta es "no lo
+tengo por aquí" o un rechazo por fuera de tema y, en ese caso, pasar al plan B sin
+mostrarla.
 `POST /chat` sigue devolviendo la respuesta completa de una vez (por ejemplo, para
 probarla desde `/docs`).
 
@@ -124,8 +129,9 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
   pregunta solo se calcula el de la pregunta.
 - Si cambias `EXTRA_INFO`, regenera los vectores con `python -m app.retrieval` (con
   las claves cargadas) y haz commit del archivo. Un test avisa si se te olvida.
-- Si la búsqueda falla o si la IA contesta que no tiene la información, se repite la
-  pregunta con toda la información (casos 3 y 4).
+- Si la búsqueda falla, o si la IA contesta que no tiene la información o rechaza la
+  pregunta por no tratar de mí, se repite con toda la información (casos 3 y 4):
+  puede que el dato estuviera en la parte que el RAG no envió.
 - Si el parecido es bajo (saludos, texto sin sentido, preguntas que no tratan de mí),
   se envían igualmente las 12 más parecidas: esos mensajes se responden con las
   reglas en una sola llamada, sin pasar al plan B.
@@ -149,21 +155,29 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
 Cada proveedor declara su límite (`max_request_tokens` en `app/llm.py`), así que el
 orden se ajusta solo si se cambia de proveedor.
 
-## Estadísticas de uso (privadas)
+## Estadísticas de uso y registro de preguntas (privados)
 
 `GET /admin/stats` muestra, por día (UTC) y en total: mensajes respondidos, los que
 quedan del tope global, cuántos respondió cada proveedor, cuántas veces se usó el
 RAG, el plan B y la búsqueda por palabras clave, tiempos medios, mensajes bloqueados
-por cada límite y errores (por proveedor, 429, tiempo agotado, internos). No guarda
-preguntas, respuestas, IPs ni datos personales, y no aparece en `/docs`.
+por cada límite y errores (por proveedor, 429, tiempo agotado, internos). No aparece
+en `/docs`.
+
+Debajo están las preguntas de los últimos 30 días, de 50 en 50: "Preguntas sin
+respuesta o rechazadas" (para ver qué falta en mis datos) y "Últimas preguntas". De
+cada una se guarda la pregunta, la respuesta, la fecha, el proveedor y si fue
+respondida, rechazada (fuera de tema), sin información o sin respuesta por fallo de
+los proveedores. Nunca la IP ni nada que identifique a quien pregunta. Las de más de
+30 días se borran solas (como mucho una vez por hora) y nunca se muestran. La web
+avisa debajo del chat de que las preguntas se guardan de forma anónima 30 días.
 
 - Se protege con `ADMIN_TOKEN` (al menos 20 caracteres). El navegador pide usuario y
   contraseña: el usuario da igual y la contraseña es el token. Sin token, la página
   no existe (404).
 - **Se guardan en PostgreSQL** (Neon, plan gratuito) si está definida
   `STATS_DATABASE_URL`, para que no se pierdan cuando Render reinicia o duerme el
-  servicio (`app/stats_store.py`). Solo esa tabla de contadores (día, nombre, valor) va
-  a PostgreSQL: el CV y el chat siguen en SQLite. El driver es `psycopg`.
+  servicio (`app/stats_store.py`). Solo van a PostgreSQL los contadores (día, nombre,
+  valor) y el registro de preguntas: el CV sigue en SQLite. El driver es `psycopg`.
 - El chat nunca espera a la base de datos: apunta en memoria y un hilo aparte envía
   lo pendiente cada 5 segundos (y al apagar). Si Neon no responde o la cadena es
   incorrecta, la web y el chat siguen igual, lo pendiente se guarda en cuanto vuelva
@@ -174,7 +188,7 @@ preguntas, respuestas, IPs ni datos personales, y no aparece en `/docs`.
 
 ## La web
 
-Una sola página (`app/static/index.html`, `styles.css` y `chat.js`, sin
+Una sola página (`app/static/index.html`, `styles.css`, `chat.js` y `contact.js`, sin
 frameworks): cabecera con foto y enlaces, el chat, el resumen del perfil, cómo está
 hecha la web y contacto. El móvil usa el mismo HTML; con `@media (max-width: 600px)`
 la foto se pone al lado del nombre y los botones pasan debajo del chat.
@@ -186,6 +200,11 @@ la foto se pone al lado del nombre y los botones pasan debajo del chat.
 - Accesibilidad: todo se usa con teclado y foco visible, zonas de toque de 44 px, el
   área de mensajes con `role="log"` y la respuesta anunciada entera al terminar (no
   palabra a palabra), y sin animaciones con `prefers-reduced-motion`.
+- "Enviar un correo" (`contact.js`): un `mailto:` solo funciona si el ordenador
+  tiene un programa de correo configurado, así que en el ordenador abre un menú con
+  Gmail, Outlook, otra app de correo o copiar la dirección (con `aria-expanded`,
+  flechas, Esc y clic fuera para cerrar). En el móvil (pantalla táctil y estrecha)
+  abre directamente el `mailto:`. Sin JavaScript queda el enlace `mailto:`.
 - Al compartir el enlace (LinkedIn, WhatsApp...) se ve `static/img/og-image.png`. Su
   URL tiene que ser completa: se toma de `PUBLIC_URL` si existe o de la petición.
 
