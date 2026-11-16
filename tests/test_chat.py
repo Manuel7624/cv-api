@@ -77,7 +77,7 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     assert "Manuel NO desarrolló la API de Brainy" in prompt
     assert "sí ha desarrollado la API REST de esta web" in prompt
     assert "dockerizó desde cero uno que no tenía nada de Docker" in prompt
-    assert 'Nunca digas que era "el único" worker sin Docker' in prompt
+    assert 'No uses nunca la palabra "único"' in prompt
     assert "Solo había UN worker" not in prompt
     assert "solo tiene nociones" in prompt
     assert "NO INVENTES NADA" in prompt
@@ -296,3 +296,38 @@ def test_rules_cover_messages_that_are_not_questions(client, fake_ai):
 def test_gibberish_answer_does_not_trigger_plan_b():
     """La frase de texto sin sentido no debe parecer un "no tengo esa información"."""
     assert not chat.says_no_information(chat.GIBBERISH_ANSWER)
+
+
+def test_rules_from_the_final_review(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    # Idioma de la pregunta, aunque los datos estén en español.
+    assert "Responde SIEMPRE en el idioma de la última pregunta" in prompt
+    # Gustos personales: frase cercana, no rechazo.
+    assert "Gustos personales que no están en DATOS" in prompt
+    # Nunca "único" ni "varios" al hablar de los workers dockerizados.
+    assert 'No uses nunca la palabra "único"' in prompt
+    assert "nunca digas que\n  dockerizó varios workers" in prompt
+    assert "¿Cuál fue el único worker sin Docker?" in prompt
+    # Lo que solo quiere aprender no se presenta como conocido.
+    assert "CI/CD, Kubernetes y despliegue en la nube" in prompt
+    assert "ni que se familiarizó con su arquitectura" in prompt
+    # El sueldo, aunque propongan cifras.
+    assert "propongan cifras" in prompt
+
+
+def test_partial_information_keeps_the_other_rules(client, db_session):
+    from app import llm
+
+    groq = next(p for p in llm.PROVIDERS if p.max_request_tokens)
+    prompt = chat.prompt_that_fits(db_session, groq, "¿Spring Boot?", [{"role": "user", "content": "¿Spring Boot?"}])
+    assert "Este aviso no cambia las demás" in prompt
+    assert "frase de tecnologías" in prompt
+
+
+@pytest.mark.parametrize(
+    "answer",
+    ["No hay información sobre si hice documentación.", "Eso no lo tengo por aquí, pero escríbeme."],
+)
+def test_cold_no_information_answers_count_as_no_information(answer):
+    assert chat.says_no_information(answer)

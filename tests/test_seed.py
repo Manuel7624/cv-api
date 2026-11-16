@@ -18,3 +18,14 @@ def test_foreign_keys_are_enforced(db_session):
     with pytest.raises(IntegrityError):
         db_session.commit()
     db_session.rollback()
+
+
+def test_extra_info_answers_are_short_plain_text():
+    """El chat responde en 100 palabras como mucho y sin Markdown: si los datos ya
+    cumplen eso, ningún proveedor los copia largos o con listas."""
+    from app.seed import EXTRA_INFO
+
+    for item in EXTRA_INFO:
+        assert len(item["answer"].split()) <= 100, item["question"]
+        assert "**" not in item["answer"], item["question"]
+        assert "\n- " not in item["answer"] and not item["answer"].startswith("- "), item["question"]

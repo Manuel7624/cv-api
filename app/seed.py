@@ -115,6 +115,7 @@ SKILLS = {
         "Visual Studio Code",
         "Consola",
         "Codex",
+        "Claude Code",
     ],
     "concepts": [
         "Programación orientada a objetos",
@@ -149,13 +150,13 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "Háblame de ti",
-        "answer": "Soy Manuel, Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, de Zaragoza, y busco mi primer puesto como desarrollador backend junior. En mis prácticas en Brainy Inteligencia Semántica trabajé con Python, Docker y GitLab refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker, y mi proyecto final fue Balancea, una app Android de finanzas personales en Java con SQLite. Ahora estoy reforzando Python y he creado este proyecto: una API REST con FastAPI, base de datos, Docker y tests, que sirve esta web y este chat. Lo que más me gusta de programar es la lógica y resolver problemas, y tengo muchas ganas de seguir aprendiendo dentro de un equipo.",
+        "answer": "Soy Manuel, Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, de Zaragoza, y busco mi primer puesto como desarrollador backend junior. En mis prácticas en Brainy Inteligencia Semántica trabajé con Python, Docker y GitLab: refactoricé varios workers que ya estaban dockerizados y dockericé desde cero uno que no tenía nada de Docker. Mi proyecto final fue Balancea, una app Android de finanzas personales en Java con SQLite. Ahora estoy reforzando Python y he creado este proyecto: una API REST con FastAPI que sirve esta web y este chat. Me gusta la lógica y quiero seguir aprendiendo en un equipo.",
         "fixed_answer": False,
     },
     {
         "topic": "Presentación",
         "question": "¿Cuáles son tus puntos fuertes?",
-        "answer": "- **Resolución de problemas:** me gusta que un reto me haga pensar; analizo el problema desde varias perspectivas y valoro las posibles soluciones antes de actuar.\n- **Trabajo en equipo:** llevo toda la vida jugando a deportes de equipo y es algo que se me da bien.\n- **Adaptación y aprendizaje:** si hay algo que no entiendo en un trabajo nuevo, busco información, exploro y pregunto hasta entenderlo. Me pasó en las prácticas con las APIs y Docker, que no había visto en el grado.",
+        "answer": "Lo primero, la resolución de problemas: me gusta que un reto me haga pensar, analizo el problema desde varias perspectivas y valoro las posibles soluciones antes de actuar. También el trabajo en equipo: llevo toda la vida jugando a deportes de equipo y es algo que se me da bien. Y la adaptación y el aprendizaje: si hay algo que no entiendo en un trabajo nuevo, busco información, exploro y pregunto hasta entenderlo, como me pasó en las prácticas con las APIs y Docker, que no había visto en el grado.",
         "fixed_answer": False,
     },
     {
@@ -167,7 +168,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Por qué deberían contratarte?",
-        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero y acabé refactorizando varios workers que ya estaban dockerizados y dockerizando desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo, desde la API hasta la web y el chat. También sé trabajar con herramientas de IA para programar con un método: primero entiendo el problema, pido un plan, tomo yo las decisiones, avanzo por pasos pequeños y reviso y pruebo todo lo que generan. La IA es una herramienta que dirijo y reviso, lo que me permite avanzar más rápido sin perder el control del código. Me adapto a la forma de trabajar de cada equipo, me tomo en serio la calidad de lo que entrego y tengo muchas ganas de crecer en la empresa.",
+        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero, refactoricé varios workers que ya estaban dockerizados y dockericé desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo (API, web y chat) trabajando con IA con un método: reviso los planes, decido yo y pruebo todo antes de darlo por bueno. Me tomo en serio la calidad y tengo muchas ganas de crecer en la empresa.",
         "fixed_answer": False,
     },
     {
@@ -323,7 +324,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué hiciste en las prácticas?",
-        "answer": "Empecé conociendo el funcionamiento general de la plataforma de Brainy. Mi primera prueba fue poner en marcha en mi portátil una versión anterior de su API, conectada a un frontal y a una base de datos de pruebas que me proporcionó la empresa, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar y optimizar varios workers en Python que ya estaban dockerizados, para que su código fuera más limpio y mantenible. Para cada worker, primero lo analizaba y adaptaba a él un prompt base, hacía la refactorización con Codex y revisaba lo que había generado. Después preparaba una prueba (por ejemplo, enviarle un documento de ejemplo y verificar que lo procesaba correctamente), comprobaba que funcionaba y, cuando todo estaba bien, subía los cambios a una nueva rama en GitLab desde la terminal. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
+        "answer": "Empecé conociendo la plataforma de Brainy: puse en marcha en mi portátil una versión anterior de su API, con un frontal y una base de datos de pruebas, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar varios workers en Python que ya estaban dockerizados: adaptaba un prompt base a cada uno, hacía la refactorización con Codex, revisaba el resultado, lo comprobaba con un script de prueba y subía los cambios a una rama nueva en GitLab. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
         "fixed_answer": False,
     },
     {
@@ -401,7 +402,7 @@ EXTRA_INFO = [
     {
         "topic": "Cómo trabajo",
         "question": "¿Usas IA para programar?",
-        "answer": "Sí, pero con un método, no de cualquier manera. Primero entiendo el problema. Le doy a la IA contexto y reglas claras desde el principio y le pido un plan sin que toque nada. Reviso y ajusto ese plan, y las decisiones las tomo yo. La implementación se hace por pasos pequeños, y reviso lo que ha hecho y lo verifico con pruebas antes de guardarlo. La IA es una herramienta que dirijo y reviso, no la dejo trabajar sola. La usé en las prácticas (con Codex) y en este proyecto (con Claude Code).",
+        "answer": "La uso con un método, no de cualquier manera. Primero entiendo el problema. Le doy a la IA contexto y reglas claras desde el principio y le pido un plan sin que toque nada. Reviso y ajusto ese plan, y las decisiones las tomo yo. La implementación se hace por pasos pequeños, y reviso lo que ha hecho y lo verifico con pruebas antes de guardarlo. La IA es una herramienta que dirijo y reviso, no la dejo trabajar sola. La usé en las prácticas (con Codex) y en este proyecto (con Claude Code).",
         "fixed_answer": False,
     },
     {
@@ -449,7 +450,7 @@ EXTRA_INFO = [
     {
         "topic": "Lo que busco",
         "question": "¿Qué tecnologías te gustaría aprender?",
-        "answer": "Quiero profundizar en lo que ya he empezado: diseño de APIs, Docker y Python. Además, me gustaría aprender bases de datos como PostgreSQL, testing, CI/CD y despliegue en la nube, y más adelante tecnologías como Kubernetes o Kafka.",
+        "answer": "Quiero profundizar en lo que ya he empezado: diseño de APIs, Docker, Python, bases de datos como PostgreSQL y testing, que ya uso en este proyecto. Además, me gustaría aprender CI/CD y despliegue en la nube, y más adelante tecnologías como Kubernetes o Kafka.",
         "fixed_answer": False,
     },
     {

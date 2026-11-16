@@ -45,6 +45,7 @@ def test_cv_matches_the_pdf(client):
     assert "Apoyo de Codex" in internship["highlights"][0]
     assert "comprobación mediante pruebas" in internship["highlights"][0]
     assert "Codex" in client.get("/skills").json()["tools"]
+    assert "Claude Code" in client.get("/skills").json()["tools"]
 
 
 def test_python_course_has_no_year(client):
