@@ -7,6 +7,9 @@ Se guardan dos cosas:
 - Las preguntas del chat con su respuesta, la fecha, el proveedor y cómo terminó,
   para ver qué falta en los datos. Se borran solas a los 30 días. Nunca la IP ni
   nada que identifique a quien pregunta.
+- Los usos de los límites del chat (hash con sal de la IP y hora), para que los
+  límites sobrevivan a los reinicios. Se borran cuando pasan 24 horas, que es cuando
+  dejan de contar para cualquier límite. Nunca la IP en claro.
 Los datos del CV siguen en SQLite (app/database.py).
 
 La cadena de conexión se lee de STATS_DATABASE_URL y no se muestra nunca: los
@@ -59,6 +62,14 @@ questions_table = Table(
     Column("status", String(16), nullable=False),  # ver QUESTION_STATUSES en app/stats.py
 )
 
+limit_uses_table = Table(
+    "chat_limit_uses",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("key", String(64), nullable=False),  # hash HMAC-SHA256 de la IP, o "all"
+    Column("used_at", DateTime(timezone=True), nullable=False, index=True),  # UTC
+)
+
 
 def make_engine(url: str) -> Engine:
     """Engine de SQLAlchemy con tiempos de espera cortos.
@@ -103,6 +114,8 @@ class StatsStore:
         deltas: dict[tuple[str, str], float],
         questions: list[dict] | None = None,
         delete_before: datetime | None = None,
+        limit_uses: list[dict] | None = None,
+        delete_limit_uses_before: datetime | None = None,
     ) -> None:
         """Guarda todo en una sola transacción: si falla, no se guarda nada y se
         puede repetir más tarde con los mismos datos.
@@ -110,8 +123,10 @@ class StatsStore:
         `deltas` asocia (día, nombre) con lo que hay que sumar a lo guardado.
         `questions` son preguntas nuevas (filas de questions_table, sin id).
         Si se indica `delete_before`, se borran las preguntas anteriores a esa fecha.
+        `limit_uses` son usos nuevos de los límites ({"key", "used_at"}) y
+        `delete_limit_uses_before` borra los que ya no cuentan.
         """
-        if not deltas and not questions and delete_before is None:
+        if not any((deltas, questions, delete_before, limit_uses, delete_limit_uses_before)):
             return
         self._ensure_table()
         with self.engine.begin() as connection:
@@ -135,6 +150,24 @@ class StatsStore:
                 connection.execute(
                     delete(questions_table).where(questions_table.c.asked_at < delete_before)
                 )
+            if limit_uses:
+                connection.execute(limit_uses_table.insert(), limit_uses)
+            if delete_limit_uses_before is not None:
+                connection.execute(
+                    delete(limit_uses_table).where(
+                        limit_uses_table.c.used_at < delete_limit_uses_before
+                    )
+                )
+
+    def limit_uses(self, since: datetime) -> list[tuple[str, datetime]]:
+        """Usos de los límites desde `since`: (clave, fecha)."""
+        self._ensure_table()
+        query = select(limit_uses_table.c.key, limit_uses_table.c.used_at).where(
+            limit_uses_table.c.used_at >= since
+        )
+        with self.engine.begin() as connection:
+            self._limit_time(connection)
+            return [(key, used_at) for key, used_at in connection.execute(query)]
 
     def questions(
         self, since: datetime, statuses: Iterable[str] | None, limit: int, offset: int

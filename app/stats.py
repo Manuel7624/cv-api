@@ -5,6 +5,9 @@
 - Registro de preguntas: cada pregunta con su respuesta, la fecha, el proveedor y
   cómo terminó (respondida, rechazada, sin información o error), para ver qué falta
   en los datos. Se conservan QUESTION_DAYS días y después se borran solas.
+- Usos de los límites del chat (ver app/rate_limit.py): solo un hash con sal de la
+  IP y la hora, para que los límites sobrevivan a los reinicios. Se borran a las
+  24 horas.
 Nunca se guarda la IP ni ningún dato que identifique a quien escribe.
 
 Si STATS_DATABASE_URL está definida, se guardan también en PostgreSQL (Neon, ver
@@ -34,6 +37,8 @@ QUESTION_DAYS = 30
 CLEANUP_SECONDS = 60 * 60
 # Preguntas que se guardan en memoria (sin base de datos, o mientras falla).
 MAX_QUESTIONS_IN_MEMORY = 1000
+# Horas que cuenta un uso para los límites (el más largo es el diario).
+LIMIT_USES_HOURS = 24
 
 # Cómo terminó cada pregunta y cómo se muestra en la página privada.
 QUESTION_STATUSES = {
@@ -96,6 +101,8 @@ class ChatStats:
         # Preguntas: las últimas en memoria y las que faltan por guardar.
         self.recent_questions: deque[dict] = deque(maxlen=MAX_QUESTIONS_IN_MEMORY)
         self.pending_questions: deque[dict] = deque(maxlen=MAX_QUESTIONS_IN_MEMORY)
+        # Usos de los límites que faltan por guardar: {"key", "used_at"}.
+        self.pending_limit_uses: deque[dict] = deque(maxlen=MAX_QUESTIONS_IN_MEMORY)
         self.last_cleanup: float | None = None  # time.monotonic() del último borrado
         # Para que el hilo y la página privada no envíen lo mismo a la vez.
         self.flush_lock = threading.Lock()
@@ -145,6 +152,14 @@ class ChatStats:
             if self.store is not None:
                 self.pending_questions.append(row)
 
+    def log_limit_use(self, key: str, when: float) -> None:
+        """Apunta un uso de los límites (hash de la IP, segundos) para guardarlo."""
+        with self.lock:
+            if self.store is not None:
+                self.pending_limit_uses.append(
+                    {"key": key, "used_at": datetime.fromtimestamp(when, timezone.utc)}
+                )
+
     # --- Base de datos ---
 
     def connect(self, url: str | None, flush_seconds: float = FLUSH_SECONDS) -> None:
@@ -180,17 +195,24 @@ class ChatStats:
             with self.lock:
                 batch = dict(self.pending)
                 questions = list(self.pending_questions)
+                limit_uses = list(self.pending_limit_uses)
             cleanup = (
                 self.last_cleanup is None
                 or time.monotonic() - self.last_cleanup >= CLEANUP_SECONDS
             )
-            if not batch and not questions and not cleanup:
+            if not batch and not questions and not limit_uses and not cleanup:
                 return True
             try:
                 self.store.add(
                     batch,
                     questions,
                     delete_before=self.questions_since() if cleanup else None,
+                    limit_uses=limit_uses,
+                    # Los usos que ya no cuentan se borran cada vez que se guardan
+                    # otros nuevos (y en la limpieza de cada hora).
+                    delete_limit_uses_before=(
+                        self.limit_uses_since() if cleanup or limit_uses else None
+                    ),
                 )
             except Exception as error:  # cualquier fallo de red o de la base de datos
                 self._set_connected(False, error)
@@ -201,6 +223,8 @@ class ChatStats:
                 # Las guardadas son las primeras; detrás puede haber otras nuevas.
                 for _ in questions:
                     self.pending_questions.popleft()
+                for _ in limit_uses:
+                    self.pending_limit_uses.popleft()
             if cleanup:
                 self.last_cleanup = time.monotonic()
         self._set_connected(True)
@@ -269,6 +293,28 @@ class ChatStats:
             "total": summary(total),
         }
 
+    def limit_uses_since(self) -> datetime:
+        """Fecha a partir de la cual un uso todavía cuenta para algún límite."""
+        return self.clock() - timedelta(hours=LIMIT_USES_HOURS)
+
+    def load_limit_uses(self) -> list[tuple[str, float]]:
+        """Usos de los límites guardados en las últimas 24 horas, como (clave,
+        segundos). Se usa al arrancar; si la base de datos falla, ninguno."""
+        if self.store is None:
+            return []
+        try:
+            rows = self.store.limit_uses(self.limit_uses_since())
+        except Exception as error:
+            self._set_connected(False, error)
+            return []
+        self._set_connected(True)
+        uses = []
+        for key, used_at in rows:
+            if used_at.tzinfo is None:  # SQLite devuelve las fechas sin zona horaria
+                used_at = used_at.replace(tzinfo=timezone.utc)
+            uses.append((key, used_at.timestamp()))
+        return uses
+
     def questions_since(self) -> datetime:
         """Fecha a partir de la cual se conservan las preguntas."""
         return self.clock() - timedelta(days=QUESTION_DAYS)
@@ -314,6 +360,7 @@ class ChatStats:
             self.pending.clear()
             self.recent_questions.clear()
             self.pending_questions.clear()
+            self.pending_limit_uses.clear()
             self.last_cleanup = None
 
 

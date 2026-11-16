@@ -5,6 +5,7 @@ Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -61,6 +62,12 @@ INDEX_HTML = (STATIC_DIR / "index.html").read_text(encoding="utf-8").replace(
     "{{MAX_MESSAGE_LENGTH}}", str(MAX_MESSAGE_LENGTH)
 )
 
+logger = logging.getLogger("uvicorn.error")
+
+# Cada mensaje permitido se apunta para guardarlo en la base de datos (si la hay),
+# en el hilo de las estadísticas: el chat nunca espera a la base de datos.
+chat_limits.on_use = chat_stats.log_limit_use
+
 # Cada ruta que declara este tipo recibe una sesión abierta para esa petición.
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -74,6 +81,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         seed(session)
         retrieval.build_index(crud.get_extra_info(session, fixed_answer=False))
     chat_stats.connect(os.getenv("STATS_DATABASE_URL"))
+    # Los límites del chat siguen donde estaban antes de reiniciar (si hay base de datos).
+    restored = chat_limits.restore(chat_stats.load_limit_uses())
+    if restored:
+        logger.info("Límites del chat: %d mensajes de las últimas 24 h recuperados", restored)
     yield
     chat_stats.close()
 

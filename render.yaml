@@ -26,6 +26,11 @@ services:
       # pierdan al reiniciar. Sin valor, las estadísticas quedan solo en memoria.
       - key: STATS_DATABASE_URL
         sync: false
+      # Sal secreta del hash de las IPs que guardan los límites del chat en
+      # PostgreSQL. La genera Render (aleatoria) y no hay que tocarla: si cambia,
+      # los límites por IP empiezan de cero.
+      - key: LIMITS_HASH_SALT
+        generateValue: true
       # Límites del chat. Para cambiarlos, edita el valor en el panel de Render.
       - key: CHAT_MESSAGES_PER_MINUTE_PER_IP
         value: "5"
