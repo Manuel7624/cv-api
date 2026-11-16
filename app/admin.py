@@ -186,8 +186,9 @@ def admin_stats(
 <body>
   <main>
     <h1>Estadísticas del chat</h1>
-    <p>Sin IPs ni datos de quien pregunta. Las preguntas se borran a los {QUESTION_DAYS} días.
-    Los días van en UTC.</p>
+    <p>Las preguntas se guardan de forma anónima, sin IPs, y se borran a los
+    {QUESTION_DAYS} días. Para los límites solo se guarda un hash de la IP, que se borra
+    a las 24 horas. Los días van en UTC.</p>
     <p class="notice {notice[0]}">{escape(notice[1])}</p>
     <h2>Límites</h2>
     <div class="table"><table><tbody>{limit_rows}</tbody></table></div>

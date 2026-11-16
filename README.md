@@ -100,8 +100,18 @@ Límites (por defecto): 5 mensajes por minuto y 30 al día por IP, 300 al día e
 total, y 500 caracteres por pregunta. Se cambian con variables de entorno, sin tocar
 el código: `CHAT_MESSAGES_PER_MINUTE_PER_IP`, `CHAT_MESSAGES_PER_DAY_PER_IP`,
 `CHAT_MESSAGES_PER_DAY_TOTAL` y `CHAT_MAX_MESSAGE_LENGTH` (ver `.env.example` y
-`render.yaml`). Un valor no válido detiene el arranque. Los contadores están en
-memoria, así que se reinician con el servicio.
+`render.yaml`). Un valor no válido detiene el arranque.
+
+Los contadores se consultan en memoria (el chat nunca espera a la base de datos),
+pero sobreviven a los reinicios: en Render el servicio gratuito se duerme a los 15
+minutos y arranca de cero, y sin esto cada reinicio daría otra vez todos los
+mensajes. Cada mensaje permitido se guarda en PostgreSQL (`chat_limit_uses`) desde
+el hilo de las estadísticas, y al arrancar se cargan los de las últimas 24 horas.
+Nunca se guarda la IP: solo un hash HMAC-SHA256 con la sal secreta
+`LIMITS_HASH_SALT` (Render la genera sola), que se borra cuando pasa 24 horas y ya no
+cuenta para ningún límite. Sin la sal, los límites por IP empiezan de cero en cada
+arranque, pero el tope global se conserva. Si la base de datos falla, todo sigue
+funcionando en memoria.
 
 Para entender preguntas de seguimiento ("¿y en Java?"), el navegador envía los
 últimos 6 mensajes junto con la pregunta nueva. El servidor no guarda nada: al
