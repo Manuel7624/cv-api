@@ -35,7 +35,8 @@ def test_chat_starts_with_the_welcome_and_the_ai_notice(client):
     assert "¡Hola! Soy la IA de Manuel. Pregúntame lo que quieras sobre él." in html
     assert (
         "Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; "
-        "no escribas datos personales."
+        "no escribas datos personales. Las preguntas se guardan de forma anónima 30 días "
+        "para mejorar el chat."
     ) in html
     assert html.count('class="suggestion"') == 4
 
@@ -128,7 +129,7 @@ def test_web_links_to_cv_github_and_docs(client):
     assert 'href="https://github.com/Manuel7624"' in html
     assert 'href="https://github.com/Manuel7624/Curriculum-Avanzado"' in html
     assert 'href="https://www.linkedin.com/in/manuel-sastre-naranjo"' in html
-    assert 'href="mailto:manusastrenar@gmail.com"' in html
+    assert 'href="mailto:manusastrenar@gmail.com?subject=Contacto%20desde%20tu%20web"' in html
     assert 'href="/docs"' in html
 
 
@@ -170,3 +171,27 @@ def test_chat_types_the_answer_as_text(client):
     assert "createTypewriter" in script
     assert "prefers-reduced-motion" in script
     assert "innerHTML" not in script and "insertAdjacentHTML" not in script
+
+
+def test_email_buttons_offer_a_menu_with_mailto_fallback(client):
+    html = client.get("/").text
+    assert html.count('<div class="email-menu') == 2
+    assert html.count('class="button email-link"') + html.count('class="button button-primary email-link"') == 2
+    assert '<script src="/static/contact.js" defer></script>' in html
+    script = client.get("/static/contact.js").text
+    for text in ("Gmail", "Outlook", "Otra app de correo", "Copiar dirección", "Correo copiado"):
+        assert text in script
+    assert "https://mail.google.com/mail/?view=cm&fs=1&to=" in script
+    assert "https://outlook.office.com/mail/deeplink/compose?to=" in script
+    assert 'item.rel = "noopener"' in script
+    assert '"aria-expanded"' in script and '"Escape"' in script
+    assert "(pointer: coarse)" in script
+    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval("):
+        assert sink not in script
+
+
+def test_unfinished_answers_show_a_caret_and_are_announced_at_the_end(client):
+    script = client.get("/static/chat.js").text
+    assert 'classList.add("streaming")' in script
+    assert script.index('classList.remove("streaming")') < script.index("announce(finalText)")
+    assert ".message-assistant.streaming .bubble::after" in client.get("/static/styles.css").text

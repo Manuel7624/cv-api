@@ -242,6 +242,82 @@ h1 {
   background: #dbe6ff;
 }
 
+/* Menú de "Enviar un correo" (lo crea contact.js). */
+.email-menu {
+  position: relative;
+  display: flex;
+}
+
+.email-menu > .button {
+  flex: 1;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.email-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 10;
+  min-width: 230px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(16, 24, 40, 0.14);
+}
+
+.email-menu-up .email-options {
+  top: auto;
+  bottom: calc(100% + 6px);
+  left: auto;
+  right: 0;
+}
+
+.email-options[hidden] {
+  display: none;
+}
+
+.email-options ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.email-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.email-option:hover {
+  color: var(--text);
+  background: var(--gray-soft);
+}
+
+.email-status {
+  margin: 0;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--green);
+}
+
+.email-status:not(:empty) {
+  padding: 6px 14px 8px;
+}
+
 /* --- Chat --- */
 
 .chat {
@@ -343,6 +419,25 @@ h1 {
 
 .typing span:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+/* Cursor que parpadea mientras la respuesta sigue llegando: así, si se para a
+   medias, no parece terminada. */
+.message-assistant.streaming .bubble::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: var(--text-muted);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes typing {
@@ -748,5 +843,9 @@ h1 {
   .typing span {
     animation: none;
     opacity: 0.6;
+  }
+
+  .message-assistant.streaming .bubble::after {
+    animation: none;
   }
 }

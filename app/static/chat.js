@@ -225,6 +225,11 @@ async function sendQuestion(question) {
   addUserMessage(text);
   const answer = addAssistantMessage();
   const typewriter = createTypewriter(answer);
+  // Mientras siga llegando, un cursor parpadea tras el texto (ver styles.css): si
+  // un proveedor se para a medias, el texto no parece una respuesta terminada.
+  // Si hay que cambiar de proveedor, llega un reinicio: el texto se quita y vuelven
+  // los tres puntos hasta que llegue la respuesta buena.
+  answer.message.classList.add("streaming");
 
   let finalText;
   try {
@@ -244,7 +249,9 @@ async function sendQuestion(question) {
     finalText = CONNECTION_ERROR_TEXT;
   }
 
+  answer.message.classList.remove("streaming");
   answer.setText(finalText);
+  // Solo ahora, con la respuesta completa de verdad, se anuncia al lector de pantalla.
   announce(finalText);
   waitingAnswer = false;
   chatSend.disabled = false;
