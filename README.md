@@ -54,8 +54,11 @@ El chat responde en primera persona, como si fuera yo, y la web avisa de forma
 visible de que es una IA que responde con mi información.
 
 El navegador llama a `POST /chat/stream` y es el backend quien habla con la IA, así
-que las claves nunca llegan a la web. Se usa Gemini y, si falla o tarda más de 10
-segundos, Groq. Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
+que las claves nunca llegan a la web. Se usa Gemini 3.5 Flash-Lite; si falla o tarda
+más de 10 segundos, Gemini 3.1 Flash-Lite (una versión estable anterior, con la misma
+clave), y si también falla, Groq. Si un proveedor agota el tiempo de espera 2 veces
+seguidas, se salta durante 5 minutos para no esperar 10 segundos en cada pregunta
+(si todos se están saltando, se prueban todos). Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
 `app/llm.py`.
 
 **Streaming:** la respuesta llega a trozos (server-sent events: `data: {"text": "..."}`)
@@ -129,10 +132,10 @@ pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 t
 
 ## Orden de respaldo del chat
 
-1. RAG con Gemini.
+1. RAG con Gemini (y, si falla, con la reserva de Gemini).
 2. RAG con Groq.
-3. Sin embeddings: Gemini con toda la información.
-4. Sin embeddings y con Gemini caído: Groq. Como no admite toda la información
+3. Sin embeddings: Gemini (o su reserva) con toda la información.
+4. Sin embeddings y con los dos Gemini caídos: Groq. Como no admite toda la información
    (límite de 8.000 tokens por petición), recibe las respuestas más relacionadas,
    ordenadas por palabras clave en el propio servidor (`app/keywords.py`), tantas
    como quepan. Sus instrucciones insisten en que, si no encuentra el dato, diga

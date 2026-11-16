@@ -312,6 +312,9 @@ class Trace:
         for attempt in [*self.rag_attempts, *self.plan_b_attempts]:
             if attempt.error is None:
                 continue
+            if attempt.skipped:
+                chat_stats.count(f"skipped_{attempt.provider}")
+                continue
             chat_stats.count(f"errors_{attempt.provider}")
             if "429" in attempt.error:
                 chat_stats.count("errors_429")
@@ -395,9 +398,10 @@ def find_answer(
 ) -> Iterator[str | object]:
     """Responde siguiendo este orden de respaldo:
 
-    1. RAG con Gemini.  2. RAG con Groq.
-    3. Sin embeddings (o si el RAG no encuentra el dato): Gemini con toda la información.
-    4. Si además Gemini falla: Groq con lo más relacionado por palabras clave.
+    1. RAG con Gemini (si falla, con la reserva de Gemini).  2. RAG con Groq.
+    3. Sin embeddings (o si el RAG no encuentra el dato): Gemini (o su reserva) con
+       toda la información.
+    4. Si además los dos Gemini fallan: Groq con lo más relacionado por palabras clave.
     5. Si todo falla: mensaje amable con el correo.
     """
     conversation = [turn.model_dump() for turn in history]

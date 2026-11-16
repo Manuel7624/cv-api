@@ -10,27 +10,29 @@ from collections import Counter
 from collections.abc import Callable
 from datetime import datetime, timezone
 
+from app.llm import PROVIDERS
+
 # Días que se conservan; los más antiguos se borran para no ocupar memoria.
 DAYS_KEPT = 90
 
-# Nombre de cada contador y cómo se muestra en la página de estadísticas.
+# Nombre de cada contador y cómo se muestra en la página de estadísticas. Los de
+# cada proveedor salen de la lista PROVIDERS, así que se ajustan si cambia.
 COUNTERS = {
     "messages": "Mensajes respondidos",
     "blocked_per_minute": "Bloqueados por el límite por minuto (por IP)",
     "blocked_per_day": "Bloqueados por el límite diario (por IP)",
     "blocked_total": "Bloqueados por el tope global",
-    "answered_gemini": "Respondidos por Gemini",
-    "answered_groq": "Respondidos por Groq",
+    **{f"answered_{p.name}": f"Respondidos por {p.label}" for p in PROVIDERS},
     "unanswered": "Sin respuesta de ningún proveedor (mensaje con el correo)",
     "rag": "Con búsqueda RAG",
     "plan_b": "Con plan B (toda la información)",
     "plan_b_no_information": "Plan B porque el RAG no tenía el dato",
     "keywords": "Con búsqueda por palabras clave (Groq)",
     "restarts": "Respuestas reiniciadas a mitad",
-    "errors_gemini": "Errores de Gemini",
-    "errors_groq": "Errores de Groq",
+    **{f"errors_{p.name}": f"Errores de {p.label}" for p in PROVIDERS},
     "errors_429": "Errores por límite del proveedor (429)",
     "errors_timeout": "Errores por tiempo de espera agotado",
+    **{f"skipped_{p.name}": f"Veces que se saltó {p.label} por timeouts seguidos" for p in PROVIDERS},
     "internal_errors": "Errores internos del servidor",
 }
 

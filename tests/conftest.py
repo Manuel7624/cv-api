@@ -14,7 +14,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-from app import retrieval
+from app import llm, retrieval
 from app.rate_limit import chat_limits
 from app.seed import seed
 from app.stats import chat_stats
@@ -62,6 +62,7 @@ def isolate_chat(monkeypatch, tmp_path) -> Iterator[None]:
     monkeypatch.delenv("ADMIN_TOKEN", raising=False)
     chat_limits.reset()
     chat_stats.reset()
+    llm.provider_health.reset()
     yield
     chat_limits.reset()
     chat_stats.reset()

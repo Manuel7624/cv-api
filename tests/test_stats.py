@@ -14,7 +14,7 @@ QUESTION = "¿Tienes una pregunta muy personal llamada Toby?"
 
 @pytest.fixture
 def providers(monkeypatch):
-    script = {"gemini": [], "groq": []}
+    script = {"gemini": [], "gemini_backup": [], "groq": []}
     use_fake_stream(monkeypatch, lambda name: script[name].pop(0) if script[name] else failure())
     return script
 
@@ -159,3 +159,16 @@ def test_index_uses_the_configured_message_length(client):
     page = client.get("/").text
     assert f'maxlength="{chat_limits.MAX_MESSAGE_LENGTH}"' in page
     assert "{{" not in page
+
+
+def test_counts_skipped_providers(client, providers, monkeypatch):
+    from app import llm
+
+    for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING):
+        llm.provider_health.record("gemini", "ReadTimeout")
+    providers["gemini_backup"].append(ok("De la reserva"))
+    ask(client)
+    stats = total()
+    assert stats["skipped_gemini"] == 1
+    assert stats["errors_gemini"] == 0
+    assert stats["answered_gemini_backup"] == 1

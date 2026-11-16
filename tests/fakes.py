@@ -34,6 +34,16 @@ def failure(status_code=500):
     return httpx.Response(status_code, request=httpx.Request("POST", "https://x.test"))
 
 
+def provider_name(url, model):
+    """Nombre del proveedor de llm.PROVIDERS al que va la petición."""
+    from app import llm
+
+    for provider in llm.PROVIDERS:
+        if provider.url == url and provider.model == model:
+            return provider.name
+    return "groq" if "groq" in url else "gemini"
+
+
 def use_fake_stream(monkeypatch, answer_for):
     """Sustituye httpx.stream. `answer_for(name)` da la respuesta de cada proveedor
     (una httpx.Response o una excepción). Devuelve la lista de llamadas."""
@@ -41,7 +51,7 @@ def use_fake_stream(monkeypatch, answer_for):
 
     @contextmanager
     def fake_stream(method, url, **kwargs):
-        name = "groq" if "groq" in url else "gemini"
+        name = provider_name(url, kwargs["json"]["model"])
         calls.append({
             "provider": name,
             "url": url,

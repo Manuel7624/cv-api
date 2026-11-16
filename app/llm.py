@@ -10,6 +10,7 @@ Las claves se leen de variables de entorno y solo se usan aquí, en el backend.
 import json
 import logging
 import os
+import threading
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -37,6 +38,8 @@ class Provider:
     # Tokens máximos por petición (instrucciones + conversación + respuesta).
     # None: sin un límite que nos afecte, admite toda la información.
     max_request_tokens: int | None = None
+    # Nombre para mostrar en la página de estadísticas.
+    label: str = ""
 
     def stream(self, system_prompt: str, conversation: list[dict[str, str]]) -> Iterator[str]:
         """Envía la conversación al proveedor y devuelve su respuesta a trozos, según
@@ -103,18 +106,34 @@ def chunk_text(chunk: dict) -> str:
     return text
 
 
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+
 PROVIDERS = [
     Provider(
         name="gemini",
-        url="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        label="Gemini 3.5 Flash-Lite",
+        url=GEMINI_URL,
         api_key_env="GEMINI_API_KEY",
         model="gemini-3.5-flash-lite",
         extra_params={"reasoning_effort": "minimal"},
         # Si tarda más de 10 segundos, es mejor pasar al siguiente proveedor.
         timeout_seconds=10,
     ),
+    # Reserva de Gemini: otra versión, estable, con la misma clave y el mismo cupo
+    # gratuito. Si el modelo principal va lento o se cae, responde con la misma
+    # información (sin el límite de tokens de Groq).
+    Provider(
+        name="gemini_backup",
+        label="Gemini 3.1 Flash-Lite (reserva)",
+        url=GEMINI_URL,
+        api_key_env="GEMINI_API_KEY",
+        model="gemini-3.1-flash-lite",
+        extra_params={"reasoning_effort": "minimal"},
+        timeout_seconds=10,
+    ),
     Provider(
         name="groq",
+        label="Groq",
         url="https://api.groq.com/openai/v1/chat/completions",
         api_key_env="GROQ_API_KEY",
         model="openai/gpt-oss-120b",
@@ -124,10 +143,58 @@ PROVIDERS = [
     ),
 ]
 
+# Si un proveedor agota el tiempo de espera varias veces seguidas, se salta durante
+# un rato: así no se esperan 10 segundos en cada pregunta mientras va lento.
+TIMEOUTS_BEFORE_SKIPPING = 2
+SKIP_SECONDS = 5 * 60
+
+
+class ProviderHealth:
+    """Cuenta los timeouts seguidos de cada proveedor y dice si hay que saltarlo.
+
+    Pasados SKIP_SECONDS se vuelve a probar: si responde, se olvidan sus timeouts;
+    si vuelve a agotar el tiempo, se salta otra vez.
+    """
+
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
+        self.clock = clock
+        self.lock = threading.Lock()
+        self.timeouts: dict[str, int] = {}
+        self.skip_until: dict[str, float] = {}
+
+    def should_skip(self, name: str) -> bool:
+        with self.lock:
+            return self.clock() < self.skip_until.get(name, 0.0)
+
+    def record(self, name: str, error: str | None) -> None:
+        """Apunta el resultado de un intento (error None: ha respondido)."""
+        with self.lock:
+            if error is None or "Timeout" not in error:
+                # Otros errores (429, 500...) no hacen esperar: no cuentan.
+                if error is None:
+                    self.timeouts.pop(name, None)
+                    self.skip_until.pop(name, None)
+                return
+            self.timeouts[name] = self.timeouts.get(name, 0) + 1
+            if self.timeouts[name] >= TIMEOUTS_BEFORE_SKIPPING:
+                self.skip_until[name] = self.clock() + SKIP_SECONDS
+                logger.warning(
+                    "El proveedor %s se salta %d s por timeouts seguidos", name, SKIP_SECONDS
+                )
+
+    def reset(self) -> None:
+        with self.lock:
+            self.timeouts.clear()
+            self.skip_until.clear()
+
+
+provider_health = ProviderHealth()
 
 # Señal que envía ask_providers cuando un proveedor falla a mitad de respuesta: lo
 # recibido hasta entonces se descarta y la respuesta empieza de nuevo con el siguiente.
 RESTART = object()
+
+SKIPPED = "saltado por timeouts seguidos"
 
 
 @dataclass
@@ -139,9 +206,15 @@ class Attempt:
     first_text_seconds: float | None  # None si no llegó a enviar texto
     error: str | None = None  # None si respondió bien
 
+    @property
+    def skipped(self) -> bool:
+        return self.error == SKIPPED
+
     def describe(self) -> str:
         if self.error is None:
             return f"{self.provider} ok (primer texto {self.first_text_seconds:.2f} s) {self.seconds:.2f} s"
+        if self.skipped:
+            return f"{self.provider} {SKIPPED}"
         return f"{self.provider} falla ({self.error}) {self.seconds:.2f} s"
 
 
@@ -157,9 +230,19 @@ def ask_providers(
     las instrucciones de cada proveedor (por ejemplo, según su límite de tokens).
     Si un proveedor falla, se pasa al siguiente al momento, sin reintentos: también
     con un 429 (límite superado) o un 413 (petición demasiado grande).
+    Un proveedor con varios timeouts seguidos se salta un rato (ver ProviderHealth),
+    salvo que todos los siguientes también se estén saltando.
     En `attempts` se apunta cada intento con su resultado y su duración.
     """
-    for provider in PROVIDERS:
+    for index, provider in enumerate(PROVIDERS):
+        later = PROVIDERS[index + 1:]
+        if provider_health.should_skip(provider.name) and any(
+            not provider_health.should_skip(other.name) for other in later
+        ):
+            if attempts is not None:
+                attempts.append(Attempt(provider.name, 0.0, None, SKIPPED))
+            continue
+
         prompt = system_prompt(provider) if callable(system_prompt) else system_prompt
         start = time.perf_counter()
         first_text = None
@@ -170,6 +253,7 @@ def ask_providers(
                 yield text
         except ProviderError as error:
             logger.warning("El proveedor %s ha fallado: %s", provider.name, error)
+            provider_health.record(provider.name, str(error))
             if attempts is not None:
                 attempts.append(
                     Attempt(provider.name, time.perf_counter() - start, first_text, str(error))
@@ -177,6 +261,7 @@ def ask_providers(
             if first_text is not None:
                 yield RESTART
             continue
+        provider_health.record(provider.name, None)
         if attempts is not None:
             attempts.append(Attempt(provider.name, time.perf_counter() - start, first_text))
         return
