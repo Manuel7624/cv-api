@@ -121,8 +121,9 @@ def test_admin_page_shows_stats_and_questions_without_the_ip(client, providers, 
     page = response.text
     for label in COUNTERS.values():
         assert label in page
-    assert "Mensajes que quedan del tope global" in page
-    assert f"{limits.remaining_total()} de {chat_limits.MESSAGES_PER_DAY_TOTAL}" in page
+    assert "Mensajes usados del tope global" in page
+    used = chat_limits.MESSAGES_PER_DAY_TOTAL - limits.remaining_total()
+    assert f"{used} de {chat_limits.MESSAGES_PER_DAY_TOTAL}" in page
     # La pregunta y su respuesta salen en el registro; la IP, nunca.
     assert "Toby" in page
     assert "Respuesta de Gemini" in page

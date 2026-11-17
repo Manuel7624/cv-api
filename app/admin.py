@@ -22,6 +22,7 @@ import secrets
 import threading
 import time
 from collections import deque
+from datetime import date, timedelta
 from collections.abc import Callable
 from html import escape
 from typing import Annotated
@@ -150,6 +151,62 @@ def format_value(value) -> str:
     return str(value)
 
 
+DAILY_DAYS = 30
+SUMMARY_DAYS = 7
+
+
+def daily_row(values: dict) -> list[int]:
+    """Columnas de la tabla por días a partir de los contadores de un día (o de una
+    suma de días): mensajes, sin información, errores y respondidos por cada
+    proveedor. Los errores son los mensajes que ningún proveedor pudo responder y los
+    fallos internos; Groq sale sin los que fueron con palabras clave."""
+    keywords = values["answered_groq_keywords"]
+    return [
+        values["messages"],
+        values["no_information"],
+        values["unanswered"] + values["internal_errors"],
+        values["answered_gemini"],
+        values["answered_gemini_backup"],
+        max(0, values["answered_groq"] - keywords),
+        keywords,
+    ]
+
+
+def daily_table(snapshot: dict, today: date) -> str:
+    """Mensajes por día de los últimos 30 días, con un resumen de los últimos 7 y 30.
+
+    Sale de los mismos contadores del snapshot (una sola consulta a la base de datos):
+    no hace ninguna consulta más."""
+    days = [(today - timedelta(days=offset)).isoformat() for offset in range(DAILY_DAYS)]
+    empty = {name: 0 for name in COUNTERS}
+    rows = {day: daily_row(snapshot["days"].get(day, empty)) for day in days}
+
+    def total(selected: list[str]) -> list[int]:
+        return [sum(column) for column in zip(*(rows[day] for day in selected))]
+
+    header = (
+        "<th scope='col'>Día (UTC)</th><th scope='col'>Mensajes</th>"
+        "<th scope='col'>Sin información</th><th scope='col'>Errores</th>"
+        "<th scope='col'>Gemini 3.5</th><th scope='col'>Gemini 3.1 (reserva)</th>"
+        "<th scope='col'>Groq</th><th scope='col'>Groq (palabras clave)</th>"
+    )
+
+    def line(label: str, values: list[int], css: str = "") -> str:
+        cells = "".join(f"<td>{value}</td>" for value in values)
+        return f"<tr{css}><th scope='row'>{escape(label)}</th>{cells}</tr>"
+
+    body = [
+        line(f"Últimos {SUMMARY_DAYS} días", total(days[:SUMMARY_DAYS]), " class='summary'"),
+        line(f"Últimos {DAILY_DAYS} días", total(days), " class='summary'"),
+    ]
+    for index, day in enumerate(days):
+        body.append(line(f"{day} (hoy)" if index == 0 else day, rows[day]))
+    return (
+        "<div class='table'><table class='daily'>"
+        f"<thead><tr>{header}</tr></thead><tbody>{''.join(body)}</tbody></table></div>"
+    )
+
+
 def stats_table(snapshot: dict) -> str:
     """Tabla con una fila por estadística y una columna para el total y cada día."""
     columns = [("Total", snapshot["total"])] + list(snapshot["days"].items())
@@ -242,9 +299,10 @@ def admin_stats(
 ) -> HTMLResponse:
     snapshot = chat_stats.snapshot()
     notice = storage_notice(snapshot)
+    used_today = MESSAGES_PER_DAY_TOTAL - chat_limits.remaining_total()
     limits = [
-        ("Mensajes que quedan del tope global (últimas 24 h)",
-         f"{chat_limits.remaining_total()} de {MESSAGES_PER_DAY_TOTAL}"),
+        ("Mensajes usados del tope global (últimas 24 h)",
+         f"{used_today} de {MESSAGES_PER_DAY_TOTAL}"),
         ("Límite por IP y minuto", MESSAGES_PER_MINUTE_PER_IP),
         ("Límite por IP y día", MESSAGES_PER_DAY_PER_IP),
         ("Longitud máxima de la pregunta", f"{MAX_MESSAGE_LENGTH} caracteres"),
@@ -271,11 +329,16 @@ def admin_stats(
     <h1>Estadísticas del chat</h1>
     <p>Las preguntas se guardan de forma anónima, sin IPs, y se borran a los
     {QUESTION_DAYS} días. Para los límites solo se guarda un hash de la IP, que se borra
-    a las 24 horas. Los días van en UTC.</p>
+    a las 24 horas. <strong>Todas las horas y los días de este panel están en UTC</strong>
+    (en España, una o dos horas menos que la hora local según la época del año).</p>
     <p class="notice {notice[0]}">{escape(notice[1])}</p>
+    <p class="cap">Tope global de mensajes: <strong>{used_today} de {MESSAGES_PER_DAY_TOTAL}</strong>
+    usados en las últimas 24 horas.</p>
+    <h2>Mensajes por día (últimos {DAILY_DAYS} días, UTC)</h2>
+    {daily_table(snapshot, chat_stats.clock().date())}
     <h2>Límites</h2>
     <div class="table"><table><tbody>{limit_rows}</tbody></table></div>
-    <h2>Uso</h2>
+    <h2>Detalle por contador</h2>
     {stats_table(snapshot)}
     {questions_section("Preguntas sin respuesta o rechazadas", "missing", "missing_page",
                        missing_page, {"latest_page": latest_page}, MISSING_STATUSES)}

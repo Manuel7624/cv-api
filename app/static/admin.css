@@ -71,3 +71,18 @@ table.questions td.nowrap {
   gap: 16px;
   flex-wrap: wrap;
 }
+
+/* Tabla de mensajes por día: los resúmenes (7 y 30 días) destacan. */
+table.daily tr.summary th,
+table.daily tr.summary td {
+  font-weight: 700;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.cap {
+  font-size: 1.05rem;
+}
+
+table.daily thead th:first-child {
+  text-align: left;
+}

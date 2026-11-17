@@ -418,6 +418,8 @@ class Trace:
         if self.used_keywords:
             chat_stats.count("keywords")
         chat_stats.count(f"answered_{self.answered_by}" if self.answered_by else "unanswered")
+        if self.answered_by == "groq" and self.used_keywords:
+            chat_stats.count("answered_groq_keywords")  # Groq con palabras clave, aparte
         for attempt in [*self.rag_attempts, *self.plan_b_attempts]:
             if attempt.error is None:
                 continue
@@ -473,9 +475,10 @@ def stream_answer(db: Session, message: str, history: list[ChatTurn]) -> Iterato
             if first_text is not None:
                 chat_stats.add_time("first_text", first_text)
             answer = answer.strip()
-            chat_stats.log_question(
-                message, answer, logged_provider(trace), answer_status(answer, trace.answered_by)
-            )
+            status = answer_status(answer, trace.answered_by)
+            if status == "no_information":
+                chat_stats.count("no_information")
+            chat_stats.log_question(message, answer, logged_provider(trace), status)
 
 
 KEYWORDS_PROVIDER = "groq_keywords"

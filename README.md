@@ -173,6 +173,14 @@ RAG, el plan B y la búsqueda por palabras clave, tiempos medios, mensajes bloqu
 por cada límite y errores (por proveedor, 429, tiempo agotado, internos). No aparece
 en `/docs`.
 
+Arriba del todo hay un indicador del tope global ("87 de 300" mensajes usados en las
+últimas 24 horas) y una tabla de mensajes por día de los últimos 30 días, con un
+resumen de los últimos 7 y de los 30: mensajes, sin información, errores (los que
+ningún proveedor pudo responder y los fallos internos) y cuántos respondió cada
+proveedor (Gemini 3.5, Gemini 3.1 de reserva, Groq y Groq con palabras clave). Sale de
+los mismos contadores del panel, sin ninguna consulta más a Neon. Las horas y los días
+van en UTC, y el panel lo indica.
+
 Debajo están las preguntas de los últimos 30 días, de 50 en 50: "Preguntas sin
 respuesta o rechazadas" (para ver qué falta en mis datos) y "Últimas preguntas". De
 cada una se guarda la pregunta, la respuesta, la fecha, el proveedor y si fue
