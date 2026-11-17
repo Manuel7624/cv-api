@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -42,6 +42,7 @@ from app.stats import chat_stats
 STATIC_DIR = Path(__file__).parent / "static"
 # Windows no siempre conoce el tipo de las fuentes woff2.
 mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("image/x-icon", ".ico")
 
 # Cabeceras de seguridad para todas las respuestas.
 # Solo se permiten scripts, estilos y peticiones de esta misma web: aunque se
@@ -115,6 +116,25 @@ async def add_security_headers(request: Request, call_next):
     if not request.url.path.startswith(PATHS_WITHOUT_CSP):
         response.headers["Content-Security-Policy"] = CONTENT_SECURITY_POLICY
     return response
+
+
+# Algunos navegadores (y el móvil al guardar la web en la pantalla de inicio) piden
+# estos iconos en la raíz aunque la página indique otra ruta.
+ROOT_ICONS = {
+    "/favicon.ico": ("favicon.ico", "image/x-icon"),
+    "/apple-touch-icon.png": ("apple-touch-icon.png", "image/png"),
+}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+def root_icon(request: Request) -> FileResponse:
+    name, media_type = ROOT_ICONS[request.url.path]
+    return FileResponse(
+        STATIC_DIR / "img" / name,
+        media_type=media_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/", include_in_schema=False)

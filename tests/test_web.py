@@ -140,6 +140,10 @@ def test_web_links_to_cv_github_and_docs(client):
         ("/static/styles.css", "text/css"),
         ("/static/img/manuel-sastre.jpg", "image/jpeg"),
         ("/static/img/favicon.svg", "image/svg+xml"),
+        ("/static/img/favicon.ico", "image/x-icon"),
+        ("/static/img/apple-touch-icon.png", "image/png"),
+        ("/favicon.ico", "image/x-icon"),
+        ("/apple-touch-icon.png", "image/png"),
         ("/static/img/og-image.png", "image/png"),
         ("/static/fonts/plus-jakarta-sans-latin.woff2", "font/woff2"),
     ],
@@ -209,3 +213,32 @@ def test_web_shows_the_ai_work_method(client):
     assert "<li>Claude Code</li>" in card and "<li>Codex</li>" in card
     assert 'data-question="¿Cómo usas la IA para programar?"' in html
     assert "¿Cuál es tu disponibilidad?" not in html
+
+
+def test_favicon_is_the_chat_bubble_with_the_ai_sparkle(client):
+    svg = client.get("/static/img/favicon.svg").text
+    assert '<rect width="32" height="32" rx="7" fill="#1d4ed8"/>' in svg
+    assert 'fill="#fff"' in svg  # el bocadillo blanco
+    assert "<text" not in svg  # ya no es la "M"
+
+
+def test_every_page_links_the_icons(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_TOKEN", "token-de-prueba-muy-largo-123")
+    pages = [client.get("/").text, client.get("/admin/stats", auth=("x", "token-de-prueba-muy-largo-123")).text]
+    for html in pages:
+        assert '<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">' in html
+        assert '<link rel="icon" href="/static/img/favicon.ico" sizes="16x16 32x32">' in html
+        assert '<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">' in html
+
+
+def test_icon_files_have_the_right_sizes(client):
+    import struct
+
+    ico = client.get("/favicon.ico").content
+    reserved, kind, count = struct.unpack("<HHH", ico[:6])
+    sizes = sorted(ico[6 + 16 * i] for i in range(count))
+    assert (reserved, kind, sizes) == (0, 1, [16, 32])
+    png = client.get("/apple-touch-icon.png").content
+    assert png[1:4] == b"PNG"  # firma de un archivo PNG
+    assert struct.unpack(">II", png[16:24]) == (180, 180)
+    assert "/favicon.ico" not in client.get("/openapi.json").text
