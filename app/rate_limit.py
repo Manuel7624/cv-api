@@ -4,7 +4,9 @@ Los contadores se consultan en memoria, así que comprobar un límite nunca espe
 la base de datos. Para que sobrevivan a los reinicios (en Render, el servicio se
 duerme a los 15 minutos sin visitas y arranca de cero al despertar), cada mensaje
 permitido se apunta también en PostgreSQL (Neon) desde el hilo de las estadísticas
-(ver app/stats.py), y al arrancar se vuelven a cargar los de las últimas 24 horas.
+(ver app/stats.py), y los de las últimas 24 horas se vuelven a cargar con el primer
+mensaje del chat después de arrancar (no al arrancar: así una visita que no usa el
+chat, como la de un servicio que mantiene despierta la web, no despierta a Neon).
 Si la base de datos falla, los límites siguen funcionando solo en memoria.
 
 La IP nunca se guarda en claro, ni en memoria ni en la base de datos: se guarda un
@@ -126,6 +128,23 @@ class ChatLimits:
         # Se llama con (hash de la IP, segundos) por cada mensaje permitido; las
         # estadísticas lo usan para guardarlo en la base de datos.
         self.on_use: Callable[[str, float], None] | None = None
+        # Devuelve los usos guardados (hash de la IP, segundos). Se llama una sola vez,
+        # con el primer mensaje del chat o la primera visita a /admin/stats.
+        self.loader: Callable[[], Iterable[tuple[str, float]]] | None = None
+        self.restored = False
+        self.restore_lock = threading.Lock()
+
+    def restore_once(self) -> None:
+        """Carga los usos guardados la primera vez que hacen falta."""
+        if self.restored or self.loader is None:
+            return
+        with self.restore_lock:
+            if self.restored:
+                return
+            loaded = self.restore(self.loader())
+            self.restored = True  # aunque falle la base de datos: no se reintenta
+        if loaded:
+            logger.info("Límites del chat: %d mensajes de las últimas 24 h recuperados", loaded)
 
     def ip_key(self, ip: str) -> str:
         """Hash de la IP con sal: identifica al visitante sin guardar su IP."""
@@ -134,6 +153,7 @@ class ChatLimits:
     def check(self, ip: str) -> str | None:
         """Devuelve None si el mensaje está permitido (y lo cuenta), o el motivo del
         bloqueo (y no lo cuenta en ningún límite)."""
+        self.restore_once()
         key = self.ip_key(ip)
         with self.lock:
             now = self.clock()
@@ -167,12 +187,14 @@ class ChatLimits:
 
     def remaining_total(self) -> int:
         """Mensajes que quedan del tope global en las últimas 24 horas."""
+        self.restore_once()
         return self.total.remaining(TOTAL_KEY)
 
     def reset(self) -> None:
         self.per_minute.reset()
         self.per_day.reset()
         self.total.reset()
+        self.restored = False
 
 
 chat_limits = ChatLimits()

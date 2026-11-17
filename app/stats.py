@@ -31,8 +31,8 @@ logger = logging.getLogger("uvicorn.error")
 DAYS_KEPT = 90
 # Cada cuántos segundos se envía lo pendiente a la base de datos.
 FLUSH_SECONDS = 5
-# Días que se guardan las preguntas; las más antiguas se borran (como mucho, una vez
-# por hora, en el mismo hilo que envía lo pendiente).
+# Días que se guardan las preguntas; las más antiguas se borran junto con el
+# siguiente guardado (como mucho, una vez por hora), nunca con una conexión aparte.
 QUESTION_DAYS = 30
 CLEANUP_SECONDS = 60 * 60
 # Preguntas que se guardan en memoria (sin base de datos, o mientras falla).
@@ -186,6 +186,12 @@ class ChatStats:
     def flush(self) -> bool:
         """Envía a la base de datos lo pendiente. Devuelve si ha ido bien.
 
+        Si no hay nada pendiente, no se conecta: así Neon puede dormirse cuando no hay
+        actividad (el plan gratuito cuenta las horas que está despierta). Por eso la
+        limpieza de lo antiguo no va sola: se hace junto con el siguiente guardado
+        (como mucho una vez por hora). Mientras tanto, lo antiguo no se muestra ni
+        cuenta para los límites, porque las lecturas filtran por fecha.
+
         Si falla, lo pendiente se conserva y se vuelve a intentar en el siguiente
         envío: no se pierde nada mientras el servicio siga en marcha.
         """
@@ -196,12 +202,12 @@ class ChatStats:
                 batch = dict(self.pending)
                 questions = list(self.pending_questions)
                 limit_uses = list(self.pending_limit_uses)
+            if not batch and not questions and not limit_uses:
+                return True  # nada que guardar: ni siquiera se conecta
             cleanup = (
                 self.last_cleanup is None
                 or time.monotonic() - self.last_cleanup >= CLEANUP_SECONDS
             )
-            if not batch and not questions and not limit_uses and not cleanup:
-                return True
             try:
                 self.store.add(
                     batch,
@@ -209,7 +215,7 @@ class ChatStats:
                     delete_before=self.questions_since() if cleanup else None,
                     limit_uses=limit_uses,
                     # Los usos que ya no cuentan se borran cada vez que se guardan
-                    # otros nuevos (y en la limpieza de cada hora).
+                    # otros nuevos (y en la limpieza).
                     delete_limit_uses_before=(
                         self.limit_uses_since() if cleanup or limit_uses else None
                     ),

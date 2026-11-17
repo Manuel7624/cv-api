@@ -189,7 +189,13 @@ avisa debajo del chat de que las preguntas se guardan de forma anónima 30 días
   servicio (`app/stats_store.py`). Solo van a PostgreSQL los contadores (día, nombre,
   valor) y el registro de preguntas: el CV sigue en SQLite. El driver es `psycopg`.
 - El chat nunca espera a la base de datos: apunta en memoria y un hilo aparte envía
-  lo pendiente cada 5 segundos (y al apagar). Si Neon no responde o la cadena es
+  lo pendiente cada 5 segundos (y al apagar).
+- Neon puede dormirse cuando no hay actividad (el plan gratuito cuenta las horas que
+  está despierta): la aplicación solo se conecta cuando hay algo que guardar, la
+  limpieza de lo antiguo va junto con un guardado (nunca sola) y los límites del
+  chat se cargan con el primer mensaje, no al arrancar. Las visitas que no usan el
+  chat (por ejemplo, un servicio que llame a `/health` para que Render no se duerma)
+  no tocan Neon. Si Neon no responde o la cadena es
   incorrecta, la web y el chat siguen igual, lo pendiente se guarda en cuanto vuelva
   la conexión y la página avisa de que solo muestra los datos en memoria.
 - Los errores de conexión se registran solo por su tipo, sin la cadena de conexión.

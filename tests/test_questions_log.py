@@ -142,10 +142,16 @@ def test_questions_older_than_30_days_are_deleted(tmp_path):
 
     now[0] += timedelta(days=QUESTION_DAYS, hours=1)
     stats_.last_cleanup = None  # toca borrar ya, sin esperar una hora
+    # Sin nada nuevo que guardar no se conecta, así que todavía no borra nada...
     assert stats_.flush()
     rows, total = stats_.store.questions(datetime(2000, 1, 1, tzinfo=timezone.utc), None, 50, 0)
-    assert [row["question"] for row in rows] == ["Reciente"]
-    assert total == 1
+    assert total == 2
+    # ...la limpieza va junto con el siguiente guardado.
+    stats_.log_question("Nueva", "R", "gemini", "answered")
+    assert stats_.flush()
+    rows, total = stats_.store.questions(datetime(2000, 1, 1, tzinfo=timezone.utc), None, 50, 0)
+    assert [row["question"] for row in rows] == ["Nueva", "Reciente"]
+    assert total == 2
 
 
 def test_old_questions_are_not_shown_even_before_they_are_deleted():
