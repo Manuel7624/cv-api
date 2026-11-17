@@ -765,8 +765,13 @@ h1 {
     font-size: 24px;
   }
 
+  /* Zona de mensajes más baja, para que siempre quede página a la vista fuera del
+     chat (vh de reserva para navegadores sin dvh), y sin atrapar el scroll: al
+     llegar a su límite, el gesto pasa a la página. */
   .chat-log {
-    max-height: 60dvh;
+    max-height: 55vh;
+    max-height: 55dvh;
+    overscroll-behavior-y: auto;
     padding: 14px 16px;
   }
 

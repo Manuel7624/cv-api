@@ -40,7 +40,35 @@ chatLog.addEventListener("scroll", () => {
   followLatest = distanceToBottom < 40;
 });
 
+// En pantallas estrechas (el chat es bajo), cada respuesta se coloca al principio de
+// su mensaje en lugar de al final del texto, para leerla de arriba abajo. Solo mueve
+// el scroll interno del chat, nunca la página. En escritorio no cambia nada.
+const narrowScreen = window.matchMedia("(max-width: 600px)");
+const ANSWER_TOP_MARGIN = 8;
+let answerAnchor = null; // mensaje de la IA cuyo principio se mantiene a la vista
+let anchoredScrollTop = 0; // scroll que se puso, para saber si el usuario lo ha movido
+
+function anchorToAnswer() {
+  if (!answerAnchor || !answerAnchor.isConnected) return;
+  const top =
+    answerAnchor.getBoundingClientRect().top -
+    chatLog.getBoundingClientRect().top +
+    chatLog.scrollTop -
+    ANSWER_TOP_MARGIN;
+  chatLog.scrollTop = Math.max(0, top);
+  anchoredScrollTop = chatLog.scrollTop;
+}
+
+chatLog.addEventListener("scroll", () => {
+  // Si el usuario mueve el chat con el dedo, deja de colocarse solo.
+  if (answerAnchor && Math.abs(chatLog.scrollTop - anchoredScrollTop) > 3) answerAnchor = null;
+});
+
 function scrollToLatest(force = false) {
+  if (narrowScreen.matches && answerAnchor) {
+    anchorToAnswer();
+    return;
+  }
   if (force) followLatest = true;
   if (followLatest) chatLog.scrollTop = chatLog.scrollHeight;
 }
@@ -73,6 +101,7 @@ function addAssistantMessage() {
   const dots = createTypingDots();
   message.append(avatar, dots);
   chatLog.append(message);
+  answerAnchor = message; // en pantallas estrechas, se coloca al principio de esta respuesta
   scrollToLatest();
 
   const bubble = createElement("p", "bubble");
@@ -225,6 +254,7 @@ async function sendQuestion(question) {
   chatSection.classList.add("started"); // en el móvil, oculta las sugerencias
   chatInput.value = "";
   resizeInput();
+  answerAnchor = null; // una pregunta nueva: la anterior ya no se mantiene colocada
   addUserMessage(text);
   const answer = addAssistantMessage();
   const typewriter = createTypewriter(answer);
@@ -254,6 +284,7 @@ async function sendQuestion(question) {
 
   answer.message.classList.remove("streaming");
   answer.setText(finalText);
+  answerAnchor = null; // la respuesta ya está completa: el chat queda donde está
   // Solo ahora, con la respuesta completa de verdad, se anuncia al lector de pantalla.
   announce(finalText);
   waitingAnswer = false;

@@ -332,3 +332,35 @@ def test_copy_address_only_changes_the_option_text(client):
     assert 'status.className = "visually-hidden"' in script
     assert 'status.setAttribute("role", "status")' in script
     assert ".email-status" not in client.get("/static/styles.css").text
+
+
+def test_mobile_chat_is_shorter_and_does_not_trap_the_scroll(client):
+    css = client.get("/static/styles.css").text
+    mobile = css.split("@media (max-width: 600px) {")[1]
+    log = mobile.split(".chat-log {")[1].split("}")[0]
+    # Alto de reserva con vh y, detrás, dvh; y el scroll pasa a la página al llegar al límite.
+    assert log.index("max-height: 55vh") < log.index("max-height: 55dvh")
+    assert "overscroll-behavior-y: auto" in log
+    assert "contain" not in log
+
+
+def test_desktop_chat_log_is_unchanged(client):
+    css = client.get("/static/styles.css").text
+    base = css.split(".chat-log {")[1].split("}")[0]
+    assert "max-height: 520px" in base
+    assert "overscroll-behavior: contain" in base
+    assert "padding: 18px 22px" in base
+
+
+def test_on_narrow_screens_the_answer_is_placed_at_its_start(client):
+    script = client.get("/static/chat.js").text
+    assert 'window.matchMedia("(max-width: 600px)")' in script
+    assert "function anchorToAnswer()" in script
+    # Solo mueve el scroll interno del chat, nunca la página.
+    anchor = script.split("function anchorToAnswer()")[1].split("\n}\n")[0]
+    assert "chatLog.scrollTop" in anchor and "scrollIntoView" not in anchor and "window.scroll" not in anchor
+    # En pantallas estrechas con una respuesta en curso, no baja al final del texto.
+    latest = script.split("function scrollToLatest")[1].split("\n}\n")[0]
+    assert latest.index("narrowScreen.matches && answerAnchor") < latest.index("chatLog.scrollTop = chatLog.scrollHeight")
+    # Se suelta al empezar otra pregunta, al terminar la respuesta y si el usuario mueve el chat.
+    assert script.count("answerAnchor = null") >= 3
