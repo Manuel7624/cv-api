@@ -176,9 +176,12 @@ def public_base_url(request: Request) -> str:
     return f"{scheme}://{host}"
 
 
-@app.get("/health", tags=["sistema"])
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
 def health() -> dict[str, str]:
-    """Comprobación de que el servicio está vivo (la usará el despliegue)."""
+    """Comprobación de que el servicio está vivo (Render y los servicios que visitan la
+    web para que no se duerma). Devuelve siempre lo mismo sin consultar ninguna base
+    de datos (ni SQLite ni Neon) y no aparece en Swagger. Responde a GET y a HEAD; el
+    registro de peticiones de uvicorn está desactivado, así que no deja nada en el log."""
     return {"status": "ok"}
 
 

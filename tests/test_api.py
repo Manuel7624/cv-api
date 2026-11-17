@@ -75,3 +75,23 @@ def test_lists_keep_their_order(client):
     assert client.get("/projects").json()[0]["technologies"][0] == "Java"
     assert client.get("/education").json()[-1]["title"] == "Bachillerato de Ciencias"
     assert client.get("/skills").json()["tools"][0] == "Docker"
+
+
+def test_health_answers_get_and_head_without_touching_any_database(client, monkeypatch):
+    from app import crud, database
+    from app.stats import chat_stats
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("/health no debe consultar ninguna base de datos")
+
+    for name in ("get_profile", "get_experience", "get_extra_info", "get_skills"):
+        monkeypatch.setattr(crud, name, forbidden)
+    monkeypatch.setattr(database, "SessionLocal", forbidden)
+    monkeypatch.setattr(chat_stats, "snapshot", forbidden)
+    assert client.get("/health").json() == {"status": "ok"}
+    head = client.head("/health")
+    assert head.status_code == 200 and head.content == b""
+
+
+def test_health_is_not_in_swagger(client):
+    assert "/health" not in client.get("/openapi.json").json()["paths"]
