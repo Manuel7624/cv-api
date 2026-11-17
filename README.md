@@ -227,6 +227,21 @@ la foto se pone al lado del nombre y los botones pasan debajo del chat.
   no la lleva porque Swagger se carga desde un CDN.
 - Las instrucciones del chat solo contienen datos públicos del CV: ni claves ni
   teléfono.
+- Cabeceras extra: `Permissions-Policy` (sin cámara, micrófono ni ubicación) y, solo
+  en peticiones que llegan por HTTPS, `Strict-Transport-Security` (un año).
+- Las peticiones de más de 32 KB se rechazan con 413 sin leerlas enteras, traigan o
+  no `Content-Length` (`app/security.py`).
+- `/admin/stats`: tras 10 contraseñas fallidas desde la misma IP en 15 minutos, esa
+  IP queda bloqueada 15 minutos (429). La IP se guarda como hash con sal y solo en
+  memoria.
+- La conexión con PostgreSQL (Neon) exige siempre SSL, aunque la cadena no lo diga.
+- El contenedor se ejecuta con un usuario sin privilegios (`app`), que solo puede
+  escribir en `/code/data` (donde está `cv.db`), y uvicorn arranca sin el registro
+  de cada petición (`--no-access-log`) para que la IP no acabe en los logs.
+- Las versiones de `requirements.txt` son exactas y pip se actualiza en la imagen.
+- `scripts/check_client_ip.py`: después de desplegar, comprueba contra la web
+  publicada que no se puede saltar el límite por IP inventándose la IP en las
+  cabeceras (`python scripts/check_client_ip.py https://tu-web.onrender.com`).
 
 ## Con Docker
 
