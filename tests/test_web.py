@@ -353,7 +353,7 @@ def test_desktop_chat_log_is_unchanged(client):
 
 
 def test_on_narrow_screens_the_answer_is_placed_at_its_start(client):
-    script = client.get("/static/chat.js").text
+    script = client.get("/static/chat.js").text.replace("\r\n", "\n")  # finales de línea de Windows
     assert 'window.matchMedia("(max-width: 600px)")' in script
     assert "function anchorToAnswer()" in script
     # Solo mueve el scroll interno del chat, nunca la página.
