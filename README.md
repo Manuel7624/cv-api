@@ -221,6 +221,11 @@ la foto se pone al lado del nombre y los botones pasan debajo del chat.
   Gmail, Outlook, otra app de correo o copiar la dirección (con `aria-expanded`,
   flechas, Esc y clic fuera para cerrar). En el móvil (pantalla táctil y estrecha)
   abre directamente el `mailto:`. Sin JavaScript queda el enlace `mailto:`.
+- Caché: cada referencia a `/static/` del HTML lleva `?v=<hash del contenido>`, que
+  cambia solo cuando cambia el archivo (`app/static_files.py`). Esos archivos se
+  guardan un año (`immutable`), el HTML no se guarda nunca (`no-store`) y lo que va
+  sin versión (las fuentes, que pide el CSS) se revalida cada vez. Así, al publicar
+  una actualización, los visitantes ven la versión nueva sin Ctrl+F5.
 - Al compartir el enlace (LinkedIn, WhatsApp...) se ve `static/img/og-image.png`. Su
   URL tiene que ser completa: se toma de `PUBLIC_URL` si existe o de la petición.
 

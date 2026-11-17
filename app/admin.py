@@ -38,6 +38,7 @@ from app.chat_limits import (
 )
 from app.rate_limit import chat_limits, get_client_ip
 from app.llm import PROVIDERS
+from app.static_files import HTML_CACHE, add_versions
 from app.stats import COUNTERS, QUESTION_DAYS, QUESTION_STATUSES, TIMINGS, chat_stats
 
 logger = logging.getLogger("uvicorn.error")
@@ -280,6 +281,6 @@ def admin_stats(
 </body>
 </html>"""
     return HTMLResponse(
-        page,
-        headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"},
+        add_versions(page),
+        headers={"Cache-Control": HTML_CACHE, "X-Robots-Tag": "noindex, nofollow"},
     )

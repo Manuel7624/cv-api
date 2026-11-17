@@ -25,6 +25,7 @@ from app.chat_limits import MAX_MESSAGE_LENGTH
 from app.llm import RESTART
 from app.database import Base, SessionLocal, engine, get_db
 from app.rate_limit import chat_limits, get_client_ip
+from app.static_files import HTML_CACHE, UNVERSIONED_CACHE, add_versions, cache_control
 from app.security import HSTS_HEADER, SECURITY_HEADERS, LimitRequestSize, arrived_over_https
 from app.schemas import (
     ChatRequest,
@@ -55,8 +56,12 @@ CONTENT_SECURITY_POLICY = (
 PATHS_WITHOUT_CSP = ("/docs", "/redoc")
 
 # La portada lleva la longitud máxima de la pregunta, que se puede configurar.
-INDEX_HTML = (STATIC_DIR / "index.html").read_text(encoding="utf-8").replace(
-    "{{MAX_MESSAGE_LENGTH}}", str(MAX_MESSAGE_LENGTH)
+# Cada referencia a /static/ lleva ?v=<hash del contenido> (ver app/static_files.py):
+# al publicar un cambio, el navegador pide el archivo nuevo sin borrar la caché.
+INDEX_HTML = add_versions(
+    (STATIC_DIR / "index.html").read_text(encoding="utf-8").replace(
+        "{{MAX_MESSAGE_LENGTH}}", str(MAX_MESSAGE_LENGTH)
+    )
 )
 
 # Cada mensaje permitido se apunta para guardarlo en la base de datos (si la hay),
@@ -111,6 +116,9 @@ app.add_middleware(LimitRequestSize)
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.update(SECURITY_HEADERS)
+    static_cache = cache_control(request.url.path, request.url.query)
+    if static_cache and response.status_code == 200:
+        response.headers["Cache-Control"] = static_cache
     if arrived_over_https(request.url.scheme, request.headers.get("x-forwarded-proto")):
         response.headers["Strict-Transport-Security"] = HSTS_HEADER
     if not request.url.path.startswith(PATHS_WITHOUT_CSP):
@@ -133,14 +141,19 @@ def root_icon(request: Request) -> FileResponse:
     return FileResponse(
         STATIC_DIR / "img" / name,
         media_type=media_type,
-        headers={"Cache-Control": "public, max-age=86400"},
+        # Sin versión en la URL: el navegador pregunta cada vez si ha cambiado.
+        headers={"Cache-Control": UNVERSIONED_CACHE},
     )
 
 
 @app.get("/", include_in_schema=False)
 def root(request: Request) -> HTMLResponse:
     """La raíz muestra la web del currículum."""
-    return HTMLResponse(INDEX_HTML.replace("{{BASE_URL}}", public_base_url(request)))
+    return HTMLResponse(
+        INDEX_HTML.replace("{{BASE_URL}}", public_base_url(request)),
+        # Que el HTML no se guarde: así siempre lleva las versiones nuevas.
+        headers={"Cache-Control": HTML_CACHE},
+    )
 
 
 # Solo nombres de host normales (letras, números, puntos, guiones y puerto).

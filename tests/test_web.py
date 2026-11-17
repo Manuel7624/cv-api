@@ -47,7 +47,7 @@ def test_chat_log_is_accessible(client):
     assert 'id="chat-announcer" aria-live="polite"' in html
     assert 'alt="Foto de Manuel Sastre"' in html
     # Los avatares del chat son decorativos.
-    assert '<img class="avatar" src="/static/img/manuel-sastre.jpg" alt=""' in html
+    assert re.search(r'<img class="avatar" src="/static/img/manuel-sastre.jpg\?v=[0-9a-f]{10}" alt=""', html)
 
 
 def test_card_questions_are_buttons_that_ask_the_chat(client):
@@ -86,14 +86,14 @@ def test_page_has_no_inline_styles_or_scripts(client):
 def test_share_preview_tags(client):
     html = client.get("/", headers={"x-forwarded-proto": "https", "host": "cv.example.com"}).text
     assert '<meta property="og:title" content="Manuel Sastre · Backend Developer">' in html
-    assert '<meta property="og:image" content="https://cv.example.com/static/img/og-image.png">' in html
+    assert re.search(r'<meta property="og:image" content="https://cv.example.com/static/img/og-image.png\?v=[0-9a-f]{10}">', html)
     assert '<meta name="twitter:card" content="summary_large_image">' in html
     assert "{{" not in html
 
 
 def test_share_image_url_ignores_a_strange_host(client):
     html = client.get("/", headers={"host": 'x"><script>'}).text
-    assert '<meta property="og:image" content="/static/img/og-image.png">' in html
+    assert re.search(r'<meta property="og:image" content="/static/img/og-image.png\?v=[0-9a-f]{10}">', html)
 
 
 def test_scripts_never_insert_html(client):
@@ -125,7 +125,7 @@ def test_chat_shows_a_typing_indicator(client):
 
 def test_web_links_to_cv_github_and_docs(client):
     html = client.get("/").text
-    assert 'href="/static/Manuel_Sastre_CV.pdf"' in html
+    assert re.search(r'href="/static/Manuel_Sastre_CV.pdf\?v=[0-9a-f]{10}"', html)
     assert 'href="https://github.com/Manuel7624"' in html
     assert 'href="https://github.com/Manuel7624/Curriculum-Avanzado"' in html
     assert 'href="https://www.linkedin.com/in/manuel-sastre-naranjo"' in html
@@ -181,7 +181,7 @@ def test_email_buttons_offer_a_menu_with_mailto_fallback(client):
     html = client.get("/").text
     assert html.count('<div class="email-menu') == 2
     assert html.count('class="button email-link"') + html.count('class="button button-primary email-link"') == 2
-    assert '<script src="/static/contact.js" defer></script>' in html
+    assert re.search(r'<script src="/static/contact.js\?v=[0-9a-f]{10}" defer></script>', html)
     script = client.get("/static/contact.js").text
     for text in ("Gmail", "Outlook", "Otra app de correo", "Copiar dirección", "Correo copiado"):
         assert text in script
@@ -231,9 +231,9 @@ def test_every_page_links_the_icons(client, monkeypatch):
     monkeypatch.setenv("ADMIN_TOKEN", "token-de-prueba-muy-largo-123")
     pages = [client.get("/").text, client.get("/admin/stats", auth=("x", "token-de-prueba-muy-largo-123")).text]
     for html in pages:
-        assert '<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">' in html
-        assert '<link rel="icon" href="/static/img/favicon.ico" sizes="16x16 32x32">' in html
-        assert '<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">' in html
+        assert re.search(r'<link rel="icon" href="/static/img/favicon.svg\?v=[0-9a-f]{10}" type="image/svg\+xml">', html)
+        assert re.search(r'<link rel="icon" href="/static/img/favicon.ico\?v=[0-9a-f]{10}" sizes="16x16 32x32">', html)
+        assert re.search(r'<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png\?v=[0-9a-f]{10}">', html)
 
 
 def test_icon_files_have_the_right_sizes(client):
@@ -247,3 +247,78 @@ def test_icon_files_have_the_right_sizes(client):
     assert png[1:4] == b"PNG"  # firma de un archivo PNG
     assert struct.unpack(">II", png[16:24]) == (180, 180)
     assert "/favicon.ico" not in client.get("/openapi.json").text
+
+
+# --- Versiones en las URLs y caché ---
+
+
+def static_references(html):
+    return re.findall(r'(?:href|src|content)="(?:https?://[^/"]+)?(/static/[^"]+)"', html)
+
+
+def test_every_static_file_has_a_content_version_except_fonts(client):
+    import hashlib
+    from pathlib import Path
+
+    static = Path(__file__).parent.parent / "app" / "static"
+    references = static_references(client.get("/").text)
+    assert len(references) >= 10
+    for url in references:
+        path, _, query = url.removeprefix("/static/").partition("?")
+        if path.startswith("fonts/"):
+            assert query == "", url  # el CSS la pide sin versión: así coinciden
+            continue
+        expected = hashlib.sha256((static / path).read_bytes()).hexdigest()[:10]
+        assert query == f"v={expected}", url
+        assert client.get(url).status_code == 200
+
+
+def test_font_preload_matches_the_css(client):
+    html = client.get("/").text
+    css = client.get("/static/styles.css").text
+    assert 'href="/static/fonts/plus-jakarta-sans-latin.woff2"' in html
+    assert 'url("/static/fonts/plus-jakarta-sans-latin.woff2")' in css
+
+
+def test_the_version_changes_when_the_file_changes(tmp_path):
+    from app.static_files import add_versions, file_version
+
+    (tmp_path / "styles.css").write_text("body { color: red; }", encoding="utf-8")
+    first = add_versions('<link href="/static/styles.css">', tmp_path)
+    file_version.cache_clear()
+    (tmp_path / "styles.css").write_text("body { color: blue; }", encoding="utf-8")
+    second = add_versions('<link href="/static/styles.css">', tmp_path)
+    file_version.cache_clear()
+    assert first != second
+    assert re.fullmatch(r'<link href="/static/styles.css\?v=[0-9a-f]{10}">', second)
+    # Un archivo que no existe se deja como está.
+    assert add_versions('<img src="/static/no-existe.png">', tmp_path) == '<img src="/static/no-existe.png">'
+
+
+def test_html_is_never_cached(client, monkeypatch):
+    assert client.get("/").headers["Cache-Control"] == "no-store"
+    monkeypatch.setenv("ADMIN_TOKEN", "token-de-prueba-muy-largo-123")
+    page = client.get("/admin/stats", auth=("x", "token-de-prueba-muy-largo-123"))
+    assert page.headers["Cache-Control"] == "no-store"
+    assert static_references(page.text)
+    for url in static_references(page.text):
+        assert "?v=" in url
+
+
+def test_versioned_static_files_are_cached_for_a_year(client):
+    url = next(u for u in static_references(client.get("/").text) if u.startswith("/static/styles.css"))
+    response = client.get(url)
+    assert response.headers["Cache-Control"] == "public, max-age=31536000, immutable"
+
+
+def test_unversioned_static_files_are_revalidated(client):
+    for path in ("/static/styles.css", "/static/fonts/plus-jakarta-sans-latin.woff2", "/favicon.ico"):
+        assert client.get(path).headers["Cache-Control"] == "no-cache"
+    # Un 404 no se marca como guardable.
+    assert client.get("/static/no-existe.css?v=123").headers.get("Cache-Control") != "public, max-age=31536000, immutable"
+
+
+def test_chat_avatar_uses_the_versioned_url_from_the_page(client):
+    script = client.get("/static/chat.js").text
+    assert "/static/img/manuel-sastre.jpg" not in script
+    assert 'document.querySelector(".message-assistant .avatar").getAttribute("src")' in script

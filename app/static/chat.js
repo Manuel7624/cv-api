@@ -10,7 +10,8 @@ const chatSend = document.getElementById("chat-send");
 const chatLog = document.getElementById("chat-log");
 const chatAnnouncer = document.getElementById("chat-announcer");
 
-const AVATAR_SRC = "/static/img/manuel-sastre.jpg";
+// La misma dirección (con su versión) que el avatar del mensaje de bienvenida.
+const AVATAR_SRC = document.querySelector(".message-assistant .avatar").getAttribute("src");
 const ERROR_TEXT = "No he podido procesar esa pregunta. Prueba a escribirla de otra forma.";
 const CONNECTION_ERROR_TEXT =
   "No he podido conectar. Puedes escribirme desde la sección de contacto.";
