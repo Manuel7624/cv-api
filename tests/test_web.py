@@ -198,7 +198,12 @@ def test_unfinished_answers_show_a_caret_and_are_announced_at_the_end(client):
     script = client.get("/static/chat.js").text
     assert 'classList.add("streaming")' in script
     assert script.index('classList.remove("streaming")') < script.index("announce(finalText)")
-    assert ".message-assistant.streaming .bubble::after" in client.get("/static/styles.css").text
+    css = client.get("/static/styles.css").text
+    # El cursor va solo detrás del texto, nunca en la burbuja de los tres puntos.
+    assert ".message-assistant.streaming .bubble:not(.typing)::after" in css
+    assert ".message-assistant.streaming .bubble::after" not in css
+    typing = css.split(".typing {")[1].split("}")[0]
+    assert "align-items: center" in typing and "justify-content: center" in typing
 
 
 def test_web_shows_the_ai_work_method(client):

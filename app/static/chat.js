@@ -84,7 +84,9 @@ function addAssistantMessage() {
         return;
       }
       if (!bubble.isConnected) dots.replaceWith(bubble);
-      bubble.textContent = text;
+      // Sin los espacios del final, para que el cursor quede pegado a la última
+      // palabra mientras llega la respuesta (la respuesta final ya llega sin ellos).
+      bubble.textContent = text.trimEnd();
       scrollToLatest();
     },
   };

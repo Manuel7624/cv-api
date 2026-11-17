@@ -398,11 +398,16 @@ h1 {
   color: #b42318;
 }
 
-/* Tres puntos mientras llega la respuesta. */
+/* Tres puntos mientras llega la respuesta: centrados en una burbuja del mismo alto
+   que una respuesta de una línea (12 + 24 + 12 px), sin cursor. */
 .typing {
   display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 14px 16px;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 0 16px;
 }
 
 .typing span {
@@ -422,15 +427,13 @@ h1 {
 }
 
 /* Cursor que parpadea mientras la respuesta sigue llegando: así, si se para a
-   medias, no parece terminada. */
-.message-assistant.streaming .bubble::after {
+   medias, no parece terminada. Solo detrás del texto, nunca en los tres puntos. */
+.message-assistant.streaming .bubble:not(.typing)::after {
+  /* En línea y sin espacio delante: no se separa nunca de la última palabra. */
   content: "";
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  margin-left: 3px;
-  vertical-align: text-bottom;
-  background: var(--text-muted);
+  display: inline;
+  margin-left: 2px;
+  border-left: 2px solid var(--text-muted);
   animation: caret 1s steps(1) infinite;
 }
 
@@ -845,7 +848,7 @@ h1 {
     opacity: 0.6;
   }
 
-  .message-assistant.streaming .bubble::after {
+  .message-assistant.streaming .bubble:not(.typing)::after {
     animation: none;
   }
 }
