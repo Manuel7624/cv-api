@@ -1,11 +1,17 @@
 # CV API · Manuel Sastre
 
+[![Tests](https://github.com/Manuel7624/cv-api/actions/workflows/tests.yml/badge.svg)](https://github.com/Manuel7624/cv-api/actions/workflows/tests.yml)
+
 API REST desarrollada con **Python y FastAPI** que sirve mi currículum
 (perfil, experiencia, proyectos, formación, habilidades e idiomas). Es la base
 de mi web-CV personal, que incluye un chatbot sobre mi perfil.
 
-> Estado: en desarrollo. Los datos se guardan en SQLite; el siguiente paso de
-> la base de datos es pasar a PostgreSQL.
+- **Web:** <https://manuel-sastre-cv.onrender.com>
+- **API (Swagger):** <https://manuel-sastre-cv.onrender.com/docs>
+
+> Estado: publicada y en funcionamiento en Render (plan gratuito: si nadie la visita
+> durante un rato, se duerme y la primera visita tarda unos segundos). El CV está en
+> SQLite; el siguiente paso es pasarlo a PostgreSQL.
 
 ## Endpoints
 
@@ -24,15 +30,28 @@ de mi web-CV personal, que incluye un chatbot sobre mi perfil.
 
 Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
 
-## Ejecutarla en local (Windows)
+## Ejecutarla en local
 
-Requisitos: Python 3.12.
+Requisitos: Python 3.12. Las claves de Gemini y Groq van en `.env` (sin ellas, la web y
+la API funcionan, pero el chat responde con un mensaje de error amable).
+
+Windows (PowerShell):
 
 ```powershell
 py -V:3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements-dev.txt
 copy .env.example .env
+uvicorn app.main:app --reload --reload-dir app --env-file .env
+```
+
+Linux o macOS:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env
 uvicorn app.main:app --reload --reload-dir app --env-file .env
 ```
 
@@ -92,7 +111,7 @@ Si ningún proveedor responde, el chat da un mensaje amable con mi correo.
 
 El chat solo conoce los datos del CV y las preguntas y respuestas de `EXTRA_INFO`
 en `app/seed.py`, que admite cualquier número de elementos. Si algo no está, dice
-que no lo sabe. Los elementos con `fixed_answer=True` son temas delicados (sueldo,
+que no lo sabe. Los elementos con `fixed_answer=True` son temas que prefiero hablar en persona (sueldo,
 nota media): el chat responde con ese texto y nunca da cifras. Después de editar
 ese archivo hay que borrar `cv.db` y reiniciar.
 
@@ -272,16 +291,22 @@ La web queda en `http://localhost:8000`. Las claves se cargan de `.env`.
 
 ## Despliegue
 
-El archivo `render.yaml` describe el servicio para Render: usa el `Dockerfile` y
-comprueba `/health`. En el plan gratuito el disco no es persistente, así que
+La web está publicada en <https://manuel-sastre-cv.onrender.com> (documentación de la
+API en <https://manuel-sastre-cv.onrender.com/docs>). El archivo `render.yaml`
+describe el servicio para Render (región Frankfurt, plan gratuito): usa el
+`Dockerfile` y comprueba `/health`. En el plan gratuito el disco no es persistente, así que
 `cv.db` se vuelve a crear desde `app/seed.py` en cada arranque. Las claves se
 escriben en el panel de Render, no en el repositorio.
 
 ## Tests
 
-```powershell
+```bash
 pytest
 ```
+
+No necesitan claves, `.env` ni conexión a internet: sustituyen a los proveedores de IA
+y a la base de datos de estadísticas. Se ejecutan automáticamente en cada push y pull
+request con GitHub Actions (`.github/workflows/tests.yml`).
 
 ## Estructura
 
@@ -298,20 +323,32 @@ app/
 ├── chat_limits.py  Valores de los límites (configurables por entorno)
 ├── stats.py     Estadísticas de uso del chat (en memoria y envío a PostgreSQL)
 ├── stats_store.py  Guardado de las estadísticas en PostgreSQL (Neon)
+├── security.py  Límite de tamaño de las peticiones y cabeceras de seguridad
+├── static_files.py  Versión (hash) en las URLs de los estáticos y su caché
 ├── admin.py     Página privada de estadísticas
 ├── models.py    Tablas de la base de datos (SQLAlchemy)
 ├── database.py  Conexión con la base de datos
 ├── seed.py      Datos iniciales del currículum
 └── static/      Web: HTML, CSS, JavaScript, fuente, imágenes y CV en PDF
+scripts/         Utilidades (comprobación de la IP real tras desplegar)
 tests/           Pruebas automáticas
+.github/workflows/tests.yml  Tests en cada push y pull request
 Dockerfile       Imagen del servicio
 render.yaml      Configuración del despliegue en Render
+LICENSE          Licencia MIT del código
 ```
 
 ## Próximos pasos
 
-- Pasar la base de datos de SQLite a PostgreSQL.
-- Desplegar la web en Render.
+- Pasar el CV de SQLite a PostgreSQL (con migraciones).
+- Estadísticas de visitas por origen, sin cookies.
+
+## Licencia
+
+El **código** es libre bajo la licencia MIT (ver [LICENSE](LICENSE)). El **CV, la foto
+y los textos personales** (`app/seed.py`, `app/static/Manuel_Sastre_CV.pdf`,
+`app/static/img/`) no se licencian para reutilizarlos. La fuente Plus Jakarta Sans
+lleva su propia licencia (SIL OFL, en `app/static/fonts/OFL.txt`).
 
 ## Autor
 

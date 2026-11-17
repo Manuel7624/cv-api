@@ -127,7 +127,7 @@ def test_web_links_to_cv_github_and_docs(client):
     html = client.get("/").text
     assert re.search(r'href="/static/Manuel_Sastre_CV.pdf\?v=[0-9a-f]{10}"', html)
     assert 'href="https://github.com/Manuel7624"' in html
-    assert 'href="https://github.com/Manuel7624/Curriculum-Avanzado"' in html
+    assert 'href="https://github.com/Manuel7624/cv-api"' in html
     assert 'href="https://www.linkedin.com/in/manuel-sastre-naranjo"' in html
     assert 'href="mailto:manusastrenar@gmail.com?subject=Contacto%20desde%20tu%20web"' in html
     assert 'href="/docs"' in html
