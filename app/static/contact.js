@@ -74,10 +74,24 @@ function setUpEmailMenu(wrapper) {
   copyItem.append(copyButton);
   list.append(copyItem);
 
-  // Aviso para lectores de pantalla (y visible) al copiar.
+  // Aviso solo para lectores de pantalla (oculto a la vista): lo visible es el
+  // propio texto de la opción, que cambia a "✓ Correo copiado" durante 2 segundos.
   const status = document.createElement("p");
-  status.className = "email-status";
+  status.className = "visually-hidden";
   status.setAttribute("role", "status");
+  const COPY_TEXT = "Copiar dirección";
+  const COPIED_SECONDS = 2;
+  let restoreCopy = null;
+
+  function showCopyResult(visibleText, announcement) {
+    window.clearTimeout(restoreCopy);
+    copyButton.textContent = visibleText;
+    status.textContent = announcement;
+    restoreCopy = window.setTimeout(() => {
+      copyButton.textContent = COPY_TEXT;
+      status.textContent = "";
+    }, COPIED_SECONDS * 1000);
+  }
 
   menu.append(list, status);
   wrapper.append(menu);
@@ -93,8 +107,9 @@ function setUpEmailMenu(wrapper) {
     if (menu.hidden) return;
     menu.hidden = true;
     button.setAttribute("aria-expanded", "false");
+    window.clearTimeout(restoreCopy);
     status.textContent = "";
-    copyButton.textContent = "Copiar dirección";
+    copyButton.textContent = COPY_TEXT;
     if (returnFocus) button.focus();
   }
 
@@ -114,10 +129,10 @@ function setUpEmailMenu(wrapper) {
   copyButton.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(EMAIL);
-      copyButton.textContent = "Correo copiado";
-      status.textContent = "Correo copiado";
+      showCopyResult("✓ Correo copiado", "Correo copiado");
     } catch (error) {
-      status.textContent = `No se ha podido copiar. La dirección es ${EMAIL}`;
+      // Si el navegador no deja copiar, se muestra la dirección para copiarla a mano.
+      showCopyResult(EMAIL, `No se ha podido copiar. La dirección es ${EMAIL}`);
     }
   });
 

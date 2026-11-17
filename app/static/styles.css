@@ -307,17 +307,6 @@ h1 {
   background: var(--gray-soft);
 }
 
-.email-status {
-  margin: 0;
-  padding: 0 14px;
-  font-size: 14px;
-  color: var(--green);
-}
-
-.email-status:not(:empty) {
-  padding: 6px 14px 8px;
-}
-
 /* --- Chat --- */
 
 .chat {

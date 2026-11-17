@@ -322,3 +322,13 @@ def test_chat_avatar_uses_the_versioned_url_from_the_page(client):
     script = client.get("/static/chat.js").text
     assert "/static/img/manuel-sastre.jpg" not in script
     assert 'document.querySelector(".message-assistant .avatar").getAttribute("src")' in script
+
+
+def test_copy_address_only_changes_the_option_text(client):
+    script = client.get("/static/contact.js").text
+    assert '"✓ Correo copiado"' in script
+    assert "COPIED_SECONDS = 2" in script
+    # El aviso para lectores de pantalla existe, pero oculto a la vista.
+    assert 'status.className = "visually-hidden"' in script
+    assert 'status.setAttribute("role", "status")' in script
+    assert ".email-status" not in client.get("/static/styles.css").text
