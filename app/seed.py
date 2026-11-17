@@ -263,6 +263,12 @@ EXTRA_INFO = [
     },
     {
         "topic": "Más sobre cómo trabajo",
+        "question": "¿Tienes forma de moverte o desplazarte hasta el trabajo? ¿Cómo irías al trabajo?",
+        "answer": "Vivo en Zaragoza y mi preferencia es el trabajo híbrido o remoto. Ahora mismo me estoy sacando el carnet de conducir.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Más sobre cómo trabajo",
         "question": "¿Carnet de conducir?",
         "answer": "Ahora mismo me estoy sacando el carnet de conducir.",
         "fixed_answer": False,
@@ -523,6 +529,12 @@ EXTRA_INFO = [
         "topic": "Nuevas preguntas y respuestas",
         "question": "Sobre este proyecto: ¿qué has aprendido?",
         "answer": "A trabajar con Claude Code dentro de Visual Studio Code, a usar Docker por mi cuenta y a construir paso a paso una aplicación completa: una API REST con FastAPI, una base de datos, una web que consume esa API y un chat conectado a modelos de IA.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Más técnico",
+        "question": "¿Qué tecnologías usa este proyecto? Tecnologías de esta web, la API y el chat",
+        "answer": "Python con FastAPI para la API REST, SQLAlchemy con SQLite para los datos del CV, PostgreSQL (en Neon) para las estadísticas del chat, Docker, pytest para los tests, y Gemini y Groq con RAG para el chat.",
         "fixed_answer": False,
     },
     {

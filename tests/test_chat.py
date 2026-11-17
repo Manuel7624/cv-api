@@ -340,7 +340,10 @@ def test_rules_from_the_latest_review(client, fake_ai):
     send(client)
     prompt = fake_ai[0]["system_prompt"]
     # Codex y Claude Code siempre que pregunten por tecnologías.
-    assert "menciona SIEMPRE Codex y Claude\n  Code" in prompt
+    assert "menciónalos cuando sean relevantes, nunca como\n  frase de relleno" in prompt
+    assert "NO los menciones en respuestas sobre el carnet" in prompt
+    assert "nunca como frase final" in prompt and "no los asocies nunca a Balancea" in prompt
+    assert "SIEMPRE Codex" not in prompt
     # Sin exagerar: es junior.
     assert '"destaco", "experto", "dominio"' in prompt
     # Lo negativo de las prácticas, en positivo y sin mandar al correo.
@@ -401,3 +404,56 @@ def test_keyword_mode_is_logged_apart_from_groq_with_rag():
     assert chat.logged_provider(chat.Trace(answered_by="groq")) == "groq"
     assert chat.logged_provider(chat.Trace(answered_by="gemini", used_keywords=True)) == "gemini"
     assert chat.logged_provider(chat.Trace()) is None
+
+
+def test_rules_for_personal_questions_persona_and_language(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    # Preguntas personales o afectivas: respuesta neutra, sin confirmar ni negar nada.
+    assert chat.PERSONAL_ANSWER in prompt
+    assert chat.PERSONAL_ANSWER.startswith("Prefiero centrar esta conversación en mi perfil profesional")
+    assert "no confirmes ni niegues\n  nada" in prompt
+    # Persona coherente: solo reconoce ser una IA si se lo preguntan directamente.
+    assert "No digas por tu cuenta que eres una\n  IA" in prompt
+    assert "Solo si te preguntan directamente" in prompt
+    # El inglés es siempre B2, y no se inventa nada que DATOS no diga.
+    assert "tu nivel es siempre B2 (2022)" in prompt and "Nunca digas que es básico" in prompt
+    assert "No afirmes ni niegues nada que DATOS no diga" in prompt
+    # Tecnologías de este proyecto, desplazamiento al trabajo y sueldo con erratas.
+    assert "SQLAlchemy, pytest, PostgreSQL en Neon" in prompt
+    assert "solo cuando la pregunta sea precisamente sobre tus tecnologías" in prompt
+    assert 'saludos ni en "háblame de ti"' in prompt
+    assert 'ni en "háblame de ti")' in prompt
+    assert "Cómo te desplazas o llegas al trabajo" in prompt
+    assert "rango,\n  saldo, cobrar, ganar, nómina" in prompt
+
+
+def test_personal_answer_is_not_a_rejection_nor_a_missing_answer():
+    """No debe activar el plan B ni contarse como "sin información" o rechazo."""
+    assert not chat.says_no_information(chat.PERSONAL_ANSWER)
+    assert not chat.is_rejection(chat.PERSONAL_ANSWER)
+    assert "@" not in chat.PERSONAL_ANSWER  # nada de mandar al correo
+
+
+def test_project_technologies_are_in_the_data():
+    text = " ".join(item["answer"] for item in EXTRA_INFO if "este proyecto" in item["question"])
+    for word in ("FastAPI", "API REST", "SQLAlchemy", "pytest", "PostgreSQL", "Neon"):
+        assert word in text, word
+
+
+def test_english_level_in_the_data_is_always_b2():
+    for item in EXTRA_INFO:
+        if "inglés" in item["question"].lower() or item["question"] == "Inglés":
+            assert "B2" in item["answer"]
+            assert "básico" not in item["answer"].lower()
+
+
+def test_commute_answer_only_uses_facts_already_in_the_data():
+    texts = {item["question"]: item["answer"] for item in EXTRA_INFO}
+    commute = next(a for q, a in texts.items() if q.startswith("¿Tienes forma de moverte o desplazarte"))
+    assert "Vivo en Zaragoza" in commute and "híbrido o remoto" in commute
+    assert "carnet de conducir" in commute
+    for invented in ("coche", "oficina", "transporte"):
+        assert invented not in commute.lower()
+    # Los mismos hechos ya estaban escritos en otras respuestas.
+    assert any("sacando el carnet" in a for q, a in texts.items() if q.startswith("¿Carnet de conducir?"))
