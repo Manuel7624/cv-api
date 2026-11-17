@@ -255,3 +255,26 @@ def test_questions_are_not_in_swagger_or_public_routes(client):
         response = client.get(path)
         assert "¿Pregunta secreta?" not in response.text
         assert "Respuesta secreta" not in response.text
+
+
+def test_admin_shows_everything_for_each_question(client, monkeypatch):
+    """Fecha y hora, pregunta, respuesta completa, proveedor y estado."""
+    monkeypatch.setenv("ADMIN_TOKEN", TOKEN)
+    long_answer = "Respuesta larga. " * 40
+    chat_stats.log_question("¿Pregunta uno?", long_answer, "groq_keywords", "answered")
+    chat_stats.log_question("¿Pregunta dos?", "Sobre eso no tengo información aquí.", "gemini_backup", "no_information")
+    chat_stats.log_question("¿Pregunta tres?", "Otra", "groq", "answered")
+    chat_stats.log_question("¿Pregunta cuatro?", "Y otra", "gemini", "answered")
+    page = admin_page(client).text
+    latest = page.split("Últimas preguntas</h2>")[1]
+    assert long_answer.strip() in latest  # la respuesta, completa
+    for label in ("Groq (palabras clave)", "Gemini 3.1 Flash-Lite (reserva)", "Groq", "Gemini 3.5 Flash-Lite"):
+        assert f"<td>{label}</td>" in latest
+    assert "<td>Sin información</td>" in latest
+    assert "<td>Respondida</td>" in latest
+    import re
+    assert re.search(r"<td class='nowrap'>\d\d/\d\d/\d{4} \d\d:\d\d:\d\d</td>", latest)  # fecha y hora
+    # Y sigue protegida.
+    assert client.get("/admin/stats").status_code == 401
+
+

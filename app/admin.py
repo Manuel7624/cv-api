@@ -30,6 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+from app.chat import KEYWORDS_PROVIDER
 from app.chat_limits import (
     MAX_MESSAGE_LENGTH,
     MESSAGES_PER_DAY_PER_IP,
@@ -48,7 +49,10 @@ MIN_TOKEN_LENGTH = 20
 QUESTIONS_PER_PAGE = 50
 # Estados del apartado "Preguntas sin respuesta o rechazadas".
 MISSING_STATUSES = ("rejected", "no_information", "error")
-PROVIDER_LABELS = {provider.name: provider.label for provider in PROVIDERS}
+PROVIDER_LABELS = {
+    **{provider.name: provider.label for provider in PROVIDERS},
+    KEYWORDS_PROVIDER: "Groq (palabras clave)",
+}
 
 FAILED_LOGINS_BEFORE_LOCK = 10
 LOCK_WINDOW_SECONDS = 15 * 60
@@ -187,7 +191,7 @@ def questions_section(
     pages = max(1, -(-result["total"] // QUESTIONS_PER_PAGE))
     rows = []
     for row in result["rows"]:
-        asked_at = row["asked_at"].strftime("%d/%m/%Y %H:%M")
+        asked_at = row["asked_at"].strftime("%d/%m/%Y %H:%M:%S")
         provider = PROVIDER_LABELS.get(row["provider"], row["provider"] or "-")
         rows.append(
             "<tr>"

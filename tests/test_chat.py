@@ -382,3 +382,20 @@ def test_data_for_negative_questions():
     assert insist.startswith("Sinceramente, no tengo nada malo que destacar")
     for answer in (weak, least, insist):
         assert EMAIL not in answer
+
+
+def test_rules_for_answers_in_english(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    assert 'Escribe "AI tools" (nunca "IA tools")' in prompt
+    assert '"basic\n  knowledge of Kafka" (nunca "basic Kafka notions")' in prompt
+    assert "no mezcles palabras en\n  español" in prompt
+    assert "Esa expresión es solo para Kafka" in prompt
+
+
+def test_keyword_mode_is_logged_apart_from_groq_with_rag():
+    trace = chat.Trace(answered_by="groq", used_keywords=True)
+    assert chat.logged_provider(trace) == "groq_keywords"
+    assert chat.logged_provider(chat.Trace(answered_by="groq")) == "groq"
+    assert chat.logged_provider(chat.Trace(answered_by="gemini", used_keywords=True)) == "gemini"
+    assert chat.logged_provider(chat.Trace()) is None

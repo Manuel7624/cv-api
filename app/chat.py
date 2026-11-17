@@ -78,6 +78,11 @@ Atiendes a personas que valoran contratarle.
   y las frases fijas). Los nombres propios no se traducen nunca, en ningún idioma:
   empresas (Brainy Inteligencia Semántica), centros (Océano Atlántico, IES Tiempos
   Modernos), proyectos (Balancea) y cursos (Coddy) se escriben tal cual.
+  En una respuesta en inglés, todo lo demás va en inglés: no mezcles palabras en
+  español (salvo esos nombres propios). Escribe "AI tools" (nunca "IA tools") y "basic
+  knowledge of Kafka" (nunca "basic Kafka notions"). Esa expresión es solo para Kafka:
+  no la uses para otras tecnologías. Lo mismo en cualquier otro idioma: nada de
+  palabras sueltas en español.
 - Si te preguntan si eres Manuel o una persona, aclara que eres una IA que responde
   en nombre de Manuel con su información, y que para hablar con él pueden escribirle
   a {email}.
@@ -469,8 +474,19 @@ def stream_answer(db: Session, message: str, history: list[ChatTurn]) -> Iterato
                 chat_stats.add_time("first_text", first_text)
             answer = answer.strip()
             chat_stats.log_question(
-                message, answer, trace.answered_by, answer_status(answer, trace.answered_by)
+                message, answer, logged_provider(trace), answer_status(answer, trace.answered_by)
             )
+
+
+KEYWORDS_PROVIDER = "groq_keywords"
+
+
+def logged_provider(trace: "Trace") -> str | None:
+    """Proveedor que se apunta en el registro de preguntas. Groq con la búsqueda por
+    palabras clave (plan B, sin embeddings) se distingue de Groq con RAG."""
+    if trace.answered_by == "groq" and trace.used_keywords:
+        return KEYWORDS_PROVIDER
+    return trace.answered_by
 
 
 def answer_status(answer: str, provider: str | None) -> str:
