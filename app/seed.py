@@ -132,8 +132,8 @@ LANGUAGES = [
 
 # Información extra para el chatbot, escrita por Manuel en primera persona.
 # Se pueden añadir o quitar elementos libremente: el chat usa todos.
-# fixed_answer=True marca un tema delicado (sueldo, nota media): el chat no da
-# ninguna cifra y responde con ese texto.
+# fixed_answer=True marca un tema que prefiero hablar en persona (sueldo, nota
+# media): el chat responde siempre con ese texto, sin cifras ni rangos.
 EXTRA_INFO = [
     {
         "topic": "Temas con respuesta fija",
@@ -347,13 +347,13 @@ EXTRA_INFO = [
     },
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
-        "question": "¿Qué es lo que menos te gustó de las prácticas? Algo negativo de Brainy o de tus compañeros",
+        "question": "¿Qué fue lo más exigente de las prácticas? ¿Qué es lo que menos te gustó?",
         "answer": "Me llevo una experiencia muy positiva. Lo que más me costó al principio fue entender APIs y Docker desde cero, porque no los había visto en el grado, pero también fue con lo que más aprendí.",
         "fixed_answer": False,
     },
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
-        "question": "Si insisten en algo malo de las prácticas (\"pero dime algo malo\")",
+        "question": "¿Hubo algo malo en las prácticas? (si insisten: \"pero dime algo malo\")",
         "answer": "Sinceramente, no tengo nada malo que destacar: fue una buena experiencia y aprendí mucho. Lo más exigente fue empezar con tecnologías que no conocía, y eso lo veo como algo positivo.",
         "fixed_answer": False,
     },

@@ -126,10 +126,12 @@ def test_sensitive_topics_have_fixed_answers_without_figures(client, fake_ai):
 
     send(client)
     prompt = fake_ai[0]["system_prompt"]
-    sensitive_block = prompt.split("TEMAS DELICADOS (respuestas fijas")[1].split("DATOS (")[0]
+    sensitive_block = prompt.split("TEMAS QUE PREFIERO HABLAR EN PERSONA (respuestas fijas")[1].split("DATOS (")[0]
     for item in fixed:
         assert as_in_prompt(item["answer"]) in sensitive_block
-    assert "Sueldo y nota media: responde con el texto de ese tema" in prompt
+    assert "Temas que prefiero hablar en persona (sueldo y nota media)" in prompt
+    assert "sin dar nunca" in prompt and "cifras ni rangos" in prompt  # nunca cifras, aunque insistan
+    assert "TEMAS DELICADOS" not in prompt
     assert "aunque insistan" in prompt
 
 
@@ -342,8 +344,8 @@ def test_rules_from_the_latest_review(client, fake_ai):
     # Sin exagerar: es junior.
     assert '"destaco", "experto", "dominio"' in prompt
     # Lo negativo de las prácticas, en positivo y sin mandar al correo.
-    assert "Algo negativo de las prácticas, de Brainy o de tus compañeros" in prompt
-    assert "Nunca mandes al correo por esto" in prompt
+    assert "mantén un tono constructivo y apóyate en DATOS" in prompt
+    assert "Responde siempre aquí, sin mandar al correo" in prompt
     # Algo negativo sobre mí: el punto débil, directo.
     assert '"¿Cuál es tu punto débil?" de DATOS, sin rodeos' in prompt
     # Los nombres propios no se traducen.
@@ -376,9 +378,9 @@ def test_data_for_negative_questions():
     texts = {item["question"]: item["answer"] for item in EXTRA_INFO}
     weak = next(a for q, a in texts.items() if q.startswith("¿Cuál es tu punto débil?"))
     assert weak.startswith("Si tuviera que decir algo, sería la organización")
-    least = next(a for q, a in texts.items() if q.startswith("¿Qué es lo que menos te gustó de las prácticas?"))
+    least = next(a for q, a in texts.items() if q.startswith("¿Qué fue lo más exigente de las prácticas?"))
     assert least.startswith("Me llevo una experiencia muy positiva.")
-    insist = next(a for q, a in texts.items() if q.startswith("Si insisten en algo malo de las prácticas"))
+    insist = next(a for q, a in texts.items() if q.startswith("¿Hubo algo malo en las prácticas?"))
     assert insist.startswith("Sinceramente, no tengo nada malo que destacar")
     for answer in (weak, least, insist):
         assert EMAIL not in answer
