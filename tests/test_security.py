@@ -244,3 +244,13 @@ def test_compose_and_render_do_not_override_the_start_command():
     assert "pull_policy: build" in compose
     assert "dockerCommand" not in render and "startCommand" not in render
     assert "dockerfilePath: ./Dockerfile" in render
+
+
+def test_ip_check_script_does_not_send_cf_connecting_ip():
+    """Cloudflare rechaza con 403 esa cabecera si la pone el visitante."""
+    script = (ROOT / "scripts" / "check_client_ip.py").read_text(encoding="utf-8")
+    headers = script.split("headers={")[1].split("},")[0]
+    assert "CF-Connecting-IP" not in headers
+    for header in ("X-Forwarded-For", "True-Client-IP", "X-Real-IP", "Forwarded"):
+        assert header in headers
+    assert "403" in script and "Cloudflare" in script
