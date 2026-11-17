@@ -222,3 +222,25 @@ def test_requirements_are_pinned():
     for line in (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines():
         if line.strip() and not line.startswith("#"):
             assert "==" in line and ">" not in line and "<" not in line, line
+
+
+def test_access_log_is_silenced_in_code_too():
+    """Aunque se arranque uvicorn sin --no-access-log, no se registra cada petición."""
+    import logging
+
+    from app import main
+
+    access = logging.getLogger("uvicorn.access")
+    access.disabled = False
+    main.silence_access_log()
+    assert access.disabled
+    assert "silence_access_log()" in (ROOT / "app" / "main.py").read_text(encoding="utf-8").split("async def lifespan")[1]
+
+
+def test_compose_and_render_do_not_override_the_start_command():
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    render = (ROOT / "render.yaml").read_text(encoding="utf-8")
+    assert "command" not in compose
+    assert "pull_policy: build" in compose
+    assert "dockerCommand" not in render and "startCommand" not in render
+    assert "dockerfilePath: ./Dockerfile" in render

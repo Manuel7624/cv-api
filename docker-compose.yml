@@ -1,6 +1,9 @@
 services:
   api:
     build: .
+    # Reconstruye la imagen en cada "docker compose up" (con caché, es rápido): así
+    # nunca se arranca una imagen antigua con otro comando u otra configuración.
+    pull_policy: build
     env_file:
       - path: .env
         required: false

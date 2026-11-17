@@ -5,6 +5,7 @@ Web del currículum:  http://127.0.0.1:8000/
 Documentación interactiva (Swagger):  http://127.0.0.1:8000/docs
 """
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -68,10 +69,21 @@ chat_limits.loader = chat_stats.load_limit_uses
 DbSession = Annotated[Session, Depends(get_db)]
 
 
+def silence_access_log() -> None:
+    """Quita la línea que uvicorn escribe por cada petición ("GET / 200 OK" con la IP).
+
+    El Dockerfile ya arranca con --no-access-log, pero así tampoco aparece si alguien
+    arranca la app con otro comando (o con una imagen antigua): la IP de quien visita
+    la web no debe acabar en los logs.
+    """
+    logging.getLogger("uvicorn.access").disabled = True
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Al arrancar, crea las tablas, carga los datos, prepara la búsqueda del chat y
     empieza a guardar las estadísticas. Al apagar, envía las que queden pendientes."""
+    silence_access_log()
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
         seed(session)
