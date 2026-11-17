@@ -81,7 +81,8 @@ def test_prompt_has_cv_data_and_honesty_rules(client, fake_ai):
     assert "Solo había UN worker" not in prompt
     assert "solo tiene nociones" in prompt
     assert "NO INVENTES NADA" in prompt
-    assert "Eso no lo tengo por aquí, pero escríbeme a" in prompt
+    assert "Sobre eso no tengo información aquí. Puedo contarte sobre mi experiencia, mis proyectos o mi formación, o, si lo prefieres, escríbeme a" in prompt
+    assert "Eso no lo tengo por aquí" not in prompt
     assert "Todavía no tengo experiencia con esa tecnología" in prompt
     assert "Mi teléfono aparece en mi perfil de LinkedIn" in prompt
     assert "respondes en su nombre, en primera\npersona" in prompt
@@ -327,7 +328,57 @@ def test_partial_information_keeps_the_other_rules(client, db_session):
 
 @pytest.mark.parametrize(
     "answer",
-    ["No hay información sobre si hice documentación.", "Eso no lo tengo por aquí, pero escríbeme."],
+    ["No hay información sobre si hice documentación.", "Sobre eso no tengo información aquí. Puedo contarte sobre mi experiencia, mis proyectos o mi formación, o, si lo prefieres, escríbeme a manusastrenar@gmail.com."],
 )
 def test_cold_no_information_answers_count_as_no_information(answer):
     assert chat.says_no_information(answer)
+
+
+def test_rules_from_the_latest_review(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    # Codex y Claude Code siempre que pregunten por tecnologías.
+    assert "menciona SIEMPRE Codex y Claude\n  Code" in prompt
+    # Sin exagerar: es junior.
+    assert '"destaco", "experto", "dominio"' in prompt
+    # Lo negativo de las prácticas, en positivo y sin mandar al correo.
+    assert "Algo negativo de las prácticas, de Brainy o de tus compañeros" in prompt
+    assert "Nunca mandes al correo por esto" in prompt
+    # Algo negativo sobre mí: el punto débil, directo.
+    assert '"¿Cuál es tu punto débil?" de DATOS, sin rodeos' in prompt
+    # Los nombres propios no se traducen.
+    assert "Los nombres propios no se traducen nunca" in prompt
+    assert 'nunca "APIs REST" en\n  plural' in prompt
+    assert "en las prácticas usó Codex; en este proyecto, Claude Code" in prompt
+    assert "Brainy Inteligencia Semántica" in prompt.split("Los nombres propios")[1][:200]
+
+
+def test_partial_information_mode_uses_the_new_no_information_answer(client, db_session):
+    from app import llm
+
+    groq = next(p for p in llm.PROVIDERS if p.max_request_tokens)
+    prompt = chat.prompt_that_fits(db_session, groq, "¿Película favorita?", [{"role": "user", "content": "¿Película favorita?"}])
+    assert "Sobre eso no tengo información aquí. Puedo contarte sobre mi experiencia" in prompt
+    assert "Eso no lo tengo por aquí" not in prompt
+
+
+def test_new_no_information_answer_counts_as_no_information():
+    answer = (
+        "Sobre eso no tengo información aquí. Puedo contarte sobre mi experiencia, mis "
+        "proyectos o mi formación, o, si lo prefieres, escríbeme a manusastrenar@gmail.com."
+    )
+    assert chat.says_no_information(answer)
+    assert chat.answer_status(answer, "gemini") == "no_information"
+    assert chat.answer_status("Respuesta normal", "gemini") == "answered"
+
+
+def test_data_for_negative_questions():
+    texts = {item["question"]: item["answer"] for item in EXTRA_INFO}
+    weak = next(a for q, a in texts.items() if q.startswith("¿Cuál es tu punto débil?"))
+    assert weak.startswith("Si tuviera que decir algo, sería la organización")
+    least = next(a for q, a in texts.items() if q.startswith("¿Qué es lo que menos te gustó de las prácticas?"))
+    assert least.startswith("Me llevo una experiencia muy positiva.")
+    insist = next(a for q, a in texts.items() if q.startswith("Si insisten en algo malo de las prácticas"))
+    assert insist.startswith("Sinceramente, no tengo nada malo que destacar")
+    for answer in (weak, least, insist):
+        assert EMAIL not in answer

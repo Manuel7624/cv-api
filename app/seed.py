@@ -161,8 +161,8 @@ EXTRA_INFO = [
     },
     {
         "topic": "Presentación",
-        "question": "¿Cuál es tu punto débil?",
-        "answer": "La organización es algo que trabajo de forma consciente, así que me apoyo en métodos concretos. En las prácticas, por ejemplo, llevaba una lista con cada tarea dividida en fases y marcaba cada paso al completarlo, para tener siempre claro en qué punto estaba.",
+        "question": "¿Cuál es tu punto débil? Algo malo de ti, tus defectos, en qué fallas o qué mejorarías de ti",
+        "answer": "Si tuviera que decir algo, sería la organización: no es lo que me sale de forma natural, así que la trabajo de forma consciente. En las prácticas, por ejemplo, llevaba una lista con cada tarea dividida en fases y marcaba cada paso al completarlo, para tener siempre claro en qué punto estaba.",
         "fixed_answer": False,
     },
     {
@@ -343,6 +343,18 @@ EXTRA_INFO = [
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué es lo más importante que aprendiste?",
         "answer": "En lo técnico, entender qué es una API, cómo está compuesta y cómo funciona, además de Docker y una base de Python, que no se daban en el grado. Y fuera de lo técnico, cómo es trabajar de verdad en un entorno profesional, en una oficina y con compañeros.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Prácticas en Brainy Inteligencia Semántica",
+        "question": "¿Qué es lo que menos te gustó de las prácticas? Algo negativo de Brainy o de tus compañeros",
+        "answer": "Me llevo una experiencia muy positiva. Lo que más me costó al principio fue entender APIs y Docker desde cero, porque no los había visto en el grado, pero también fue con lo que más aprendí.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Prácticas en Brainy Inteligencia Semántica",
+        "question": "Si insisten en algo malo de las prácticas (\"pero dime algo malo\")",
+        "answer": "Sinceramente, no tengo nada malo que destacar: fue una buena experiencia y aprendí mucho. Lo más exigente fue empezar con tecnologías que no conocía, y eso lo veo como algo positivo.",
         "fixed_answer": False,
     },
     {

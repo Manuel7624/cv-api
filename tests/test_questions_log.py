@@ -83,7 +83,7 @@ def test_rejection_is_never_shown_before_plan_b(client, providers, rag_on):
     [
         ([chat.OFF_TOPIC_ANSWER, chat.OFF_TOPIC_ANSWER], "rejected"),
         (
-            ["Eso no lo tengo por aquí, pero escríbeme a mi correo y te lo cuento encantado."] * 2,
+            ["Sobre eso no tengo información aquí. Puedo contarte sobre mi experiencia, mis proyectos o mi formación, o, si lo prefieres, escríbeme a manusastrenar@gmail.com."] * 2,
             "no_information",
         ),
         ([], "error"),
@@ -195,7 +195,7 @@ def test_admin_page_lists_missing_and_latest_questions(client, monkeypatch):
     monkeypatch.setenv("ADMIN_TOKEN", TOKEN)
     chat_stats.log_question("¿Respondida?", "Sí", "gemini", "answered")
     chat_stats.log_question("¿Capital de Francia?", chat.OFF_TOPIC_ANSWER, "gemini", "rejected")
-    chat_stats.log_question("¿Color favorito?", "Eso no lo tengo por aquí", "groq", "no_information")
+    chat_stats.log_question("¿Color favorito?", "Sobre eso no tengo información aquí.", "groq", "no_information")
     page = admin_page(client).text
     missing = page.split("Preguntas sin respuesta o rechazadas</h2>")[1].split("Últimas preguntas</h2>")[0]
     latest = page.split("Últimas preguntas</h2>")[1]
