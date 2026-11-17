@@ -10,14 +10,23 @@ queda en los logs. Solo debe usarse con HTTPS (en Render lo es siempre).
 
 Si ADMIN_TOKEN no está definido o es demasiado corto, la página no existe (404).
 No aparece en /docs.
+
+Contra quien pruebe contraseñas: tras FAILED_LOGINS_BEFORE_LOCK intentos fallidos
+desde la misma IP en LOCK_WINDOW_SECONDS, esa IP queda bloqueada
+LOCK_WINDOW_SECONDS (429), aunque luego acierte. La IP se guarda como hash con sal
+(como en los límites del chat), solo en memoria.
 """
 import logging
 import os
 import secrets
+import threading
+import time
+from collections import deque
+from collections.abc import Callable
 from html import escape
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
@@ -27,7 +36,7 @@ from app.chat_limits import (
     MESSAGES_PER_DAY_TOTAL,
     MESSAGES_PER_MINUTE_PER_IP,
 )
-from app.rate_limit import chat_limits
+from app.rate_limit import chat_limits, get_client_ip
 from app.llm import PROVIDERS
 from app.stats import COUNTERS, QUESTION_DAYS, QUESTION_STATUSES, TIMINGS, chat_stats
 
@@ -40,11 +49,64 @@ QUESTIONS_PER_PAGE = 50
 MISSING_STATUSES = ("rejected", "no_information", "error")
 PROVIDER_LABELS = {provider.name: provider.label for provider in PROVIDERS}
 
+FAILED_LOGINS_BEFORE_LOCK = 10
+LOCK_WINDOW_SECONDS = 15 * 60
+
+
+class FailedLogins:
+    """Intentos fallidos por IP (en hash) y bloqueos temporales."""
+
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
+        self.clock = clock
+        self.lock = threading.Lock()
+        self.failures: dict[str, deque[float]] = {}
+        self.locked_until: dict[str, float] = {}
+
+    def is_locked(self, key: str) -> bool:
+        now = self.clock()
+        with self.lock:
+            until = self.locked_until.get(key)
+            if until is not None and now >= until:  # el bloqueo ya ha pasado
+                del self.locked_until[key]
+                until = None
+            return until is not None
+
+    def record_failure(self, key: str) -> None:
+        now = self.clock()
+        with self.lock:
+            failures = self.failures.setdefault(key, deque())
+            failures.append(now)
+            while failures and now - failures[0] >= LOCK_WINDOW_SECONDS:
+                failures.popleft()
+            if len(failures) >= FAILED_LOGINS_BEFORE_LOCK:
+                self.locked_until[key] = now + LOCK_WINDOW_SECONDS
+                del self.failures[key]
+                logger.warning(
+                    "Página de estadísticas: %d intentos fallidos desde una IP; bloqueada %d min",
+                    FAILED_LOGINS_BEFORE_LOCK, LOCK_WINDOW_SECONDS // 60,
+                )
+            # Las IPs que ya no tienen fallos recientes no ocupan memoria.
+            for other in [k for k, v in self.failures.items() if not v or now - v[-1] >= LOCK_WINDOW_SECONDS]:
+                del self.failures[other]
+
+    def forget(self, key: str) -> None:
+        with self.lock:
+            self.failures.pop(key, None)
+
+    def reset(self) -> None:
+        with self.lock:
+            self.failures.clear()
+            self.locked_until.clear()
+
+
+failed_logins = FailedLogins()
+
 router = APIRouter(include_in_schema=False)
 basic_auth = HTTPBasic(auto_error=False, realm="Estadisticas")
 
 
 def require_admin(
+    request: Request,
     credentials: Annotated[HTTPBasicCredentials | None, Depends(basic_auth)],
 ) -> None:
     token = os.getenv("ADMIN_TOKEN", "")
@@ -52,14 +114,27 @@ def require_admin(
         if token:
             logger.warning("ADMIN_TOKEN es demasiado corto: la página de estadísticas está desactivada")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    # compare_digest tarda lo mismo acierte o no: no da pistas sobre el token.
-    if credentials is None or not secrets.compare_digest(
-        credentials.password.encode(), token.encode()
-    ):
+    key = chat_limits.ip_key(get_client_ip(request))  # hash con sal, nunca la IP
+    if failed_logins.is_locked(key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Demasiados intentos. Vuelve a probar más tarde.",
+            headers={"Retry-After": str(LOCK_WINDOW_SECONDS)},
+        )
+    if credentials is None:  # el navegador aún no ha pedido la contraseña: no cuenta
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             headers={"WWW-Authenticate": 'Basic realm="Estadisticas"'},
         )
+    # compare_digest tarda lo mismo acierte o no: no da pistas sobre el token.
+    if secrets.compare_digest(credentials.password.encode(), token.encode()):
+        failed_logins.forget(key)
+        return
+    failed_logins.record_failure(key)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        headers={"WWW-Authenticate": 'Basic realm="Estadisticas"'},
+    )
 
 
 def format_value(value) -> str:

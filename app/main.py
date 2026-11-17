@@ -25,6 +25,7 @@ from app.chat_limits import MAX_MESSAGE_LENGTH
 from app.llm import RESTART
 from app.database import Base, SessionLocal, engine, get_db
 from app.rate_limit import chat_limits, get_client_ip
+from app.security import HSTS_HEADER, SECURITY_HEADERS, LimitRequestSize, arrived_over_https
 from app.schemas import (
     ChatRequest,
     ChatResponse,
@@ -43,11 +44,6 @@ STATIC_DIR = Path(__file__).parent / "static"
 mimetypes.add_type("font/woff2", ".woff2")
 
 # Cabeceras de seguridad para todas las respuestas.
-SECURITY_HEADERS = {
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "X-Frame-Options": "DENY",
-}
 # Solo se permiten scripts, estilos y peticiones de esta misma web: aunque se
 # colara HTML en la página, no podría cargar ni ejecutar código de fuera.
 CONTENT_SECURITY_POLICY = (
@@ -98,12 +94,16 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(admin_router)
+# Peticiones de más de 32 KB: 413 sin leerlas enteras (ver app/security.py).
+app.add_middleware(LimitRequestSize)
 
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.update(SECURITY_HEADERS)
+    if arrived_over_https(request.url.scheme, request.headers.get("x-forwarded-proto")):
+        response.headers["Strict-Transport-Security"] = HSTS_HEADER
     if not request.url.path.startswith(PATHS_WITHOUT_CSP):
         response.headers["Content-Security-Policy"] = CONTENT_SECURITY_POLICY
     return response

@@ -34,7 +34,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects import postgresql, sqlite
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import Connection, Engine, make_url
 
 # Segundos máximos para conectar y para cada consulta: si Neon no responde, se
 # abandona pronto (las estadísticas siguen en memoria mientras tanto).
@@ -71,10 +71,16 @@ limit_uses_table = Table(
 )
 
 
+# Modos de SSL que cifran siempre la conexión. Con cualquier otro (o sin ninguno en
+# la cadena), se exige "require": los datos nunca viajan sin cifrar.
+SECURE_SSL_MODES = ("require", "verify-ca", "verify-full")
+
+
 def make_engine(url: str) -> Engine:
     """Engine de SQLAlchemy con tiempos de espera cortos.
 
     Neon da cadenas "postgresql://...": se indica el driver psycopg (versión 3).
+    Con PostgreSQL siempre se exige SSL, aunque la cadena no lo diga.
     También admite SQLite, que usan los tests.
     """
     if url.startswith("postgres://"):
@@ -82,6 +88,8 @@ def make_engine(url: str) -> Engine:
     if url.startswith("postgresql://"):
         url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
         connect_args = {"connect_timeout": CONNECT_TIMEOUT_SECONDS}
+        if make_url(url).query.get("sslmode") not in SECURE_SSL_MODES:
+            connect_args["sslmode"] = "require"
     else:
         connect_args = {}
     # pool_pre_ping: comprueba la conexión antes de usarla, porque Neon cierra las
