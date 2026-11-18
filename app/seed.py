@@ -168,7 +168,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Por qué deberían contratarte?",
-        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido: en las prácticas tuve que entender APIs y Docker desde cero, refactoricé varios workers que ya estaban dockerizados y dockericé desde cero uno que no tenía nada de Docker. Además, he construido por mi cuenta este proyecto completo (API, web y chat) trabajando con IA con un método: reviso los planes, decido yo y pruebo todo antes de darlo por bueno. Me tomo en serio la calidad y tengo muchas ganas de crecer en la empresa.",
+        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido, incluso con tecnologías que no había visto en el grado. Además, he construido por mi cuenta este proyecto completo (API, web y chat) trabajando con IA con un método: reviso los planes, decido yo y pruebo todo antes de darlo por bueno. Me tomo en serio la calidad y tengo muchas ganas de crecer en la empresa.",
         "fixed_answer": False,
     },
     {
@@ -263,7 +263,7 @@ EXTRA_INFO = [
     },
     {
         "topic": "Más sobre cómo trabajo",
-        "question": "¿Tienes forma de moverte o desplazarte hasta el trabajo? ¿Cómo irías al trabajo?",
+        "question": "¿Tienes forma de moverte o desplazarte hasta el lugar de trabajo? (carnet, coche, transporte)",
         "answer": "Vivo en Zaragoza y mi preferencia es el trabajo híbrido o remoto. Ahora mismo me estoy sacando el carnet de conducir.",
         "fixed_answer": False,
     },
@@ -437,6 +437,12 @@ EXTRA_INFO = [
     },
     {
         "topic": "Cómo trabajo",
+        "question": "Si no existiera la IA, ¿sabrías hacer esta página? ¿Podrías hacer este proyecto sin IA?",
+        "answer": "Con lo que sé de Java y Python habría podido hacer una versión más sencilla, pero habría tardado mucho más. Con Claude Code llegué a algo más completo, y entiendo lo que hay porque reviso cada plan y cada cambio antes de aceptarlo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Cómo trabajo",
         "question": "Soft skills",
         "answer": "He jugado toda la vida a deportes de equipo, así que me gusta mucho trabajar en equipo. Ser portero de fútbol sala me ha enseñado a mantener la calma bajo presión, a comunicarme con el equipo y a asumir responsabilidad cuando algo sale mal. Me considero empático, con facilidad para ponerme en el lugar de los demás, y con muchas ganas de aprender.",
         "fixed_answer": False,
@@ -468,7 +474,7 @@ EXTRA_INFO = [
     {
         "topic": "Lo que busco",
         "question": "¿Qué tecnologías te gustaría aprender?",
-        "answer": "Quiero profundizar en lo que ya he empezado: diseño de APIs, Docker, Python, bases de datos como PostgreSQL y testing, que ya uso en este proyecto. Además, me gustaría aprender CI/CD y despliegue en la nube, y más adelante tecnologías como Kubernetes o Kafka.",
+        "answer": "Quiero profundizar en lo que ya he empezado: diseño de APIs, Docker, Python, bases de datos como PostgreSQL y testing, que ya uso en este proyecto. Además, más adelante me gustaría aprender tecnologías como Kubernetes o Kafka.",
         "fixed_answer": False,
     },
     {
@@ -498,7 +504,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Tienes referencias?",
-        "answer": "Sí, puedo facilitar referencias de mi etapa de prácticas en Brainy si una empresa las necesita. Para ello, lo mejor es escribirme al correo.",
+        "answer": "Ahora mismo no tengo referencias que facilitar. Si quieres saber más de mi etapa de prácticas, escríbeme a manusastrenar@gmail.com.",
         "fixed_answer": False,
     },
     {
@@ -534,7 +540,7 @@ EXTRA_INFO = [
     {
         "topic": "Más técnico",
         "question": "¿Qué tecnologías usa este proyecto? Tecnologías de esta web, la API y el chat",
-        "answer": "Python con FastAPI para la API REST, SQLAlchemy con SQLite para los datos del CV, PostgreSQL (en Neon) para las estadísticas del chat, Docker, pytest para los tests, y Gemini y Groq con RAG para el chat.",
+        "answer": "Python con FastAPI para la API REST, SQLAlchemy con SQLite para los datos del CV, PostgreSQL (en Neon) para las estadísticas del chat, Docker, pytest para los tests (se ejecutan automáticamente en GitHub Actions), y Gemini y Groq con RAG para el chat. Está desplegado en Render.",
         "fixed_answer": False,
     },
     {

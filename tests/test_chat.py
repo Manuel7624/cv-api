@@ -313,7 +313,9 @@ def test_rules_from_the_final_review(client, fake_ai):
     assert "nunca digas que\n  dockerizó varios workers" in prompt
     assert "¿Cuál fue el único worker sin Docker?" in prompt
     # Lo que solo quiere aprender no se presenta como conocido.
-    assert "CI/CD, Kubernetes y despliegue en la nube" in prompt
+    assert "Kubernetes y Kafka: son cosas que quiere aprender" in prompt
+    # CI/CD y despliegue ya están hechos en este proyecto: no son algo por aprender.
+    assert "CI/CD y despliegue en la nube ya están hechos" in prompt
     assert "ni que se familiarizó con su arquitectura" in prompt
     # El sueldo, aunque propongan cifras.
     assert "propongan cifras" in prompt
@@ -412,7 +414,7 @@ def test_rules_for_personal_questions_persona_and_language(client, fake_ai):
     # Preguntas personales o afectivas: respuesta neutra, sin confirmar ni negar nada.
     assert chat.PERSONAL_ANSWER in prompt
     assert chat.PERSONAL_ANSWER.startswith("Prefiero centrar esta conversación en mi perfil profesional")
-    assert "no confirmes ni niegues\n  nada" in prompt
+    assert "no confirmes ni niegues nada" in prompt
     # Persona coherente: solo reconoce ser una IA si se lo preguntan directamente.
     assert "No digas por tu cuenta que eres una\n  IA" in prompt
     assert "Solo si te preguntan directamente" in prompt
@@ -457,3 +459,101 @@ def test_commute_answer_only_uses_facts_already_in_the_data():
         assert invented not in commute.lower()
     # Los mismos hechos ya estaban escritos en otras respuestas.
     assert any("sacando el carnet" in a for q, a in texts.items() if q.startswith("¿Carnet de conducir?"))
+
+
+# --- Correcciones a partir de preguntas reales ---
+
+
+def test_references_entry_says_there_are_none():
+    answers = [i["answer"] for i in EXTRA_INFO if i["question"] == "¿Tienes referencias?"]
+    assert answers == [
+        "Ahora mismo no tengo referencias que facilitar. Si quieres saber más de mi etapa de "
+        "prácticas, escríbeme a manusastrenar@gmail.com."
+    ]
+    # Ninguna otra respuesta ofrece ni menciona referencias.
+    for item in EXTRA_INFO:
+        if item["question"] != "¿Tienes referencias?":
+            assert "referencias" not in item["answer"].lower(), item["question"]
+
+
+def test_future_plans_have_no_ci_cd_or_cloud_deployment():
+    for item in EXTRA_INFO:
+        text = (item["question"] + " " + item["answer"]).lower()
+        if "aprender" in item["question"].lower() or "mejorar" in item["question"].lower():
+            assert "ci/cd" not in text, item["question"]
+            assert "despliegue en la nube" not in text, item["question"]
+    learn = next(i["answer"] for i in EXTRA_INFO if i["question"] == "¿Qué tecnologías te gustaría aprender?")
+    assert "Kubernetes o Kafka" in learn and "PostgreSQL" in learn
+
+
+def test_project_technologies_mention_github_actions_and_render():
+    text = next(i["answer"] for i in EXTRA_INFO if i["question"].startswith("¿Qué tecnologías usa este proyecto?"))
+    assert "GitHub Actions" in text and "Render" in text
+
+
+def test_data_has_the_no_ai_answer_word_for_word():
+    answers = [i["answer"] for i in EXTRA_INFO if i["question"].startswith("Si no existiera la IA")]
+    assert answers == [
+        "Con lo que sé de Java y Python habría podido hacer una versión más sencilla, pero habría "
+        "tardado mucho más. Con Claude Code llegué a algo más completo, y entiendo lo que hay porque "
+        "reviso cada plan y cada cambio antes de aceptarlo."
+    ]
+
+
+def test_balancea_link_is_in_the_data():
+    projects = [p for p in client_projects()]
+    assert any(p["repository"] == "https://github.com/Manuel7624/TFG_ManuelSastre" for p in projects)
+
+
+def client_projects():
+    from app.seed import PROJECTS
+
+    return PROJECTS
+
+
+def test_rules_against_repetition_and_invented_claims(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    # Sin ofertas al final en cada respuesta.
+    assert 'No termines con "Si quieres, te cuento más..."' in prompt
+    assert "una de cada tres respuestas" in prompt and "misma frase que en tu mensaje anterior" in prompt
+    assert 'termina con una frase corta que invite a preguntar' not in prompt
+    # Frases de las prácticas solo cuando preguntan por las prácticas; un solo ejemplo al contratar.
+    assert "solo cuando\n  preguntan por las prácticas" in prompt
+    assert 'NO menciones los workers ni "Docker desde cero"' in prompt
+    assert "elige UN solo enfoque" in prompt
+    assert 'No repitas "me tomo en serio la calidad"' in prompt
+    # Correo: solo "puedes escribirme a ..."; sin "respondo personalmente".
+    assert 'di solo "puedes escribirme a manusastrenar@gmail.com"' in prompt
+    assert "no digas que\n  respondes personalmente" in prompt
+    assert "No termines tus respuestas\n  invitando a escribir al correo" in prompt
+    # Referencias y horario del fútbol sala.
+    assert "Referencias: no tienes ninguna que facilitar" in prompt
+    assert '(nunca digas que el fútbol sala, ni otra afición,\n  "no limita" o "limita" tu horario)' in prompt
+    # El carnet solo cuando preguntan por el carnet o por cómo te desplazas.
+    assert "menciónalo solo si preguntan por el carnet o por cómo te\n  desplazas al trabajo" in prompt
+    # ¿Cómo sé que no te lo estás inventando?
+    assert "eres una IA que solo usa la información que Manuel ha cargado" in prompt
+    assert 'No hables de "sus datos" ni de "pedirle" nada' in prompt
+
+
+def test_personal_jokes_and_insults_have_four_different_answers(client, fake_ai):
+    assert len(chat.PERSONAL_ANSWERS) == 4 and len(set(chat.PERSONAL_ANSWERS)) == 4
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    for number, answer in enumerate(chat.PERSONAL_ANSWERS, 1):
+        assert f'{number}) "{answer}"' in prompt
+    assert "elige una distinta de la que ya hayas usado" in prompt
+    assert "bromas o insultos" in prompt
+    # Ninguna se confunde con "sin información" ni con un rechazo, y ninguna manda al correo.
+    for answer in chat.PERSONAL_ANSWERS:
+        assert not chat.says_no_information(answer) and not chat.is_rejection(answer)
+        assert "@" not in answer
+
+
+def test_messages_that_are_not_understood_use_the_not_understood_phrase(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    assert 'por ejemplo "qué es lo q quiero ver"' in prompt
+    assert "nunca con la frase de cuando no tienes la información" in prompt
+    assert chat.GIBBERISH_ANSWER in prompt
