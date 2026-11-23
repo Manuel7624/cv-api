@@ -371,9 +371,11 @@ def test_mobile_ai_notice_is_smaller_and_desktop_is_unchanged(client):
     # Escritorio: el aviso sigue igual.
     base = css.split(".chat-note {")[1].split("}")[0]
     assert "margin: 10px 4px 0" in base and "font-size: 12px" in base and "line-height: 1.5" in base
-    # Móvil: letra más pequeña, menos altura y botón del CV más cerca del aviso.
+    # Móvil: más aire. Aviso a 13 px de la tarjeta, de 12,5 px y con interlineado cómodo;
+    # el botón del CV a unos 30 px del aviso (18 de margen + 12 de la rejilla) y a 12 px
+    # de la fila Correo/LinkedIn/GitHub.
     mobile = css.split("@media (max-width: 600px) {")[1]
     note = mobile.split(".chat-note {")[1].split("}")[0]
-    assert "font-size: 11px" in note and "line-height: 1.35" in note and "margin: 8px 2px 0" in note
+    assert "font-size: 12.5px" in note and "line-height: 1.55" in note and "margin: 13px 4px 0" in note
     links = mobile.split(".links {")[1].split("}")[0]
-    assert "margin-top: -4px" in links
+    assert "margin-top: 18px" in links and "gap: 12px 8px" in links

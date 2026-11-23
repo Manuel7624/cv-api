@@ -795,21 +795,23 @@ h1 {
     padding: 12px 16px 16px;
   }
 
-  /* Aviso de la IA más pequeño y bajo, y más cerca del botón del CV. El botón
-     queda siempre a más de 16 px del cuadro de escribir y de "Enviar": el propio
-     aviso va entre los dos. */
+  /* Zona bajo el chat con aire: la tarjeta, el aviso de la IA y los botones no van
+     pegados. El aviso queda a 13 px de la tarjeta (y siempre a más de 16 px del cuadro
+     de escribir y de "Enviar", porque va dentro de ella), y a unos 30 px del botón del
+     CV; el botón del CV, a 12 px de la fila Correo/LinkedIn/GitHub. Su color se queda
+     en --text-muted, que ya es suave y sigue cumpliendo el contraste AA. */
   .chat-note {
-    margin: 8px 2px 0;
-    font-size: 11px;
-    line-height: 1.35;
+    margin: 13px 4px 0;
+    font-size: 12.5px;
+    line-height: 1.55;
   }
 
   /* CV a todo el ancho; correo, LinkedIn y GitHub en la fila de abajo. */
   .links {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: -4px;
+    gap: 12px 8px;
+    margin-top: 18px; /* + 12 px de la rejilla = unos 30 px desde el aviso */
   }
 
   .links > :first-child {
