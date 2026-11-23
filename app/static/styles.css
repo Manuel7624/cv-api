@@ -483,7 +483,7 @@ h1 {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 16px 22px 4px;
+  padding: 16px 22px 20px;
   border-top: 1px solid var(--gray-soft);
 }
 
@@ -538,11 +538,13 @@ h1 {
   opacity: 0.7;
 }
 
-/* Aviso legal dentro de la tarjeta, bajo la caja de escribir: una línea pequeña y, al
-   pulsar "Más info", el texto completo (details/summary nativo: se abre con el dedo, con
-   Intro o con Espacio). Toda la línea es la zona táctil, de al menos 44 px. */
+/* Aviso legal justo debajo de la tarjeta del chat (fuera de ella, lejos de la caja de escribir
+   y de "Enviar"): una línea pequeña y, al pulsar "Más info", el texto completo (details/summary
+   nativo: se abre con el dedo, con Intro o con Espacio). Todo el resumen es zona táctil, de 44 px
+   como mínimo. El texto queda a unos 14 px de la tarjeta (1 px de margen + la holgura de la
+   zona táctil) y alineado con su borde izquierdo. */
 .chat-note {
-  padding: 0 22px 8px;
+  margin-top: 1px;
   font-size: 12.5px;
   line-height: 1.5;
   color: #4b5563;
@@ -552,7 +554,8 @@ h1 {
   display: flex;
   align-items: center;
   min-height: 44px;
-  /* Algo de margen interior para que el aro del foco no tape el texto. */
+  /* El aro del foco, que se ve entero (el aviso ya no está dentro de la tarjeta, que lo recortaba), */
+  /* tiene sitio a los lados sin mover el texto. */
   padding: 0 6px;
   margin: 0 -6px;
   cursor: pointer;
@@ -564,7 +567,6 @@ h1 {
 }
 
 .chat-note summary:focus-visible {
-  outline-offset: -3px;
   border-radius: 8px;
 }
 
@@ -576,7 +578,7 @@ h1 {
 }
 
 .chat-note p {
-  padding: 0 0 10px;
+  padding: 6px 0 12px; /* los 6 px de arriba dejan sitio al aro del foco del resumen */
   font-size: 12.5px;
   line-height: 1.55;
 }
@@ -597,7 +599,7 @@ h1 {
 }
 
 .section-summary {
-  padding-top: 32px;
+  padding-top: 19px; /* + 13 px de holgura del aviso = 32 px desde su línea */
 }
 
 
@@ -941,7 +943,7 @@ h1 {
   }
 
   .chat-form {
-    padding: 12px 16px 4px;
+    padding: 12px 16px 16px;
   }
 
   /* El texto de ayuda cabe en una sola línea hasta en 360 px. La letra de lo que se escribe
@@ -954,7 +956,6 @@ h1 {
      errores" de la línea (sigue en el texto completo de "Más info"): con las tres partes, la
      línea mide unos 353 px y no cabe en una tarjeta de 390 px o menos. */
   .chat-note {
-    padding: 0 16px 6px;
     font-size: 11.5px;
   }
 
@@ -967,7 +968,7 @@ h1 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px 8px;
-    margin-top: 14px; /* + 12 px de la rejilla = 26 px bajo la tarjeta del chat */
+    margin-top: 0; /* 13 px de holgura del aviso + 12 px de la rejilla = unos 25 px bajo su línea */
   }
 
   .links > :first-child {

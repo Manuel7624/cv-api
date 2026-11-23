@@ -85,7 +85,7 @@ def test_card_footer_is_one_line_and_the_same_height(client):
     # Los tres títulos de apartado (resumen, cómo está hecha y contacto) miden lo mismo: 20 px.
     assert "font-size: 20px" in css_block(css, ".section h2") and "font-size: 20px" in css_block(css, ".section-contact h2")
     assert "font-size" not in css_block(css, ".section-how")
-    assert "padding-top: 32px" in css_block(css, ".section-summary")  # escritorio
+    assert "padding-top: 19px" in css_block(css, ".section-summary")  # escritorio: 32 px desde la línea del aviso
     assert "padding-top: 22px" in css_block(css.split("@media (max-width: 600px) {")[1], "  .section-summary")  # móvil
 
 
@@ -187,16 +187,20 @@ FULL_NOTICE = (
 )
 
 
-def test_notice_is_a_native_details_inside_the_card_below_the_input(client):
+def test_notice_is_a_native_details_right_below_the_card_not_inside_it(client):
     html = client.get("/").text
-    card = html.split('<div class="chat-card">')[1].split("</section>")[0]
-    assert card.index('<form class="chat-form"') < card.index('<details class="chat-note">') < card.rindex("</div>")
-    note = card.split('<details class="chat-note">')[1].split("</details>")[0]
+    section = html.split('<section class="chat" id="chat"')[1].split("</section>")[0]
+    card = section.split('<div class="chat-card">')[1].split("<details")[0]
+    card = re.sub(r"<!--.*?-->", "", card, flags=re.S)  # sin los comentarios
+    assert card.rstrip().endswith("</div>")  # la tarjeta ya está cerrada antes del aviso
+    assert "chat-note" not in card and "<details" not in card
+    assert section.count("<details") == 1 and section.rindex("</div>") < section.index('<details class="chat-note">')
+    note = section.split('<details class="chat-note">')[1].split("</details>")[0]
     summary = re.sub(r"<[^>]+>", "", note.split("<summary>")[1].split("</summary>")[0])
     assert summary == "Respuestas generadas por IA · pueden contener errores · Más info"
     assert f"<p>{FULL_NOTICE}</p>" in note
-    assert "<details" in html and "open" not in html.split('<details class="chat-note"')[1].split(">")[0]  # cerrado al empezar
-    assert 'class="chat-note"' not in html.replace('<details class="chat-note">', "")  # ya no hay un <p> aparte debajo de la tarjeta
+    assert "open" not in html.split('<details class="chat-note"')[1].split(">")[0]  # cerrado al empezar
+    assert 'class="chat-note"' not in html.replace('<details class="chat-note">', "")  # ya no hay un <p> aparte
 
 
 def test_notice_needs_no_new_javascript(client):
@@ -208,7 +212,10 @@ def test_notice_is_keyboard_and_touch_friendly(client):
     css = client.get("/static/styles.css").text
     summary = css_block(css, ".chat-note summary")
     assert "min-height: 44px" in summary and "cursor: pointer" in summary and "list-style: none" in summary
-    assert "outline-offset: -3px" in css_block(css, ".chat-note summary:focus-visible")  # el foco no se recorta
+    # Fuera de la tarjeta (que tiene overflow oculto) el aro del foco se ve entero: sin recortes ni desplazamientos.
+    focus = css_block(css, ".chat-note summary:focus-visible")
+    assert "outline-offset: -" not in focus and "overflow" not in css_block(css, ".chat")
+    assert "padding: 0 6px" in summary and "margin: 0 -6px" in summary  # sitio para el aro sin mover el texto
     more = css_block(css, ".chat-note-more")
     assert "color: var(--blue)" in more and "text-decoration: underline" in more
     mobile = css.split("@media (max-width: 600px) {")[1]
