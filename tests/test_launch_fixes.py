@@ -27,33 +27,39 @@ def test_selection_keeps_the_most_similar_in_original_order():
 
 def test_groq_gets_6_rag_answers_and_gemini_12(client, db_session, monkeypatch):
     def embed(texts, timeout=None):
-        return [retrieval.normalize([1.0 + (hash(text) % 7), 0.5, 0.2]) for text in texts]
+        # Vectores fijos (sin hash() de Python, que cambia en cada ejecución).
+        return [retrieval.normalize([1.0 + (sum(map(ord, text)) % 7), 0.5, 0.2]) for text in texts]
 
     monkeypatch.setattr(retrieval, "embed", embed)
     monkeypatch.setattr(retrieval, "MIN_SIMILARITY", -1)
     from app import crud
 
     retrieval.build_index(crud.get_extra_info(db_session, fixed_answer=False))
+    sent = {}  # proveedor -> respuestas extra que lleva su prompt
+    real_build = chat.build_system_prompt
+
+    def spy(db, extra_info=None, partial=False):
+        sent[current["name"]] = list(extra_info)
+        return real_build(db, extra_info, partial)
+
+    current = {}
+    monkeypatch.setattr(chat, "build_system_prompt", spy)
     prompts = {}
 
     def fake_ask(system_prompt, conversation, _steps=None, **_):
         for provider in llm.PROVIDERS:
+            current["name"] = provider.name
             prompts[provider.name] = system_prompt(provider)
         yield "Respuesta de prueba"
 
     monkeypatch.setattr(chat, "ask_providers", fake_ask)
     assert client.post("/chat", json={"message": "¿Sabe Python?"}).status_code == 200
 
-    def extra_in(prompt):
-        return [item for item in EXTRA_INFO if not item["fixed_answer"]
-                and json.dumps(item["answer"], ensure_ascii=False)[1:-1] in prompt]
-
-    assert len(extra_in(prompts["gemini"])) == retrieval.TOP_K == 12
-    assert len(extra_in(prompts["gemini_backup"])) == 12
-    groq_items = extra_in(prompts["groq"])
-    assert len(groq_items) == chat.GROQ_RAG_ITEMS == 6
+    assert len(sent["gemini"]) == retrieval.TOP_K == 12
+    assert prompts["gemini"] == prompts["gemini_backup"]  # la reserva de Gemini lleva las mismas 12
+    assert len(sent["groq"]) == chat.GROQ_RAG_ITEMS == 6
     # Son 6 de las 12 de Gemini, y el prompt de Groq es más corto.
-    assert all(item in extra_in(prompts["gemini"]) for item in groq_items)
+    assert all(item in sent["gemini"] for item in sent["groq"])
     assert len(prompts["groq"]) < len(prompts["gemini"])
 
 
