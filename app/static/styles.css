@@ -795,6 +795,12 @@ h1 {
     padding: 12px 16px 16px;
   }
 
+  /* El texto de ayuda cabe en una sola línea hasta en 360 px. La letra de lo que se escribe
+     sigue en 16 px (con menos, el iPhone amplía la página al tocar el cuadro). */
+  #chat-input::placeholder {
+    font-size: 14px;
+  }
+
   /* Zona bajo el chat con aire: la tarjeta, el aviso de la IA y los botones no van
      pegados. El aviso queda a 13 px de la tarjeta (y siempre a más de 16 px del cuadro
      de escribir y de "Enviar", porque va dentro de ella), y a unos 30 px del botón del

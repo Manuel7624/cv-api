@@ -379,3 +379,12 @@ def test_mobile_ai_notice_is_smaller_and_desktop_is_unchanged(client):
     assert "font-size: 12.5px" in note and "line-height: 1.55" in note and "margin: 13px 4px 0" in note
     links = mobile.split(".links {")[1].split("}")[0]
     assert "margin-top: 18px" in links and "gap: 12px 8px" in links
+
+
+def test_mobile_placeholder_is_smaller_so_it_fits_in_one_line(client):
+    css = client.get("/static/styles.css").text
+    mobile = css.split("@media (max-width: 600px) {")[1]
+    assert "#chat-input::placeholder {" in mobile
+    assert "font-size: 14px" in mobile.split("#chat-input::placeholder {")[1].split("}")[0]
+    # Lo que se escribe sigue en 16 px: con menos, iOS amplía la página al tocar el cuadro.
+    assert "font-size: 16px" in css.split("#chat-input {")[1].split("}")[0]
