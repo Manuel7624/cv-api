@@ -329,7 +329,8 @@ def admin_stats(
     <h1>Estadísticas del chat</h1>
     <p>Las preguntas se guardan de forma anónima, sin IPs, y se borran a los
     {QUESTION_DAYS} días. Para los límites solo se guarda un hash de la IP, que se borra
-    a las 24 horas. <strong>Todas las horas y los días de este panel están en UTC</strong>
+    a las 24 horas. La aplicación no guarda IPs; el hosting puede registrarlas como parte
+    de sus logs de servidor. <strong>Todas las horas y los días de este panel están en UTC</strong>
     (en España, una o dos horas menos que la hora local según la época del año).</p>
     <p class="notice {notice[0]}">{escape(notice[1])}</p>
     <p class="cap">Tope global de mensajes: <strong>{used_today} de {MESSAGES_PER_DAY_TOTAL}</strong>

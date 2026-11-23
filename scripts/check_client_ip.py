@@ -2,7 +2,7 @@
 por IP inventándose la IP en las cabeceras.
 
 Uso (después de desplegar, desde tu ordenador):
-    python scripts/check_client_ip.py https://tu-web.onrender.com
+    python scripts/check_client_ip.py https://tu-web.vercel.app
 
 Envía 6 mensajes cortos al chat (el límite es de 5 por minuto y por IP), cada uno
 con una IP inventada distinta en X-Forwarded-For, True-Client-IP, X-Real-IP y
@@ -48,7 +48,7 @@ def send(base_url: str, number: int) -> int:
 
 def main() -> None:
     if len(sys.argv) != 2 or not sys.argv[1].startswith("https://"):
-        print("Uso: python scripts/check_client_ip.py https://tu-web.onrender.com")
+        print("Uso: python scripts/check_client_ip.py https://tu-web.vercel.app")
         sys.exit(1)
     base_url = sys.argv[1]
     codes = []
