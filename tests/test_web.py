@@ -209,10 +209,8 @@ def test_unfinished_answers_show_a_caret_and_are_announced_at_the_end(client):
 def test_web_shows_the_ai_work_method(client):
     html = client.get("/").text
     assert (
-        "La he desarrollado yo desde cero con un método de trabajo con IA: defino los "
-        "requisitos y las reglas del proyecto, pido a Claude Code un plan para cada tarea "
-        "que reviso y ajusto yo, la implementa por pasos pequeños y yo reviso el "
-        "resultado, lo pruebo y decido qué se queda."
+        "Defino los requisitos, Claude Code propone un plan por tarea y lo implementa en "
+        "pasos pequeños. Yo reviso, pruebo y decido qué se queda."
     ) in html
     card = html.split('aria-label="Tecnologías">')[1].split("</ul>")[0]
     assert "<li>Claude Code</li>" in card and "<li>Codex</li>" in card
@@ -369,8 +367,10 @@ def test_on_narrow_screens_the_answer_is_placed_at_its_start(client):
 def test_mobile_ai_notice_is_smaller_and_desktop_is_unchanged(client):
     css = client.get("/static/styles.css").text
     # Escritorio: el aviso sigue igual.
+    # (Escritorio: 22 px bajo la tarjeta, 12,5 px, gris #4b5563 y interlineado 1,55.)
     base = css.split(".chat-note {")[1].split("}")[0]
-    assert "margin: 10px 4px 0" in base and "font-size: 12px" in base and "line-height: 1.5" in base
+    assert "margin: 22px 4px 0" in base and "font-size: 12.5px" in base and "line-height: 1.55" in base
+    assert "color: #4b5563" in base
     # Móvil: más aire. Aviso a 13 px de la tarjeta, de 12,5 px y con interlineado cómodo;
     # el botón del CV a unos 30 px del aviso (18 de margen + 12 de la rejilla) y a 12 px
     # de la fila Correo/LinkedIn/GitHub.
