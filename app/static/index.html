@@ -94,8 +94,13 @@
             <textarea id="chat-input" rows="1" maxlength="{{MAX_MESSAGE_LENGTH}}" enterkeyhint="send" autocomplete="off" placeholder="Escribe tu pregunta…"></textarea>
             <button class="send" id="chat-send" type="submit">Enviar</button>
           </form>
+
+          <!-- Aviso legal: una línea pequeña; "Más info" abre el texto completo (nativo, sin JavaScript). -->
+          <details class="chat-note">
+            <summary><span>Respuestas generadas por IA<span class="chat-note-extra"> · pueden contener errores</span> · <span class="chat-note-more">Más info</span></span></summary>
+            <p>Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas datos personales. Las preguntas se guardan de forma anónima 30 días para mejorar el chat.</p>
+          </details>
         </div>
-        <p class="chat-note">Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas datos personales. Las preguntas se guardan de forma anónima 30 días para mejorar el chat.</p>
       </section>
     </div>
 

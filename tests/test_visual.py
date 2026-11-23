@@ -50,7 +50,8 @@ def test_chat_styles(client):
     focus = css_block(css, "#chat-input:focus-visible")
     assert "border-color: var(--blue)" in focus and "box-shadow: 0 0 0 4px" in focus
     mobile = css.split("@media (max-width: 600px) {")[1]
-    assert "font-size: 25px" in css_block(mobile, "  .chat h2")
+    # El título cabe en una línea en móvil: baja hasta 22 px como mínimo y sube hasta 25 px.
+    assert "clamp(22px" in css_block(mobile, "  .chat h2") and ", 25px)" in css_block(mobile, "  .chat h2")
 
 
 def test_chat_has_no_online_label_and_a_34px_welcome_avatar(client):
@@ -84,7 +85,8 @@ def test_card_footer_is_one_line_and_the_same_height(client):
     # Los tres títulos de apartado (resumen, cómo está hecha y contacto) miden lo mismo: 20 px.
     assert "font-size: 20px" in css_block(css, ".section h2") and "font-size: 20px" in css_block(css, ".section-contact h2")
     assert "font-size" not in css_block(css, ".section-how")
-    assert "padding-top: 22px" in css_block(css, ".section-summary")
+    assert "padding-top: 32px" in css_block(css, ".section-summary")  # escritorio
+    assert "padding-top: 22px" in css_block(css.split("@media (max-width: 600px) {")[1], "  .section-summary")  # móvil
 
 
 def test_clicking_a_card_sends_the_original_question():
@@ -175,3 +177,52 @@ def test_footer_text_has_enough_contrast():
     pairs = [("#4b5563", "#f6f7f9"), ("#4b5563", "#ffffff"), ("#1e40af", "#f6f9ff"),
              ("#1d4ed8", "#e8efff"), ("#ffffff", "#1d4ed8"), ("#1d4ed8", "#f6f7f9")]
     assert all(contrast(*pair) >= 4.5 for pair in pairs)
+
+
+# --- Aviso legal dentro de la tarjeta -------------------------------------------------
+
+FULL_NOTICE = (
+    "Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas "
+    "datos personales. Las preguntas se guardan de forma anónima 30 días para mejorar el chat."
+)
+
+
+def test_notice_is_a_native_details_inside_the_card_below_the_input(client):
+    html = client.get("/").text
+    card = html.split('<div class="chat-card">')[1].split("</section>")[0]
+    assert card.index('<form class="chat-form"') < card.index('<details class="chat-note">') < card.rindex("</div>")
+    note = card.split('<details class="chat-note">')[1].split("</details>")[0]
+    summary = re.sub(r"<[^>]+>", "", note.split("<summary>")[1].split("</summary>")[0])
+    assert summary == "Respuestas generadas por IA · pueden contener errores · Más info"
+    assert f"<p>{FULL_NOTICE}</p>" in note
+    assert "<details" in html and "open" not in html.split('<details class="chat-note"')[1].split(">")[0]  # cerrado al empezar
+    assert 'class="chat-note"' not in html.replace('<details class="chat-note">', "")  # ya no hay un <p> aparte debajo de la tarjeta
+
+
+def test_notice_needs_no_new_javascript(client):
+    script = client.get("/static/chat.js").text + client.get("/static/contact.js").text
+    assert "chat-note" not in script and "details" not in script
+
+
+def test_notice_is_keyboard_and_touch_friendly(client):
+    css = client.get("/static/styles.css").text
+    summary = css_block(css, ".chat-note summary")
+    assert "min-height: 44px" in summary and "cursor: pointer" in summary and "list-style: none" in summary
+    assert "outline-offset: -3px" in css_block(css, ".chat-note summary:focus-visible")  # el foco no se recorta
+    more = css_block(css, ".chat-note-more")
+    assert "color: var(--blue)" in more and "text-decoration: underline" in more
+    mobile = css.split("@media (max-width: 600px) {")[1]
+    assert "font-size: 11.5px" in css_block(mobile, "  .chat-note")
+
+
+def test_notice_line_is_shortened_on_narrow_screens_only(client):
+    css = client.get("/static/styles.css").text
+    narrow = css.split("@media (max-width: 440px) {")[1]
+    assert "display: none" in css_block(narrow, "  .chat-note-extra")
+    assert "display: none" not in css_block(css, ".chat-note")  # en el texto completo sigue todo
+
+
+def test_mobile_greeting_avatar_is_aligned_with_the_top_of_the_bubble(client):
+    css = client.get("/static/styles.css").text
+    assert "align-items: flex-end" in css_block(css, ".message")  # escritorio, como antes
+    assert "align-items: flex-start" in css_block(css.split("@media (max-width: 600px) {")[1], "  .message")

@@ -483,7 +483,7 @@ h1 {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 16px 22px 20px;
+  padding: 16px 22px 4px;
   border-top: 1px solid var(--gray-soft);
 }
 
@@ -538,11 +538,47 @@ h1 {
   opacity: 0.7;
 }
 
+/* Aviso legal dentro de la tarjeta, bajo la caja de escribir: una línea pequeña y, al
+   pulsar "Más info", el texto completo (details/summary nativo: se abre con el dedo, con
+   Intro o con Espacio). Toda la línea es la zona táctil, de al menos 44 px. */
 .chat-note {
-  margin: 22px 4px 0;
+  padding: 0 22px 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.chat-note summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  /* Algo de margen interior para que el aro del foco no tape el texto. */
+  padding: 0 6px;
+  margin: 0 -6px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.chat-note summary::-webkit-details-marker {
+  display: none;
+}
+
+.chat-note summary:focus-visible {
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+.chat-note-more {
+  margin-left: 0.3em;
+  font-weight: 700;
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+.chat-note p {
+  padding: 0 0 10px;
   font-size: 12.5px;
   line-height: 1.55;
-  color: #4b5563;
 }
 
 /* --- Apartados --- */
@@ -561,7 +597,7 @@ h1 {
 }
 
 .section-summary {
-  padding-top: 22px;
+  padding-top: 32px;
 }
 
 
@@ -862,9 +898,20 @@ h1 {
     margin-top: 0;
   }
 
+  /* El título cabe en una línea (a 360 px, 390 px y 430 px) y baja hasta 22 px como mínimo:
+     mide unas 12,5 veces su tamaño de letra y la tarjeta deja (ancho - 72 px) libres. */
   .chat h2 {
     padding: 18px 16px 2px;
-    font-size: 25px;
+    font-size: clamp(22px, calc((100vw - 76px) / 13.2), 25px);
+  }
+
+  /* El avatar del saludo, a la altura de la parte de arriba de la burbuja. */
+  .message {
+    align-items: flex-start;
+  }
+
+  .section-summary {
+    padding-top: 22px;
   }
 
   /* Zona de mensajes más baja, para que siempre quede página a la vista fuera del
@@ -894,7 +941,7 @@ h1 {
   }
 
   .chat-form {
-    padding: 12px 16px 16px;
+    padding: 12px 16px 4px;
   }
 
   /* El texto de ayuda cabe en una sola línea hasta en 360 px. La letra de lo que se escribe
@@ -903,15 +950,16 @@ h1 {
     font-size: 14px;
   }
 
-  /* Zona bajo el chat con aire: la tarjeta, el aviso de la IA y los botones no van
-     pegados. El aviso queda a 13 px de la tarjeta (y siempre a más de 16 px del cuadro
-     de escribir y de "Enviar", porque va dentro de ella), y a unos 30 px del botón del
-     CV; el botón del CV, a 12 px de la fila Correo/LinkedIn/GitHub. Su color se queda
-     en --text-muted, que ya es suave y sigue cumpliendo el contraste AA. */
+  /* Aviso legal: 11,5 px, una sola línea. En pantallas estrechas se oculta "pueden contener
+     errores" de la línea (sigue en el texto completo de "Más info"): con las tres partes, la
+     línea mide unos 353 px y no cabe en una tarjeta de 390 px o menos. */
   .chat-note {
-    margin: 13px 4px 0;
-    font-size: 12.5px;
-    line-height: 1.55;
+    padding: 0 16px 6px;
+    font-size: 11.5px;
+  }
+
+  .chat-note p {
+    font-size: 12px;
   }
 
   /* CV a todo el ancho; correo, LinkedIn y GitHub en la fila de abajo. */
@@ -919,7 +967,7 @@ h1 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px 8px;
-    margin-top: 18px; /* + 12 px de la rejilla = unos 30 px desde el aviso */
+    margin-top: 14px; /* + 12 px de la rejilla = 26 px bajo la tarjeta del chat */
   }
 
   .links > :first-child {
@@ -972,6 +1020,12 @@ h1 {
   .how-steps {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+}
+
+@media (max-width: 440px) {
+  .chat-note-extra {
+    display: none;
   }
 }
 

@@ -213,7 +213,7 @@ cada una se guarda la pregunta, la respuesta, la fecha, el proveedor y si fue
 respondida, rechazada (fuera de tema), sin información o sin respuesta por fallo de
 los proveedores. Nunca la IP ni nada que identifique a quien pregunta. Las de más de
 30 días se borran solas (como mucho una vez por hora) y nunca se muestran. La web
-avisa debajo del chat de que las preguntas se guardan de forma anónima 30 días.
+avisa, en una línea bajo la caja de escribir (con "Más info" para el texto completo), de que las preguntas se guardan de forma anónima 30 días.
 
 - Se protege con `ADMIN_TOKEN` (al menos 20 caracteres). El navegador pide usuario y
   contraseña: el usuario da igual y la contraseña es el token. Sin token, la página
