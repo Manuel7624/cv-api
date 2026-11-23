@@ -523,7 +523,7 @@ def test_rules_against_repetition_and_invented_claims(client, fake_ai):
     # Frases de las prácticas solo cuando preguntan por las prácticas; un solo ejemplo al contratar.
     assert "solo cuando\n  preguntan por las prácticas" in prompt
     assert 'NO menciones los workers ni "Docker desde cero"' in prompt
-    assert "combina como máximo\n  dos ideas" in prompt
+    assert "usa 60-80 palabras y tres ideas" in prompt
     assert 'No repitas "me tomo en serio la calidad"' in prompt
     # Correo: solo "puedes escribirme a ..."; sin "respondo personalmente".
     assert 'di solo "puedes escribirme a manusastrenar@gmail.com"' in prompt
