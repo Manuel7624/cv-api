@@ -234,7 +234,7 @@ def test_access_log_is_silenced_in_code_too():
     access.disabled = False
     main.silence_access_log()
     assert access.disabled
-    assert "silence_access_log()" in (ROOT / "app" / "main.py").read_text(encoding="utf-8").split("async def lifespan")[1]
+    assert "silence_access_log()" in (ROOT / "app" / "main.py").read_text(encoding="utf-8").split("def startup()")[1].split("async def lifespan")[0]
 
 
 def test_compose_and_render_do_not_override_the_start_command():

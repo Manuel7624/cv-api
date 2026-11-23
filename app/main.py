@@ -14,10 +14,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from starlette.background import BackgroundTask
 
 from app import chat, crud, retrieval
 from app.admin import router as admin_router
@@ -41,6 +42,10 @@ from app.seed import seed
 from app.stats import chat_stats
 
 STATIC_DIR = Path(__file__).parent / "static"
+# En Vercel (que define VERCEL) la app corre en funciones que se congelan entre
+# peticiones: el hilo que envía las estadísticas cada 5 s no sirve, así que se envían
+# al terminar cada mensaje del chat. En Render y en local, todo sigue como siempre.
+SERVERLESS = bool(os.getenv("VERCEL"))
 # Windows no siempre conoce el tipo de las fuentes woff2.
 mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("image/x-icon", ".ico")
@@ -85,16 +90,22 @@ def silence_access_log() -> None:
     logging.getLogger("uvicorn.access").disabled = True
 
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Al arrancar, crea las tablas, carga los datos, prepara la búsqueda del chat y
-    empieza a guardar las estadísticas. Al apagar, envía las que queden pendientes."""
+def startup() -> None:
+    """Crea las tablas, carga los datos, prepara la búsqueda del chat y empieza a
+    guardar las estadísticas. Lo usa el arranque normal (lifespan) y también api/index.py,
+    el punto de entrada de Vercel, que arranca la app al importarla."""
     silence_access_log()
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
         seed(session)
         retrieval.build_index(crud.get_extra_info(session, fixed_answer=False))
     chat_stats.connect(os.getenv("STATS_DATABASE_URL"))
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Al arrancar, llama a startup(). Al apagar, envía las estadísticas pendientes."""
+    startup()
     yield
     chat_stats.close()
 
@@ -228,9 +239,13 @@ def check_chat_limits(request: Request) -> None:
 
 
 @app.post("/chat", response_model=ChatResponse, tags=["chat"])
-def post_chat(payload: ChatRequest, request: Request, db: DbSession) -> ChatResponse:
+def post_chat(
+    payload: ChatRequest, request: Request, db: DbSession, background: BackgroundTasks
+) -> ChatResponse:
     """Responde preguntas sobre el perfil de Manuel, con límite de mensajes por IP."""
     check_chat_limits(request)
+    if SERVERLESS:
+        background.add_task(chat_stats.flush)
     return ChatResponse(answer=chat.answer_question(db, payload.message, payload.history))
 
 
@@ -258,4 +273,6 @@ def post_chat_stream(payload: ChatRequest, request: Request, db: DbSession) -> S
         media_type="text/event-stream",
         # Que ningún proxy guarde la respuesta entera antes de enviarla.
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        # En Vercel no hay hilo de fondo que valga: se envían las estadísticas al acabar.
+        background=BackgroundTask(chat_stats.flush) if SERVERLESS else None,
     )
