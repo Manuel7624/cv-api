@@ -92,8 +92,7 @@ def silence_access_log() -> None:
 
 def startup() -> None:
     """Crea las tablas, carga los datos, prepara la búsqueda del chat y empieza a
-    guardar las estadísticas. Lo usa el arranque normal (lifespan) y también api/index.py,
-    el punto de entrada de Vercel, que arranca la app al importarla."""
+    guardar las estadísticas. Lo llama el lifespan, tanto en Render como en Vercel."""
     silence_access_log()
     Base.metadata.create_all(engine)
     with SessionLocal() as session:
