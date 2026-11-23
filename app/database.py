@@ -12,7 +12,10 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./cv.db")
+# En Vercel (que define VERCEL) el disco es de solo lectura salvo /tmp: ahí va la base del CV,
+# que se vuelve a crear desde app/seed.py en cada arranque en frío.
+DEFAULT_DATABASE_URL = "sqlite:////tmp/cv.db" if os.getenv("VERCEL") else "sqlite:///./cv.db"
+DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
