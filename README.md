@@ -6,8 +6,8 @@ API REST desarrollada con **Python y FastAPI** que sirve mi currículum
 (perfil, experiencia, proyectos, formación, habilidades e idiomas). Es la base
 de mi web-CV personal, que incluye un chatbot sobre mi perfil.
 
-- **Web:** <https://manuel-sastre-cv.onrender.com>
-- **API (Swagger):** <https://manuel-sastre-cv.onrender.com/docs>
+- **Web:** <https://manuel-sastre-cv.vercel.app>
+- **API (Swagger):** <https://manuel-sastre-cv.vercel.app/docs>
 
 > Estado: publicada y en funcionamiento en Render (plan gratuito: si nadie la visita
 > durante un rato, se duerme y la primera visita tarda unos segundos). El CV está en
@@ -276,11 +276,13 @@ la foto se pone al lado del nombre y los botones pasan debajo del chat.
 - La conexión con PostgreSQL (Neon) exige siempre SSL, aunque la cadena no lo diga.
 - El contenedor se ejecuta con un usuario sin privilegios (`app`), que solo puede
   escribir en `/code/data` (donde está `cv.db`), y uvicorn arranca sin el registro
-  de cada petición (`--no-access-log`) para que la IP no acabe en los logs.
+  de cada petición (`--no-access-log`) para que la aplicación no escriba la IP en sus
+  logs. La aplicación no guarda IPs; el hosting (Render o Vercel) puede registrarlas
+  como parte de sus logs de servidor.
 - Las versiones de `requirements.txt` son exactas y pip se actualiza en la imagen.
 - `scripts/check_client_ip.py`: después de desplegar, comprueba contra la web
   publicada que no se puede saltar el límite por IP inventándose la IP en las
-  cabeceras (`python scripts/check_client_ip.py https://tu-web.onrender.com`).
+  cabeceras (`python scripts/check_client_ip.py https://tu-web.vercel.app`).
 
 ## Con Docker
 
@@ -292,12 +294,17 @@ La web queda en `http://localhost:8000`. Las claves se cargan de `.env`.
 
 ## Despliegue
 
-La web está publicada en <https://manuel-sastre-cv.onrender.com> (documentación de la
-API en <https://manuel-sastre-cv.onrender.com/docs>). El archivo `render.yaml`
+La web está publicada en <https://manuel-sastre-cv.vercel.app> (documentación de la
+API en <https://manuel-sastre-cv.vercel.app/docs>). El archivo `render.yaml`
 describe el servicio para Render (región Frankfurt, plan gratuito): usa el
 `Dockerfile` y comprueba `/health`. En el plan gratuito el disco no es persistente, así que
 `cv.db` se vuelve a crear desde `app/seed.py` en cada arranque. Las claves se
 escriben en el panel de Render, no en el repositorio.
+
+En Vercel (rama `vercel`) la app arranca desde `app/main.py` y la base del CV va a
+`/tmp`. Variables del panel: `GEMINI_API_KEY`, `GROQ_API_KEY`, `ADMIN_TOKEN`,
+`STATS_DATABASE_URL`, `LIMITS_HASH_SALT`, `CLIENT_IP_HEADER` (valor `x-real-ip`) y
+`PUBLIC_URL` (valor `https://manuel-sastre-cv.vercel.app`, no es secreto).
 
 ## Tests
 
