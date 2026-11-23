@@ -9,12 +9,17 @@ from contextlib import contextmanager
 import httpx
 
 
-def stream_response(*chunks, status_code=200, done=True):
-    """Respuesta que envía `chunks` como trozos de texto (cada uno, un dict delta)."""
+def stream_response(*chunks, status_code=200, done=True, finish=True):
+    """Respuesta que envía `chunks` como trozos de texto (cada uno, un dict delta).
+
+    Como los proveedores reales, termina con un trozo con el motivo de fin ("stop");
+    con finish=False se simula un flujo cerrado antes de tiempo."""
     lines = [
         "data: " + json.dumps({"choices": [{"delta": {"content": chunk}}]})
         for chunk in chunks
     ]
+    if finish:
+        lines.append("data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}]}))
     if done:
         lines.append("data: [DONE]")
     return httpx.Response(

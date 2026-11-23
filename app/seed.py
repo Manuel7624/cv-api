@@ -168,7 +168,7 @@ EXTRA_INFO = [
     {
         "topic": "Presentación",
         "question": "¿Por qué deberían contratarte?",
-        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido, incluso con tecnologías que no había visto en el grado. Además, he construido por mi cuenta este proyecto completo (API, web y chat) trabajando con IA con un método: reviso los planes, decido yo y pruebo todo antes de darlo por bueno. Me tomo en serio la calidad y tengo muchas ganas de crecer en la empresa.",
+        "answer": "Porque, aunque soy junior, ya he trabajado en un entorno real con Python, Docker y Git, y he demostrado que aprendo rápido, incluso con tecnologías que no había visto en el grado. Además, he construido por mi cuenta este proyecto completo (API, web y chat) con Claude Code (y en las prácticas usé Codex), con un método: reviso los planes, decido yo y pruebo todo antes de darlo por bueno. Me tomo en serio la calidad y tengo muchas ganas de crecer en la empresa.",
         "fixed_answer": False,
     },
     {

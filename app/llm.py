@@ -54,6 +54,7 @@ class Provider:
             raise ProviderError("falta la clave")
 
         sent_text = False
+        finished = False  # el proveedor ha enviado el motivo de fin ("stop"...)
         try:
             with httpx.stream(
                 "POST",
@@ -77,7 +78,9 @@ class Provider:
                     data = line.removeprefix("data:").strip()
                     if data == "[DONE]":
                         break
-                    text = chunk_text(json.loads(data))
+                    chunk = json.loads(data)
+                    text = chunk_text(chunk)
+                    finished = finished or has_finish_reason(chunk)
                     if not sent_text:
                         text = text.lstrip()
                     if text:
@@ -92,6 +95,15 @@ class Provider:
 
         if not sent_text:
             raise ProviderError("respuesta vacía")
+        if not finished:
+            # El flujo se cerró sin avisar de que la respuesta había terminado: puede
+            # estar cortada a mitad de frase. Se trata como un fallo y entra el siguiente.
+            raise ProviderError("respuesta incompleta")
+
+
+def has_finish_reason(chunk: dict) -> bool:
+    """Si el trozo trae el motivo de fin de la respuesta ("stop", "length"...)."""
+    return any(choice.get("finish_reason") for choice in chunk.get("choices") or [])
 
 
 def chunk_text(chunk: dict) -> str:

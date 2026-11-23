@@ -202,3 +202,28 @@ def test_a_skipped_provider_is_tried_if_all_later_ones_are_skipped(monkeypatch):
     calls = use_providers(monkeypatch, {"gemini": ok("De Gemini")})
     assert ask("reglas", QUESTION) == "De Gemini"
     assert [c["provider"] for c in calls] == ["gemini"]
+
+
+def test_a_stream_closed_without_a_finish_reason_is_an_incomplete_answer(monkeypatch):
+    """Si el proveedor cierra el flujo sin avisar de que ha terminado, la respuesta puede
+    estar cortada a mitad de frase: se descarta y responde el siguiente proveedor."""
+    cut = stream_response("Porque aporto las ganas de aprender y la base técnica de", finish=False)
+    use_providers(monkeypatch, {"gemini": cut, "gemini_backup": ok("Respuesta completa"), "groq": ok("De Groq")})
+    events = list(llm.ask_providers("reglas", QUESTION))
+    assert events[0].startswith("Porque aporto")
+    assert events[1] is llm.RESTART
+    assert "".join(events[2:]) == "Respuesta completa"
+
+
+def test_incomplete_answer_error_is_named_and_does_not_count_as_a_timeout(monkeypatch):
+    cut = stream_response("Texto cortado", finish=False)
+    use_providers(monkeypatch, {"gemini": cut, "gemini_backup": cut, "groq": cut})
+    attempts = []
+    list(llm.ask_providers("reglas", QUESTION, attempts))
+    assert [a.error for a in attempts] == ["respuesta incompleta"] * 3
+    assert not llm.provider_health.should_skip("gemini")
+
+
+def test_a_complete_stream_with_a_finish_reason_is_accepted(monkeypatch):
+    use_providers(monkeypatch, {"gemini": ok("Respuesta entera")})
+    assert ask("reglas", QUESTION) == "Respuesta entera"

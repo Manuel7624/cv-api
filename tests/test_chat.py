@@ -341,10 +341,12 @@ def test_cold_no_information_answers_count_as_no_information(answer):
 def test_rules_from_the_latest_review(client, fake_ai):
     send(client)
     prompt = fake_ai[0]["system_prompt"]
-    # Codex y Claude Code siempre que pregunten por tecnologías.
-    assert "menciónalos cuando sean relevantes, nunca como\n  frase de relleno" in prompt
+    # Codex y Claude Code solo cuando son relevantes, cada uno en su sitio.
+    assert "Menciónalos cuando sean relevantes, nunca como\n  frase de relleno" in prompt
+    assert "Cada\n  uno en su sitio: nunca los juntes como herramientas de lo mismo" in prompt
+    assert "ni digas Codex en\n  este proyecto ni Claude Code en las prácticas" in prompt
     assert "NO los menciones en respuestas sobre el carnet" in prompt
-    assert "nunca como frase final" in prompt and "no los asocies nunca a Balancea" in prompt
+    assert "nunca como frase final" in prompt and "No los asocies nunca a Balancea" in prompt
     assert "SIEMPRE Codex" not in prompt
     # Sin exagerar: es junior.
     assert '"destaco", "experto", "dominio"' in prompt
@@ -521,7 +523,7 @@ def test_rules_against_repetition_and_invented_claims(client, fake_ai):
     # Frases de las prácticas solo cuando preguntan por las prácticas; un solo ejemplo al contratar.
     assert "solo cuando\n  preguntan por las prácticas" in prompt
     assert 'NO menciones los workers ni "Docker desde cero"' in prompt
-    assert "elige UN solo enfoque" in prompt
+    assert "combina como máximo\n  dos ideas" in prompt
     assert 'No repitas "me tomo en serio la calidad"' in prompt
     # Correo: solo "puedes escribirme a ..."; sin "respondo personalmente".
     assert 'di solo "puedes escribirme a manusastrenar@gmail.com"' in prompt
@@ -557,3 +559,17 @@ def test_messages_that_are_not_understood_use_the_not_understood_phrase(client, 
     assert 'por ejemplo "qué es lo q quiero ver"' in prompt
     assert "nunca con la frase de cuando no tienes la información" in prompt
     assert chat.GIBBERISH_ANSWER in prompt
+
+
+def test_technologies_answer_is_short_and_coddy_is_worded_right(client, fake_ai):
+    send(client)
+    prompt = fake_ai[0]["system_prompt"]
+    assert "Unas 80 palabras" in prompt
+    assert 'Di "estoy terminando un curso de Python en Coddy", nunca\n  "curso de Coddy en curso"' in prompt
+    assert "sigue en curso" not in prompt
+
+
+def test_prompt_did_not_grow_for_groq(db_session):
+    """Groq admite 8.000 tokens: si se añaden reglas, hay que recortar otras."""
+    base = len(chat.build_system_prompt(db_session, [], partial=True))
+    assert base <= 22_168, f"el prompt base ha crecido a {base} caracteres"

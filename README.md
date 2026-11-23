@@ -82,7 +82,8 @@ seguidas, se salta durante 5 minutos para no esperar 10 segundos en cada pregunt
 
 **Streaming:** la respuesta llega a trozos (server-sent events: `data: {"text": "..."}`)
 y la web la va mostrando según se genera, siempre con `textContent`, nunca como HTML.
-Si un proveedor falla a mitad, o si el RAG acaba diciendo que no tiene el dato, se
+Si un proveedor falla a mitad (o cierra el flujo sin avisar de que ha terminado, lo que
+deja la respuesta cortada), o si el RAG acaba diciendo que no tiene el dato, se
 envía `data: {"restart": true}`: la web borra lo recibido y sigue con la respuesta
 nueva: quita el texto a medias y vuelve a mostrar los tres puntos. Mientras la
 respuesta sigue llegando, un cursor parpadea detrás del texto, para que una respuesta
