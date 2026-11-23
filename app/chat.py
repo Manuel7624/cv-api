@@ -16,7 +16,14 @@ from sqlalchemy.orm import Session
 
 from app import crud, keywords, retrieval
 from app.chat_limits import MAX_ANSWER_LENGTH
-from app.llm import MAX_ANSWER_TOKENS, RESTART, Attempt, Provider, ask_providers
+from app.llm import (
+    FIRST_TEXT_BUDGET_SECONDS,
+    MAX_ANSWER_TOKENS,
+    RESTART,
+    Attempt,
+    Provider,
+    ask_providers,
+)
 from app.schemas import ChatTurn
 from app.stats import chat_stats
 
@@ -580,6 +587,14 @@ def answer_status(answer: str, provider: str | None) -> str:
 # tiene la información, se repite con toda (plan B) sin haber mostrado nada.
 RAG_HOLD_CHARS = 80
 
+# Groq solo admite 8.000 tokens por petición y 200.000 al día: con el RAG recibe las 6
+# respuestas más parecidas (Gemini recibe las 12).
+GROQ_RAG_ITEMS = 6
+# Si la respuesta del RAG obliga a repetir con toda la información (plan B), el plan B
+# comparte el presupuesto de tiempo de la pregunta: sin al menos esto de margen, no se
+# repite y se deja la respuesta del RAG.
+PLAN_B_MIN_LEFT_SECONDS = 3.0
+
 
 def relay_rag_answer(events: Iterator[str | object]):
     """Reenvía la respuesta del RAG, salvo si dice que no tiene la información o
@@ -634,13 +649,31 @@ def find_answer(
     trace.search_seconds = time.perf_counter() - search_start
     if selected is not None:
         trace.used_rag = True
-        prompt = build_system_prompt(db, selected)
-        events = ask_providers(prompt, conversation, trace.rag_attempts, started=search_start)
+        prompts: dict[bool, str] = {}
+
+        def rag_prompt_for(provider: Provider) -> str:
+            limited = provider.max_request_tokens is not None  # Groq
+            if limited not in prompts:
+                items = selected.top(GROQ_RAG_ITEMS) if limited and hasattr(selected, "top") else selected
+                prompts[limited] = build_system_prompt(db, items)
+            return prompts[limited]
+
+        events = ask_providers(
+            rag_prompt_for, conversation, trace.rag_attempts,
+            started=search_start, hold_chars=RAG_HOLD_CHARS,
+        )
         text, sent = yield from relay_rag_answer(events)
         if not text:
             yield fallback_message(email)
             return
         if not needs_all_information(text):
+            trace.answered_by = answered_by(trace.rag_attempts)
+            if not sent:
+                yield text
+            return
+        left = FIRST_TEXT_BUDGET_SECONDS - (time.perf_counter() - search_start)
+        if left < PLAN_B_MIN_LEFT_SECONDS:
+            logger.info("Sin tiempo para repetir con toda la información: se deja la respuesta del RAG")
             trace.answered_by = answered_by(trace.rag_attempts)
             if not sent:
                 yield text
@@ -662,8 +695,7 @@ def find_answer(
 
     trace.used_plan_b = True
     answered = False
-    for event in ask_providers(prompt_for, conversation, trace.plan_b_attempts,
-                                 started=None if trace.used_rag else search_start):
+    for event in ask_providers(prompt_for, conversation, trace.plan_b_attempts, started=search_start):
         answered = event is not RESTART
         yield event
     if answered:

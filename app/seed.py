@@ -173,8 +173,8 @@ EXTRA_INFO = [
     },
     {
         "topic": "Presentación",
-        "question": "¿Cuándo puedes empezar?",
-        "answer": "De inmediato.",
+        "question": "¿Cuándo puedes empezar? ¿Cuándo puedes incorporarte?",
+        "answer": "De inmediato: tengo disponibilidad inmediata y busco un puesto a jornada completa.",
         "fixed_answer": False,
     },
     {
@@ -413,8 +413,8 @@ EXTRA_INFO = [
     },
     {
         "topic": "Cómo trabajo",
-        "question": "¿Qué te motiva en un trabajo?",
-        "answer": "Crecer profesionalmente en la programación y seguir aprendiendo, porque es lo que me gusta.",
+        "question": "¿Qué te motiva en un trabajo? ¿Qué te motiva?",
+        "answer": "Crecer profesionalmente en la programación y seguir aprendiendo, porque es lo que me gusta. Me motivan los retos que me hacen pensar, sobre todo en backend y APIs, y trabajar en un equipo del que pueda aprender, como me pasó en las prácticas. Y ver que lo que construyo funciona de verdad, como Balancea.",
         "fixed_answer": False,
     },
     {
@@ -667,6 +667,24 @@ EXTRA_INFO = [
         "topic": "Formación",
         "question": "¿Qué aprendiste en el grado?",
         "answer": "En el grado aprendí a programar en Java, con programación orientada a objetos, y a desarrollar aplicaciones Android con bases de datos SQLite, que apliqué en Balancea, mi proyecto final. Eché de menos ver más tecnologías de backend, como APIs, Docker o Python, que aprendí después en las prácticas.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Presentación",
+        "question": "¿Qué te diferencia de otros candidatos? ¿Qué te hace distinto?",
+        "answer": "Lo que me diferencia es que trabajo con método y lo puedes comprobar: esta API, la web y el chat los he construido yo, con Claude Code, decidiendo cada cambio y comprobándolo con tests. En las prácticas, con Codex, refactoricé código de una empresa real que ya funcionaba. Y me gusta que un reto me haga pensar: analizo el problema desde varias perspectivas antes de actuar.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Proyectos",
+        "question": "¿Dónde está el código de este proyecto? ¿Está tu código en GitHub?",
+        "answer": "Sí. El código de este proyecto (la API, la web y el chat) está en GitHub, en github.com/Manuel7624/cv-api, y mi proyecto final, Balancea, en github.com/Manuel7624/TFG_ManuelSastre. Mi perfil es github.com/Manuel7624.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Experiencia",
+        "question": "¿Cuántos workers dockerizaste?",
+        "answer": "Dockericé desde cero uno, el más complejo, que no tenía nada de Docker; no tengo una cifra exacta de más que darte. El resto de mi trabajo con workers fue refactorizar varios que ya estaban dockerizados.",
         "fixed_answer": False,
     },
 ]

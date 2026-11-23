@@ -116,6 +116,18 @@ def query_text(message: str, previous_questions: list[str]) -> str:
     return f"task: search result | query: {text}"
 
 
+class Selection(list):
+    """Las respuestas elegidas, en su orden original. `ranked` las tiene ordenadas de más
+    a menos parecida a la pregunta, para poder quedarse solo con las mejores (`top`)."""
+
+    ranked: list
+
+    def top(self, count: int) -> list:
+        """Las `count` más parecidas, en su orden original."""
+        chosen = {id(item) for item in self.ranked[:count]}
+        return [item for item in self if id(item) in chosen]
+
+
 class ExtraInfoIndex:
     """Respuestas extra con sus vectores, calculados una sola vez."""
 
@@ -144,7 +156,9 @@ class ExtraInfoIndex:
         scores = [similarity(query, vector) for vector in self.vectors]
         best = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:TOP_K]
         # Se mantienen en su orden original para que el texto se lea con sentido.
-        return [self.items[i] for i in sorted(best)], scores[best[0]] if best else -1.0
+        selected = Selection(self.items[i] for i in sorted(best))
+        selected.ranked = [self.items[i] for i in best]
+        return selected, scores[best[0]] if best else -1.0
 
 
 def text_key(text: str) -> str:
