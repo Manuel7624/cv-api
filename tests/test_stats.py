@@ -166,7 +166,7 @@ def test_index_uses_the_configured_message_length(client):
 def test_counts_skipped_providers(client, providers, monkeypatch):
     from app import llm
 
-    for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING):
+    for _ in range(llm.FAILURES_BEFORE_SKIPPING):
         llm.provider_health.record("gemini", "ReadTimeout")
     providers["gemini_backup"].append(ok("De la reserva"))
     ask(client)

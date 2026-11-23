@@ -37,7 +37,8 @@ EMBEDDING_URL = (
 )
 DIMENSIONS = 768
 MAX_TEXTS_PER_REQUEST = 100
-TIMEOUT_SECONDS = 10
+TIMEOUT_SECONDS = 10  # al calcular los vectores de las respuestas (python -m app.retrieval)
+QUERY_TIMEOUT_SECONDS = 2.5  # al buscar por cada pregunta del chat: si tarda más, plan B
 
 # Cuántas respuestas se envían. Por debajo de MIN_SIMILARITY (de -1 a 1) se avisa en
 # los logs de que el parecido es bajo, pero se envían igual.
@@ -68,7 +69,7 @@ def similarity(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
 
 
-def embed(texts: list[str]) -> list[list[float]]:
+def embed(texts: list[str], timeout: float = TIMEOUT_SECONDS) -> list[list[float]]:
     """Pide a Gemini los vectores de varios textos, en el mismo orden."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -89,7 +90,7 @@ def embed(texts: list[str]) -> list[list[float]]:
                 EMBEDDING_URL,
                 headers={"x-goog-api-key": api_key},
                 json={"requests": requests},
-                timeout=TIMEOUT_SECONDS,
+                timeout=timeout,
             )
             response.raise_for_status()
             vectors += [item["values"] for item in response.json()["embeddings"]]
@@ -139,7 +140,7 @@ class ExtraInfoIndex:
         self, message: str, previous_questions: list[str]
     ) -> tuple[list[dict[str, str]], float]:
         """Devuelve las TOP_K respuestas más parecidas y el parecido de la mejor."""
-        query = embed([query_text(message, previous_questions)])[0]
+        query = embed([query_text(message, previous_questions)], QUERY_TIMEOUT_SECONDS)[0]
         scores = [similarity(query, vector) for vector in self.vectors]
         best = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:TOP_K]
         # Se mantienen en su orden original para que el texto se lea con sentido.

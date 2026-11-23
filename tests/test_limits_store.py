@@ -174,7 +174,7 @@ def test_the_app_saves_limit_uses_through_the_stats(client, url, monkeypatch):
     """La app real: cada mensaje permitido del chat se apunta para la base de datos."""
     from app import chat
 
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(["Respuesta"]))
+    monkeypatch.setattr(chat, "ask_providers", lambda *_, **__: iter(["Respuesta"]))
     monkeypatch.setattr(chat_stats, "store", StatsStore(url))
     client.post("/chat", json={"message": "¿Hola?"})
     assert chat_stats.flush()

@@ -25,7 +25,7 @@ def clean_failed_logins():
 def fake_ai(monkeypatch):
     calls = []
 
-    def fake_ask(*_args):
+    def fake_ask(*_args, **_kwargs):
         calls.append(1)
         yield "Respuesta de prueba"
 

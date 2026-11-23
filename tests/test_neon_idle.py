@@ -69,7 +69,7 @@ def test_visits_that_do_not_use_the_chat_never_touch_neon(client, store, path):
 
 
 def test_limits_are_loaded_with_the_first_chat_message_only(client, store, monkeypatch):
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(["Respuesta"]))
+    monkeypatch.setattr(chat, "ask_providers", lambda *_, **__: iter(["Respuesta"]))
     monkeypatch.setattr(chat.retrieval, "select_extra_info", lambda *_: None)
     loads = []
     monkeypatch.setattr(chat_limits, "loader", lambda: loads.append(1) or [])

@@ -22,7 +22,7 @@ def fake_vector(text):
 def fake_embed(monkeypatch):
     calls = []
 
-    def embed(texts):
+    def embed(texts, timeout=None):
         calls.append(texts)
         return [retrieval.normalize(fake_vector(text)) for text in texts]
 
@@ -75,7 +75,7 @@ def test_low_similarity_still_sends_the_closest(fake_embed, monkeypatch, caplog)
 def test_search_errors_mean_plan_b(fake_embed, monkeypatch):
     retrieval.build_index(items("Python"))
 
-    def broken(_texts):
+    def broken(_texts, timeout=None):
         raise retrieval.RetrievalError("respuesta 429")
 
     monkeypatch.setattr(retrieval, "embed", broken)
@@ -83,7 +83,7 @@ def test_search_errors_mean_plan_b(fake_embed, monkeypatch):
 
 
 def test_index_errors_disable_rag(monkeypatch):
-    def broken(_texts):
+    def broken(_texts, timeout=None):
         raise retrieval.RetrievalError("falta la clave")
 
     monkeypatch.setattr(retrieval, "embed", broken)
@@ -161,7 +161,7 @@ def fake_ai(monkeypatch):
     calls = []
     answers = []
 
-    def fake_ask(system_prompt, conversation, _steps=None):
+    def fake_ask(system_prompt, conversation, _steps=None, **_):
         calls.append(resolve_prompt(system_prompt))
         yield answers.pop(0) if answers else "Respuesta de prueba"
 
@@ -216,7 +216,7 @@ def test_low_similarity_is_one_call_with_the_closest(client, db_session, fake_em
 def test_no_retry_when_providers_are_down(client, db_session, fake_embed, monkeypatch):
     monkeypatch.setattr(retrieval, "MIN_SIMILARITY", -1)
     calls = []
-    monkeypatch.setattr(chat, "ask_providers", lambda *args: calls.append(args) or iter(()))
+    monkeypatch.setattr(chat, "ask_providers", lambda *args, **_: calls.append(args) or iter(()))
     response = chat_with_rag(client, db_session, fake_embed)
     assert "Ahora mismo no puedo responder" in response.json()["answer"]
     assert len(calls) == 1

@@ -635,7 +635,7 @@ def find_answer(
     if selected is not None:
         trace.used_rag = True
         prompt = build_system_prompt(db, selected)
-        events = ask_providers(prompt, conversation, trace.rag_attempts)
+        events = ask_providers(prompt, conversation, trace.rag_attempts, started=search_start)
         text, sent = yield from relay_rag_answer(events)
         if not text:
             yield fallback_message(email)
@@ -662,7 +662,8 @@ def find_answer(
 
     trace.used_plan_b = True
     answered = False
-    for event in ask_providers(prompt_for, conversation, trace.plan_b_attempts):
+    for event in ask_providers(prompt_for, conversation, trace.plan_b_attempts,
+                                 started=None if trace.used_rag else search_start):
         answered = event is not RESTART
         yield event
     if answered:

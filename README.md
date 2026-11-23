@@ -73,11 +73,17 @@ El chat responde en primera persona, como si fuera yo, y la web avisa de forma
 visible de que es una IA que responde con mi información.
 
 El navegador llama a `POST /chat/stream` y es el backend quien habla con la IA, así
-que las claves nunca llegan a la web. Se usa Gemini 3.5 Flash-Lite; si falla o tarda
-más de 10 segundos, Gemini 3.1 Flash-Lite (una versión estable anterior, con la misma
-clave), y si también falla, Groq. Si un proveedor agota el tiempo de espera 2 veces
-seguidas, se salta durante 5 minutos para no esperar 10 segundos en cada pregunta
-(si todos se están saltando, se prueban todos). Para cambiar de proveedor o de modelo se edita la lista `PROVIDERS` de
+que las claves nunca llegan a la web. Se usa Gemini 3.5 Flash-Lite; si no da el primer
+texto en 4 segundos (o falla), Gemini 3.1 Flash-Lite (una versión estable anterior, con
+la misma clave) con 2 segundos, y si también falla, Groq con el resto: el primer texto
+tarda como mucho unos 8 segundos desde que llega la pregunta, aunque Gemini esté caído
+(`FIRST_TEXT_BUDGET_SECONDS` y `Provider.first_text_seconds` en `app/llm.py`). Si un
+proveedor falla (error, 429 o timeout) 2 veces seguidas, se salta durante 3 minutos
+para no pagar su espera en cada pregunta; pasado ese tiempo se prueba con una sola
+pregunta y, si falla, se vuelve a saltar (si todos se están saltando, se prueban todos).
+Ese contador está en la memoria de cada instancia (en Vercel, cada una tiene la suya),
+así que lo que protege siempre son los límites de tiempo por proveedor. Para cambiar de
+proveedor o de modelo se edita la lista `PROVIDERS` de
 `app/llm.py`.
 
 **Streaming:** la respuesta llega a trozos (server-sent events: `data: {"text": "..."}`)
@@ -87,7 +93,7 @@ deja la respuesta cortada), o si el RAG acaba diciendo que no tiene el dato, se
 envía `data: {"restart": true}`: la web borra lo recibido y sigue con la respuesta
 nueva: quita el texto a medias y vuelve a mostrar los tres puntos. Mientras la
 respuesta sigue llegando, un cursor parpadea detrás del texto, para que una respuesta
-parada a medias (por ejemplo, si Gemini deja de enviar trozos y a los 10 s entra la
+parada a medias (por ejemplo, si Gemini deja de enviar trozos a mitad y a los 10 s entra la
 reserva) no parezca terminada; el lector de pantalla solo la anuncia al final. Con
 RAG, los primeros 80 caracteres se retienen para comprobar si la respuesta es "no lo
 tengo por aquí" o un rechazo por fuera de tema y, en ese caso, pasar al plan B sin

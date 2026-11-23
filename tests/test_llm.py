@@ -159,7 +159,7 @@ def test_provider_is_skipped_after_repeated_timeouts(monkeypatch):
     monkeypatch.setattr(llm, "provider_health", llm.ProviderHealth(clock=lambda: now[0]))
     responses = {"gemini": httpx.ReadTimeout("lento"), "gemini_backup": ok("De la reserva")}
     calls = use_providers(monkeypatch, responses)
-    for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING):
+    for _ in range(llm.FAILURES_BEFORE_SKIPPING):
         ask("reglas", QUESTION)
     calls.clear()
 
@@ -176,19 +176,10 @@ def test_provider_is_skipped_after_repeated_timeouts(monkeypatch):
     assert not llm.provider_health.should_skip("gemini")
 
 
-def test_other_errors_do_not_skip_a_provider(monkeypatch):
-    calls = use_providers(monkeypatch, {"gemini": failure(429), "gemini_backup": ok("Hola")})
-    for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING + 1):
-        ask("reglas", QUESTION)
-    calls.clear()
-    ask("reglas", QUESTION)
-    assert calls[0]["provider"] == "gemini"
-
-
 def test_if_all_providers_are_skipped_all_are_tried(monkeypatch):
     """Mejor una respuesta lenta que ninguna."""
     for provider in llm.PROVIDERS:
-        for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING):
+        for _ in range(llm.FAILURES_BEFORE_SKIPPING):
             llm.provider_health.record(provider.name, "ReadTimeout")
     calls = use_providers(monkeypatch, {"groq": ok("De Groq")})
     assert ask("reglas", QUESTION) == "De Groq"
@@ -197,7 +188,7 @@ def test_if_all_providers_are_skipped_all_are_tried(monkeypatch):
 
 def test_a_skipped_provider_is_tried_if_all_later_ones_are_skipped(monkeypatch):
     for name in ("gemini_backup", "groq"):
-        for _ in range(llm.TIMEOUTS_BEFORE_SKIPPING):
+        for _ in range(llm.FAILURES_BEFORE_SKIPPING):
             llm.provider_health.record(name, "ReadTimeout")
     calls = use_providers(monkeypatch, {"gemini": ok("De Gemini")})
     assert ask("reglas", QUESTION) == "De Gemini"
@@ -215,7 +206,7 @@ def test_a_stream_closed_without_a_finish_reason_is_an_incomplete_answer(monkeyp
     assert "".join(events[2:]) == "Respuesta completa"
 
 
-def test_incomplete_answer_error_is_named_and_does_not_count_as_a_timeout(monkeypatch):
+def test_incomplete_answer_error_is_named(monkeypatch):
     cut = stream_response("Texto cortado", finish=False)
     use_providers(monkeypatch, {"gemini": cut, "gemini_backup": cut, "groq": cut})
     attempts = []

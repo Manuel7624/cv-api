@@ -31,7 +31,7 @@ def fake_ai(monkeypatch):
     """Sustituye a los proveedores y guarda lo que se les ha enviado."""
     calls = []
 
-    def fake_ask(system_prompt, conversation, _steps=None):
+    def fake_ask(system_prompt, conversation, _steps=None, **_):
         calls.append({
             "system_prompt": resolve_prompt(system_prompt),
             "conversation": conversation,
@@ -63,7 +63,7 @@ def test_message_is_sent_apart_from_the_rules(client, fake_ai):
 
 
 def test_friendly_message_with_email_when_no_provider_answers(client, monkeypatch):
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(()))
+    monkeypatch.setattr(chat, "ask_providers", lambda *_, **__: iter(()))
     response = send(client)
     assert response.status_code == 200
     assert EMAIL in response.json()["answer"]
@@ -157,7 +157,7 @@ def test_longest_valid_message_is_accepted(client, fake_ai):
 
 
 def test_long_answers_are_cut(client, monkeypatch):
-    monkeypatch.setattr(chat, "ask_providers", lambda *_: iter(["x" * 700, "x" * (MAX_ANSWER_LENGTH)]))
+    monkeypatch.setattr(chat, "ask_providers", lambda *_, **__: iter(["x" * 700, "x" * (MAX_ANSWER_LENGTH)]))
     answer = send(client).json()["answer"]
     assert len(answer) == MAX_ANSWER_LENGTH
     assert answer.endswith("…")
