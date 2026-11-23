@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/chat.js" defer></script>
   <script src="/static/contact.js" defer></script>
+  <script src="/static/notice.js" defer></script>
 </head>
 <body>
   <main class="page">
@@ -96,11 +97,12 @@
           </form>
         </div>
 
-        <!-- Aviso legal, justo debajo de la tarjeta: una línea pequeña; "Más info" abre el texto completo (nativo, sin JavaScript). -->
-        <details class="chat-note">
-          <summary><span>Respuestas generadas por IA<span class="chat-note-extra"> · pueden contener errores</span> · <span class="chat-note-more">Más info</span></span></summary>
-          <p>Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas datos personales. Las preguntas se guardan de forma anónima 30 días para mejorar el chat.</p>
-        </details>
+        <!-- Aviso legal, justo debajo de la tarjeta: una línea de texto normal y un único control,
+             "Más info", que muestra u oculta el texto completo (notice.js). -->
+        <div class="chat-note">
+          <p class="chat-note-line"><span class="chat-note-label">Respuestas generadas por IA<span class="chat-note-extra"> · pueden contener errores</span> ·</span><button class="chat-note-more" id="chat-note-toggle" type="button" aria-expanded="false" aria-controls="chat-note-text">Más info</button></p>
+          <p class="chat-note-text" id="chat-note-text" hidden>Respuestas generadas por IA (Google Gemini o Groq). Pueden contener errores; no escribas datos personales. Las preguntas se guardan de forma anónima 30 días para mejorar el chat.</p>
+        </div>
       </section>
     </div>
 
