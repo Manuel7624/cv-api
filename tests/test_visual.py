@@ -81,7 +81,9 @@ def test_card_footer_is_one_line_and_the_same_height(client):
     footer = css_block(css, ".card-question")
     assert "white-space: nowrap" in footer and "height: 46px" in footer
     assert "color: #4b5563" in css_block(css, ".card-label")
-    assert "font-size: 20px" in css_block(css, ".section-summary h2")
+    # Los tres títulos de apartado (resumen, cómo está hecha y contacto) miden lo mismo: 20 px.
+    assert "font-size: 20px" in css_block(css, ".section h2") and "font-size: 20px" in css_block(css, ".section-contact h2")
+    assert "font-size" not in css_block(css, ".section-how")
     assert "padding-top: 22px" in css_block(css, ".section-summary")
 
 
