@@ -641,14 +641,32 @@ EXTRA_INFO = [
     },
     {
         "topic": "Experiencia",
-        "question": "¿Cuánta experiencia tienes?",
-        "answer": "Como perfil junior, mi experiencia profesional son mis prácticas en Brainy Inteligencia Semántica, del 26 de enero al 15 de mayo de 2026. Además, he desarrollado mi proyecto final, Balancea, y este proyecto personal con API, web y chat.",
+        "question": "¿Cuánta experiencia tienes? ¿Qué experiencia tienes?",
+        "answer": "Como perfil junior, mi experiencia profesional son mis prácticas en Brainy Inteligencia Semántica, del 26 de enero al 15 de mayo de 2026: refactoricé workers en Python, dockericé uno desde cero, trabajé con Git y GitLab y puse en marcha en local una versión anterior de su API para entender su arquitectura. Además, he desarrollado Balancea, mi proyecto final en Java, y este proyecto con API, web y chat.",
         "fixed_answer": False,
     },
     {
         "topic": "Experiencia",
         "question": "¿Cuánto tiempo llevas programando?",
         "answer": "Programo desde que empecé DAM en 2024, aunque tuve un primer contacto muy básico en 4.º de la ESO. Python lo empecé en las prácticas, en enero de 2026.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Qué tecnologías conoces? Lenguajes, herramientas y IA",
+        "answer": "Lenguajes: Python (prácticas, este proyecto y el curso de Python en Coddy que estoy terminando), Java (grado y Balancea) y SQL básico. Herramientas: Docker, Git, GitLab, Android Studio, Visual Studio Code, la consola, Windows y Linux, y nociones de Kafka. En este proyecto uso FastAPI, API REST, SQLAlchemy, pytest y PostgreSQL en Neon. En IA, Codex en las prácticas y Claude Code en este proyecto.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Nuevas preguntas y respuestas",
+        "question": "¿Con qué tecnología has trabajado más? ¿Con cuál has trabajado más?",
+        "answer": "Java es el lenguaje con el que más he programado, en el grado y en Balancea, aunque no lo uso desde hace unos meses. Desde enero de 2026 trabajo con Python: en las prácticas, en este proyecto y en el curso de Coddy. Docker, Git y GitLab los usé en las prácticas.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Formación",
+        "question": "¿Qué aprendiste en el grado?",
+        "answer": "En el grado aprendí a programar en Java, con programación orientada a objetos, y a desarrollar aplicaciones Android con bases de datos SQLite, que apliqué en Balancea, mi proyecto final. Eché de menos ver más tecnologías de backend, como APIs, Docker o Python, que aprendí después en las prácticas.",
         "fixed_answer": False,
     },
 ]

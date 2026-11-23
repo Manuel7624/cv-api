@@ -526,9 +526,10 @@ def test_rules_against_repetition_and_invented_claims(client, fake_ai):
     assert "usa 60-80 palabras y tres ideas" in prompt
     assert 'No repitas "me tomo en serio la calidad"' in prompt
     # Correo: solo "puedes escribirme a ..."; sin "respondo personalmente".
-    assert 'di solo "puedes escribirme a manusastrenar@gmail.com"' in prompt
-    assert "no digas que\n  respondes personalmente" in prompt
-    assert "No termines tus respuestas\n  invitando a escribir al correo" in prompt
+    assert 'Di solo "puedes escribirme a manusastrenar@gmail.com"' in prompt
+    assert "Da el correo SOLO si preguntan cómo contactarte" in prompt
+    assert "nunca como cierre de otra respuesta" in prompt
+    assert "respondes personalmente" not in prompt
     # Referencias y horario del fútbol sala.
     assert "Referencias: no tienes ninguna que facilitar" in prompt
     assert '(nunca digas que el fútbol sala, ni otra afición,\n  "no limita" o "limita" tu horario)' in prompt
