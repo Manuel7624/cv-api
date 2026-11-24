@@ -353,6 +353,8 @@ h1 {
   outline-offset: -3px;
 }
 
+/* El avatar va abajo, a la altura del pie de la burbuja, también en los mensajes largos y
+   en móvil. */
 .message {
   display: flex;
   gap: 10px;
@@ -904,11 +906,6 @@ h1 {
   .chat h2 {
     padding: 18px 16px 2px;
     font-size: clamp(22px, calc((100vw - 76px) / 13.2), 25px);
-  }
-
-  /* El avatar del saludo, a la altura de la parte de arriba de la burbuja. */
-  .message {
-    align-items: flex-start;
   }
 
   .section-summary {

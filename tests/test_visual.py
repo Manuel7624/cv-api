@@ -243,7 +243,13 @@ def test_notice_line_is_shortened_on_narrow_screens_only(client):
     assert "display: none" not in css_block(css, ".chat-note")  # en el texto completo sigue todo
 
 
-def test_mobile_greeting_avatar_is_aligned_with_the_top_of_the_bubble(client):
+def test_bot_avatar_is_at_the_bottom_of_the_bubble_on_mobile_and_desktop(client):
     css = client.get("/static/styles.css").text
-    assert "align-items: flex-end" in css_block(css, ".message")  # escritorio, como antes
-    assert "align-items: flex-start" in css_block(css.split("@media (max-width: 600px) {")[1], "  .message")
+    assert "align-items: flex-end" in css_block(css, ".message")
+    # Ninguna regla de móvil lo cambia: abajo en todos los anchos.
+    mobile = css.split("@media (max-width: 600px) {")[1]
+    assert "  .message {" not in mobile and "  .message-assistant {" not in mobile and "  .avatar {" not in mobile
+    # El avatar sigue siendo un círculo de 34 px que no se estira ni se deforma.
+    avatar = css_block(css, ".avatar")
+    assert "width: 34px" in avatar and "height: 34px" in avatar and "border-radius: 50%" in avatar
+    assert "object-fit: cover" in avatar and "flex: 0 0 auto" in avatar
