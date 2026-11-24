@@ -788,6 +788,12 @@ EXTRA_INFO = [
         "answer": "Prefiero no publicar mi teléfono en una web abierta, donde cualquiera puede copiarlo. Está en mi perfil de LinkedIn y también puedes pedírmelo por correo.",
         "fixed_answer": False,
     },
+    {
+        "topic": "Presentación",
+        "question": "¿En qué te diferencias de otros candidatos? ¿Qué te hace diferente? ¿Qué te distingue del resto? ¿Cuál es tu diferencial?",
+        "answer": "Mi diferencial es el desarrollo asistido por IA con un flujo de trabajo estructurado: defino los requisitos y las reglas del proyecto, reviso el plan de cada tarea antes de implementarla y valido cada cambio con pruebas, manteniendo el control técnico. Esta web, con su API, su chat y más de 360 tests, está construida así y se puede probar ahora mismo. A eso le sumo la experiencia de unas prácticas en un equipo real, con Docker, Git y GitLab, y las ganas de seguir creciendo junto a compañeros con más experiencia.",
+        "fixed_answer": False,
+    },
 ]
 
 
