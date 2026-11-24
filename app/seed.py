@@ -292,6 +292,12 @@ EXTRA_INFO = [
     },
     {
         "topic": "Más sobre cómo trabajo",
+        "question": "¿Podrías venir a una entrevista presencial? ¿Cuándo podrías hacer una entrevista en nuestras oficinas? ¿Puedes venir a la oficina? ¿Te viene bien una entrevista presencial? ¿Podrías hacer la entrevista en persona?",
+        "answer": "Sí, puedo ir a entrevistas presenciales en Zaragoza. Si fuera en otra ciudad, lo hablamos y me organizo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Más sobre cómo trabajo",
         "question": "¿Tienes forma de moverte o desplazarte hasta el lugar de trabajo? (carnet, coche, transporte)",
         "answer": "Vivo en Zaragoza y mi preferencia es el trabajo híbrido o remoto. Ahora mismo me estoy sacando el carnet de conducir.",
         "fixed_answer": False,
