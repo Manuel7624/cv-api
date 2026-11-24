@@ -146,8 +146,8 @@ Para entender preguntas de seguimiento ("¿y en Java?"), el navegador envía los
 recargar la página, la conversación empieza de cero. Como el navegador puede
 manipular ese historial, el modelo solo lo usa para entender la pregunta.
 
-El plan gratuito de Groq permite 8.000 tokens por minuto y cada pregunta usa unos
-5.400, así que como reserva solo puede responder en torno a una pregunta por minuto.
+El plan gratuito de Groq permite 8.000 tokens por minuto, así que como reserva solo
+puede responder en torno a una pregunta por minuto.
 
 Las reglas del chat (no inventar nada, qué responder sobre teléfono, edad,
 tecnologías que no conoce, preguntas fuera de tema, saludos, texto sin sentido o
@@ -156,10 +156,11 @@ preguntas cortas con siglas como "¿SQL?") están en `RULES`, en
 
 ## RAG: solo la información relacionada con cada pregunta
 
-Enviar las 70 respuestas extra en cada pregunta cuesta unos 7.600 tokens. Con RAG
+Enviar todas las respuestas extra en cada pregunta es caro. Con RAG
 (`app/retrieval.py`) se envían siempre el CV, las reglas, las respuestas fijas y el
-historial, pero de la información extra solo las 12 respuestas más parecidas a la
-pregunta (y a las anteriores, para las de seguimiento). Así baja a unos 3.000 tokens.
+historial, pero de la información extra solo las entradas más relacionadas con la
+pregunta (y con las anteriores, para las de seguimiento). Así el prompt es mucho más
+corto.
 
 - El parecido se mide con embeddings gratuitos de Gemini (`gemini-embedding-2`). Los
   vectores de las respuestas están guardados en `app/embeddings.json`: al arrancar
@@ -195,11 +196,11 @@ orden se ajusta solo si se cambia de proveedor.
 
 ## Estadísticas de uso y registro de preguntas (privados)
 
-`GET /admin/stats` muestra, por día (UTC) y en total: mensajes respondidos, los que
-quedan del tope global, cuántos respondió cada proveedor, cuántas veces se usó el
-RAG, el plan B y la búsqueda por palabras clave, tiempos medios, mensajes bloqueados
-por cada límite y errores (por proveedor, 429, tiempo agotado, internos). No aparece
-en `/docs`.
+Hay un panel privado, protegido con contraseña, que muestra, por día (UTC) y en total:
+mensajes respondidos, los que quedan del tope global, cuántos respondió cada
+proveedor, cuántas veces se usó el RAG, el plan B y la búsqueda por palabras clave,
+tiempos medios, mensajes bloqueados por cada límite y errores (por proveedor,
+429, tiempo agotado, internos). No aparece en `/docs`.
 
 Arriba del todo hay un indicador del tope global ("87 de 300" mensajes usados en las
 últimas 24 horas) y una tabla de mensajes por día de los últimos 30 días, con un
@@ -217,9 +218,7 @@ los proveedores. Nunca la IP ni nada que identifique a quien pregunta. Las de m�
 30 días se borran solas (como mucho una vez por hora) y nunca se muestran. La web
 avisa, en una línea bajo la caja de escribir (con "Más info" para el texto completo), de que las preguntas se guardan de forma anónima 30 días.
 
-- Se protege con `ADMIN_TOKEN` (al menos 20 caracteres). El navegador pide usuario y
-  contraseña: el usuario da igual y la contraseña es el token. Sin token, la página
-  no existe (404).
+- Es privado y está protegido con contraseña.
 - **Se guardan en PostgreSQL** (Neon, plan gratuito) si está definida
   `STATS_DATABASE_URL`, para que no se pierdan cuando Render reinicia o duerme el
   servicio (`app/stats_store.py`). Solo van a PostgreSQL los contadores (día, nombre,
@@ -278,7 +277,7 @@ la foto se pone al lado del nombre y los botones pasan debajo del chat.
   en peticiones que llegan por HTTPS, `Strict-Transport-Security` (un año).
 - Las peticiones de más de 32 KB se rechazan con 413 sin leerlas enteras, traigan o
   no `Content-Length` (`app/security.py`).
-- `/admin/stats`: tras 10 contraseñas fallidas desde la misma IP en 15 minutos, esa
+- Panel privado de estadísticas: tras 10 contraseñas fallidas desde la misma IP en 15 minutos, esa
   IP queda bloqueada 15 minutos (429). La IP se guarda como hash con sal y solo en
   memoria.
 - La conexión con PostgreSQL (Neon) exige siempre SSL, aunque la cadena no lo diga.
