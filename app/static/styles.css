@@ -332,7 +332,7 @@ h1 {
 }
 
 .chat h2 {
-  padding: 24px 22px 4px;
+  padding: 24px 22px 14px;
   font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -347,6 +347,9 @@ h1 {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 18px 22px;
+  /* Separa el título de la zona de mensajes: el texto que se corta al hacer scroll no queda
+     pegado al título. */
+  border-top: 1px solid var(--border-light);
 }
 
 .chat-log:focus-visible {
@@ -904,7 +907,7 @@ h1 {
   /* El título cabe en una línea (a 360 px, 390 px y 430 px) y baja hasta 22 px como mínimo:
      mide unas 12,5 veces su tamaño de letra y la tarjeta deja (ancho - 72 px) libres. */
   .chat h2 {
-    padding: 18px 16px 2px;
+    padding: 18px 16px 12px;
     font-size: clamp(22px, calc((100vw - 76px) / 13.2), 25px);
   }
 
