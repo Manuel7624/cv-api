@@ -43,7 +43,8 @@ def test_cv_matches_the_pdf(client):
     assert summary.endswith("una web personal con API propia (Python y FastAPI) y chat de IA.")
     assert "Busco mi primera" not in summary
     internship = client.get("/experience").json()[0]
-    assert internship["period"] == "26 de enero – 15 de mayo de 2026"
+    assert internship["period"] == "Ene 2026 – May 2026"
+    assert client.get("/experience").json()[1]["period"] == "Abr 2026"
     assert "Apoyo de Codex" in internship["highlights"][0]
     assert internship["highlights"][1].startswith("Pruebas de integración manuales")
     assert "documento de entrada" in internship["highlights"][1]
@@ -55,7 +56,7 @@ def test_cv_matches_the_pdf(client):
     assert projects[0]["technologies"] == ["Python", "FastAPI", "SQLite", "PostgreSQL", "Docker", "pytest"]
     skills = client.get("/skills").json()
     assert skills["languages"][-1] == "SQL (SQLite, PostgreSQL)"
-    assert skills["backend"] == ["FastAPI", "APIs REST", "pytest", "Nociones de RAG"]
+    assert skills["backend"] == ["FastAPI", "APIs REST", "OpenAPI/Swagger", "SQLAlchemy", "Rate limiting", "Nociones de RAG"]
     assert "GitHub" in skills["tools"]
     assert "Nociones de Kafka" in skills["concepts"]
     assert "Codex" in client.get("/skills").json()["tools"]
@@ -110,3 +111,18 @@ def test_health_answers_get_and_head_without_touching_any_database(client, monke
 
 def test_health_is_not_in_swagger(client):
     assert "/health" not in client.get("/openapi.json").json()["paths"]
+
+
+def test_new_cv_information_lives_in_separate_short_entries(client, db_session):
+    """Lo nuevo del CV (IA, panel, rate limiting...) va en entradas cortas del RAG, no en el bloque
+    que va siempre en el prompt, y nunca revela la ruta ni la contraseña del panel."""
+    from app import crud
+
+    entries = crud.get_extra_info(db_session, fixed_answer=False)
+    questions = " ".join(entry["pregunta"] for entry in entries)
+    for topic in ("CLAUDE.md", "sin IA", "panel de administración", "rate limiting", "SQLAlchemy"):
+        assert topic in questions
+    everything = " ".join(entry["respuesta"] for entry in entries) + str(client.get("/profile").json())
+    assert "/admin" not in everything and "ADMIN_TOKEN" not in everything
+    assert "25 días" not in everything
+    assert "Desarrollo con agentes de IA" not in str(client.get("/profile").json())

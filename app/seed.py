@@ -31,7 +31,7 @@ EXPERIENCE = [
         "role": "Prácticas de desarrollo (FCT)",
         "company": "Brainy Inteligencia Semántica",
         "kind": "Prácticas",
-        "period": "26 de enero – 15 de mayo de 2026",
+        "period": "Ene 2026 – May 2026",
         "highlights": [
             "Refactorización y optimización de workers en Python para mejorar "
             "su estructura y legibilidad. Apoyo de Codex con un prompt base "
@@ -51,7 +51,7 @@ EXPERIENCE = [
         "role": "Azafato",
         "company": "The Wave 2026, Zaragoza",
         "kind": "Trabajo temporal",
-        "period": "14 – 16 de abril de 2026",
+        "period": "Abr 2026",
         "highlights": [
             "Preparación y reorganización del escenario principal entre "
             "intervenciones.",
@@ -63,7 +63,7 @@ EXPERIENCE = [
 PROJECTS = [
     {
         "name": "CV con API y chat de IA",
-        "description": "Web personal con API propia y chat de IA que responde "
+        "description": "Web personal con API propia y chat de IA "
         "sobre mi perfil (https://manuel-sastre-cv.vercel.app).",
         "technologies": ["Python", "FastAPI", "SQLite", "PostgreSQL", "Docker", "pytest"],
         "repository": "https://github.com/Manuel7624/cv-api",
@@ -130,7 +130,9 @@ SKILLS = {
     "backend": [
         "FastAPI",
         "APIs REST",
-        "pytest",
+        "OpenAPI/Swagger",
+        "SQLAlchemy",
+        "Rate limiting",
         "Nociones de RAG",
     ],
     "tools": [
@@ -555,7 +557,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "Sobre este proyecto: ¿qué fue lo más difícil?",
-        "answer": "Es el primer proyecto que he desarrollado de principio a fin trabajando con un agente de IA como Claude Code. En Balancea ya me apoyé en la IA para partes concretas, como las gráficas o la interfaz. Lo más difícil fue al principio: preparar y configurar yo solo todo el entorno de trabajo (Visual Studio Code, Docker, Claude Code) y aprender a usar estas herramientas de forma independiente.",
+        "answer": "Es el primer proyecto que he desarrollado de principio a fin trabajando con un agente de IA como Claude Code. En Balancea solo usé la IA para las gráficas con MPAndroidChart; el resto lo programé yo. Lo más difícil fue al principio: preparar y configurar yo solo todo el entorno de trabajo (Visual Studio Code, Docker, Claude Code) y aprender a usar estas herramientas de forma independiente.",
         "fixed_answer": False,
     },
     {
@@ -591,7 +593,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Sabes HTML, CSS o JavaScript? ¿Harías frontend?",
-        "answer": "Mi nivel de frontend es básico, porque me centro en el backend. Tanto la interfaz de Balancea como la de esta web las hice con apoyo de IA. Si en un momento dado hiciera falta tocar algo de frontend, podría hacerlo con ese apoyo, aunque donde quiero crecer es en el backend.",
+        "answer": "Mi nivel de frontend es básico, porque me centro en el backend. La interfaz de esta web la hice con apoyo de IA; la de Balancea la programé yo casi toda a mano, con IA solo en las gráficas. Si en un momento dado hiciera falta tocar algo de frontend, podría hacerlo con ese apoyo, aunque donde quiero crecer es en el backend.",
         "fixed_answer": False,
     },
     {
@@ -717,19 +719,61 @@ EXTRA_INFO = [
     {
         "topic": "Este proyecto",
         "question": "¿Qué es el proyecto CV con API y chat de IA? ¿Qué es esta web?",
-        "answer": "Es mi web personal, con una API REST propia hecha con FastAPI que sirve mi CV desde una base de datos y tiene documentación Swagger. Está publicada en Vercel y Render y el código está en github.com/Manuel7624/cv-api.",
+        "answer": "Es mi web personal, con una API REST propia hecha con FastAPI que sirve mi CV desde una base de datos y tiene documentación Swagger. Está publicada en Vercel y Render y el código está en github.com/Manuel7624/cv-api. La idea, el diseño y el plan son míos; la implementación la hago con Claude Code bajo mi dirección.",
         "fixed_answer": False,
     },
     {
         "topic": "Este proyecto",
         "question": "¿Cómo funciona el chat de IA? ¿Qué es el RAG? ¿Qué proveedores usa?",
-        "answer": "Responde en primera persona sobre mi perfil. Primero busca los datos relevantes para la pregunta (RAG) y responde solo con ellos, para no inventar. Usa varios proveedores (Gemini y Groq) y cambia automáticamente si uno falla. De RAG tengo nociones.",
+        "answer": "Responde en primera persona sobre mi perfil. Primero busca los datos relevantes para la pregunta (RAG) y responde solo con ellos, para no inventar. Usa varios proveedores (Gemini y Groq) y cambia automáticamente si uno falla, y tiene límites de uso (rate limiting). De RAG tengo nociones.",
         "fixed_answer": False,
     },
     {
         "topic": "Este proyecto",
         "question": "¿Cómo validas este proyecto? ¿Usas pytest y PostgreSQL en él?",
-        "answer": "Sí: validación con tests automáticos con pytest y revisión manual. PostgreSQL lo uso en este proyecto, junto a SQLite, y de SQL conozco ambos.",
+        "answer": "Sí: más de 360 tests automáticos con pytest, una batería de preguntas para evaluar las respuestas del chat y revisión manual de cada cambio. PostgreSQL lo uso en este proyecto, junto a SQLite, y de SQL conozco ambos.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Desarrollo con IA",
+        "question": "¿Cómo desarrollas con agentes de IA? ¿Cómo usas la IA para programar?",
+        "answer": "Desarrollo con agentes de IA: Claude Code en este proyecto y Codex en las prácticas. Defino los requisitos y las reglas del proyecto, reviso el plan de cada tarea, valido con pruebas y evalúo la calidad de las respuestas, manteniendo el control técnico de cada cambio.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Desarrollo con IA",
+        "question": "¿Sabes programar sin IA? ¿Programas tú o lo hace la IA?",
+        "answer": "Sí. Balancea la programé yo casi toda a mano; solo usé IA para las gráficas con MPAndroidChart. En este proyecto la idea, el diseño y el plan son míos, y la implementación la hago con Claude Code bajo mi dirección, revisando cada cambio.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Desarrollo con IA",
+        "question": "¿Qué es CLAUDE.md y para qué lo usas? ¿Qué son las reglas del proyecto?",
+        "answer": "Es el archivo de reglas del proyecto que le doy a Claude Code: los requisitos y las decisiones, para que la IA parta de un contexto claro. Con él y con un plan por tarea que yo reviso y ajusto, avanzamos en pasos pequeños.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Cómo compruebas que el chat no inventa? ¿Cómo evalúas las respuestas?",
+        "answer": "El chat responde solo con los datos relevantes que recupera (RAG). Evalúo la calidad de sus respuestas con baterías de preguntas y reviso en el panel de administración las preguntas sin respuesta para mejorarlo.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Qué es el panel de administración y qué se ve ahí?",
+        "answer": "Es un panel con contraseña donde veo estadísticas del chat: las últimas preguntas y respuestas, los límites de uso, las preguntas sin respuesta y los tiempos. Lo uso para revisar la IA y mejorarla. Es privado, así que no puedo dar su dirección ni su contraseña.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Qué es rate limiting y qué es la tolerancia a fallos en tu API?",
+        "answer": "Rate limiting son límites de uso: limito los mensajes del chat para evitar abusos y controlar el gasto. La tolerancia a fallos es que, si un proveedor de IA (Gemini o Groq) falla, el chat pasa automáticamente a otro.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Qué base de datos usas y para qué? ¿Qué es SQLAlchemy?",
+        "answer": "SQLite para los datos de mi CV, con SQLAlchemy, y PostgreSQL (en Neon) para las estadísticas del chat, sin SQLAlchemy. SQLAlchemy es una librería de Python que permite trabajar con la base de datos con clases y objetos en vez de escribir todo el SQL a mano.",
         "fixed_answer": False,
     },
 ]
