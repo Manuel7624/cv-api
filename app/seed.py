@@ -699,12 +699,6 @@ EXTRA_INFO = [
         "fixed_answer": False,
     },
     {
-        "topic": "Presentación",
-        "question": "¿Qué te diferencia de otros candidatos? ¿Qué te hace distinto?",
-        "answer": "Lo que me diferencia es que trabajo con método y lo puedes comprobar: esta API, la web y el chat los he construido yo, con Claude Code, decidiendo cada cambio y comprobándolo con tests. En las prácticas, con Codex, refactoricé código de una empresa real que ya funcionaba. Y me gusta que un reto me haga pensar: analizo el problema desde varias perspectivas antes de actuar.",
-        "fixed_answer": False,
-    },
-    {
         "topic": "Proyectos",
         "question": "¿Dónde está el código de este proyecto? ¿Está tu código en GitHub?",
         "answer": "Sí. El código de este proyecto (la API, la web y el chat) está en GitHub, en github.com/Manuel7624/cv-api, y mi proyecto final, Balancea, en github.com/Manuel7624/TFG_ManuelSastre. Mi perfil es github.com/Manuel7624.",

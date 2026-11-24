@@ -275,12 +275,14 @@ def sentences(text):
 
 
 def test_differentiator_has_its_own_answer_that_does_not_repeat_hiring_one():
-    answer = entry("¿Qué te diferencia")
+    # Solo hay una entrada del diferencial (la antigua "Lo que me diferencia es…" se quitó).
+    answer = entry("¿Cuál es tu diferencial?")
     hiring = entry("¿Por qué deberían contratarte?")
-    assert answer.startswith("Lo que me diferencia es")
+    assert answer.startswith("Mi diferencial es el desarrollo asistido por IA")
+    assert not any("Lo que me diferencia es" in item["answer"] for item in EXTRA_INFO)
     assert not any(s in hiring for s in sentences(answer))
-    # Codex solo en las prácticas y Claude Code solo en este proyecto.
-    assert "con Claude Code" in answer and "con Codex, refactoricé" in answer
+    # No mezcla Codex y Claude Code: no nombra ninguno de los dos.
+    assert "Codex" not in answer and "Claude Code" not in answer
 
 
 def test_github_answer_links_this_project_and_balancea():
