@@ -50,6 +50,7 @@ class Education(BaseModel):
 
 class Skills(BaseModel):
     languages: list[str]
+    backend: list[str]
     tools: list[str]
     concepts: list[str]
 

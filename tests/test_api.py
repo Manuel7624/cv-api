@@ -39,11 +39,25 @@ def test_education_and_skills(client):
 
 
 def test_cv_matches_the_pdf(client):
-    assert client.get("/profile").json()["summary"].endswith("seguir creciendo en Python.")
+    summary = client.get("/profile").json()["summary"]
+    assert summary.endswith("una web personal con API propia (Python y FastAPI) y chat de IA.")
+    assert "Busco mi primera" not in summary
     internship = client.get("/experience").json()[0]
     assert internship["period"] == "26 de enero – 15 de mayo de 2026"
     assert "Apoyo de Codex" in internship["highlights"][0]
-    assert "comprobación mediante pruebas" in internship["highlights"][0]
+    assert internship["highlights"][1].startswith("Pruebas de integración manuales")
+    assert "documento de entrada" in internship["highlights"][1]
+    assert "real" not in internship["highlights"][1] and "ejemplo" not in internship["highlights"][1]
+    assert not any("Kafka" in text or "Puesta en marcha en local" in text for text in internship["highlights"])
+    projects = client.get("/projects").json()
+    assert [project["name"] for project in projects] == ["CV con API y chat de IA", "Balancea"]
+    assert projects[0]["repository"] == "https://github.com/Manuel7624/cv-api"
+    assert projects[0]["technologies"] == ["Python", "FastAPI", "SQLite", "PostgreSQL", "Docker", "pytest"]
+    skills = client.get("/skills").json()
+    assert skills["languages"][-1] == "SQL (SQLite, PostgreSQL)"
+    assert skills["backend"] == ["FastAPI", "APIs REST", "pytest", "Nociones de RAG"]
+    assert "GitHub" in skills["tools"]
+    assert "Nociones de Kafka" in skills["concepts"]
     assert "Codex" in client.get("/skills").json()["tools"]
     assert "Claude Code" in client.get("/skills").json()["tools"]
 
@@ -72,7 +86,8 @@ def test_lists_keep_their_order(client):
     experience = client.get("/experience").json()
     assert experience[0]["company"] == "Brainy Inteligencia Semántica"
     assert experience[0]["highlights"][0].startswith("Refactorización")
-    assert client.get("/projects").json()[0]["technologies"][0] == "Java"
+    assert client.get("/projects").json()[0]["technologies"][0] == "Python"
+    assert client.get("/projects").json()[1]["technologies"][0] == "Java"
     assert client.get("/education").json()[-1]["title"] == "Bachillerato de Ciencias"
     assert client.get("/skills").json()["tools"][0] == "Docker"
 

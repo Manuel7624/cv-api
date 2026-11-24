@@ -103,7 +103,7 @@ class Skill(Base):
     __tablename__ = "skill"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    category: Mapped[str]  # "languages", "tools" o "concepts"
+    category: Mapped[str]  # "languages", "backend", "tools" o "concepts"
     name: Mapped[str]
     position: Mapped[int]
 

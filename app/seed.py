@@ -16,10 +16,9 @@ PROFILE = {
     "location": "Zaragoza, España",
     "summary": (
         "Técnico Superior en Desarrollo de Aplicaciones Multiplataforma, con "
-        "prácticas en una empresa de software (Python, Docker y GitLab) y un "
-        "proyecto propio en Android con Java y SQLite. Busco mi primera "
-        "oportunidad como desarrollador backend junior y seguir creciendo en "
-        "Python."
+        "prácticas en una empresa de software (Python, Docker y GitLab), un "
+        "proyecto propio en Android con Java y SQLite, y una web personal con "
+        "API propia (Python y FastAPI) y chat de IA."
     ),
     "availability": "Disponibilidad inmediata",
     "email": "manusastrenar@gmail.com",
@@ -35,15 +34,15 @@ EXPERIENCE = [
         "period": "26 de enero – 15 de mayo de 2026",
         "highlights": [
             "Refactorización y optimización de workers en Python para mejorar "
-            "su estructura y legibilidad; comprobación mediante pruebas de "
-            "sus respuestas y comportamiento esperado. Apoyo de Codex con un "
-            "prompt base adaptado a cada worker.",
+            "su estructura y legibilidad. Apoyo de Codex con un prompt base "
+            "adaptado a cada worker.",
+            "Pruebas de integración manuales: creación de un script (.py) "
+            "dentro de la refactorización, ejecutado desde consola con un "
+            "documento de entrada para comprobar de principio a fin que el "
+            "worker funcionaba, siguiendo el proceso mediante los logs en "
+            "consola.",
             "Dockerización de los workers que aún no estaban contenerizados y "
             "subida de los cambios a nuevas ramas en GitLab.",
-            "Puesta en marcha en local de la API (versión anterior) de la "
-            "plataforma, junto con el frontend y una base de datos de pruebas, "
-            "para familiarizarme con su arquitectura y funcionamiento; "
-            "nociones de Kafka.",
             "Control de versiones con Git y GitLab (clonado, ramas, commits y "
             "push) y uso básico de la consola.",
         ],
@@ -62,6 +61,27 @@ EXPERIENCE = [
 ]
 
 PROJECTS = [
+    {
+        "name": "CV con API y chat de IA",
+        "description": "Web personal con API propia y chat de IA que responde "
+        "sobre mi perfil (https://manuel-sastre-cv.vercel.app).",
+        "technologies": ["Python", "FastAPI", "SQLite", "PostgreSQL", "Docker", "pytest"],
+        "repository": "https://github.com/Manuel7624/cv-api",
+        "highlights": [
+            "API REST propia con FastAPI que sirve mi CV desde una base de "
+            "datos, con documentación Swagger, y una web publicada en Vercel y "
+            "Render.",
+            "Chat de IA que responde en primera persona sobre mi perfil: busca "
+            "primero los datos relevantes (RAG) y responde solo con ellos, "
+            "para no inventar. Usa varios proveedores (Gemini y Groq) con "
+            "cambio automático si uno falla.",
+            "Desarrollado con Claude Code siguiendo un flujo estructurado: "
+            "definición de requisitos y reglas del proyecto, plan de "
+            "implementación por tarea revisado por mí, desarrollo en pasos "
+            "pequeños y validación con tests automáticos (pytest) y revisión "
+            "manual.",
+        ],
+    },
     {
         "name": "Balancea",
         "description": "Aplicación móvil Android de finanzas personales "
@@ -103,13 +123,20 @@ EDUCATION = [
 
 SKILLS = {
     "languages": [
-        "Python (prácticas y curso en Coddy)",
+        "Python (prácticas, curso en Coddy y proyecto propio)",
         "Java (grado y proyecto final)",
-        "SQL (SQLite)",
+        "SQL (SQLite, PostgreSQL)",
+    ],
+    "backend": [
+        "FastAPI",
+        "APIs REST",
+        "pytest",
+        "Nociones de RAG",
     ],
     "tools": [
         "Docker",
         "Git",
+        "GitHub",
         "GitLab",
         "Android Studio",
         "Visual Studio Code",
@@ -210,7 +237,7 @@ EXTRA_INFO = [
     {
         "topic": "Más sobre cómo trabajo",
         "question": "¿Cómo organizas tu trabajo del día?",
-        "answer": "En las prácticas me asignaban, por ejemplo, tres workers por semana. Los apuntaba en una lista y cada uno pasaba por varias fases: analizarlo y adaptar a él el prompt base, refactorizarlo con Codex, revisar el resultado y comprobarlo con mi script de prueba, y subirlo a una rama nueva en GitLab. Marcaba cada fase al completarla, así veía el progreso de cada worker, y al terminar uno empezaba el siguiente.",
+        "answer": "En las prácticas me asignaban, por ejemplo, tres workers por semana. Los apuntaba en una lista y cada uno pasaba por varias fases: analizarlo y adaptar a él el prompt base, refactorizarlo con Codex, revisar el resultado y comprobarlo con mi script de integración manual, y subirlo a una rama nueva en GitLab. Marcaba cada fase al completarla, así veía el progreso de cada worker, y al terminar uno empezaba el siguiente.",
         "fixed_answer": False,
     },
     {
@@ -330,7 +357,7 @@ EXTRA_INFO = [
     {
         "topic": "Prácticas en Brainy Inteligencia Semántica",
         "question": "¿Qué hiciste en las prácticas?",
-        "answer": "Empecé conociendo la plataforma de Brainy: puse en marcha en mi portátil una versión anterior de su API, con un frontal y una base de datos de pruebas, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar varios workers en Python que ya estaban dockerizados: adaptaba un prompt base a cada uno, hacía la refactorización con Codex, revisaba el resultado, lo comprobaba con un script de prueba y subía los cambios a una rama nueva en GitLab. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
+        "answer": "Empecé conociendo la plataforma de Brainy: puse en marcha en mi portátil una versión anterior de su API, con un frontal y una base de datos de pruebas, para entender cómo estaba construida. Después, mi trabajo principal fue refactorizar varios workers en Python que ya estaban dockerizados: adaptaba un prompt base a cada uno, hacía la refactorización con Codex, revisaba el resultado, lo comprobaba con un script de integración manual y subía los cambios a una rama nueva en GitLab. Al final también dockericé desde cero un worker que no tenía nada de Docker, que fue el más complejo.",
         "fixed_answer": False,
     },
     {
@@ -576,7 +603,7 @@ EXTRA_INFO = [
     {
         "topic": "Nuevas preguntas y respuestas",
         "question": "¿Has hecho tests?",
-        "answer": "Sí. En las prácticas, al refactorizar cada worker creaba un script de prueba en Python que le enviaba un documento de ejemplo; lo ejecutaba desde la terminal y mostraba mensajes según iba completando cada paso, para comprobar que el worker funcionaba. En este proyecto hay tests automáticos con pytest. En el grado no llegamos a ver testing.",
+        "answer": "Sí. En las prácticas, al refactorizar cada worker creaba un script de prueba en Python que le enviaba un documento de entrada; lo ejecutaba desde la consola y seguía el proceso mediante los logs, para comprobar de principio a fin que el worker funcionaba. En este proyecto hay tests automáticos con pytest. En el grado no llegamos a ver testing.",
         "fixed_answer": False,
     },
     {
@@ -685,6 +712,24 @@ EXTRA_INFO = [
         "topic": "Experiencia",
         "question": "¿Cuántos workers dockerizaste?",
         "answer": "Dockericé desde cero uno, el más complejo, que no tenía nada de Docker; no tengo una cifra exacta de más que darte. El resto de mi trabajo con workers fue refactorizar varios que ya estaban dockerizados.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Qué es el proyecto CV con API y chat de IA? ¿Qué es esta web?",
+        "answer": "Es mi web personal, con una API REST propia hecha con FastAPI que sirve mi CV desde una base de datos y tiene documentación Swagger. Está publicada en Vercel y Render y el código está en github.com/Manuel7624/cv-api.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Cómo funciona el chat de IA? ¿Qué es el RAG? ¿Qué proveedores usa?",
+        "answer": "Responde en primera persona sobre mi perfil. Primero busca los datos relevantes para la pregunta (RAG) y responde solo con ellos, para no inventar. Usa varios proveedores (Gemini y Groq) y cambia automáticamente si uno falla. De RAG tengo nociones.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Este proyecto",
+        "question": "¿Cómo validas este proyecto? ¿Usas pytest y PostgreSQL en él?",
+        "answer": "Sí: validación con tests automáticos con pytest y revisión manual. PostgreSQL lo uso en este proyecto, junto a SQLite, y de SQL conozco ambos.",
         "fixed_answer": False,
     },
 ]

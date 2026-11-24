@@ -571,6 +571,12 @@ def test_technologies_answer_is_short_and_coddy_is_worded_right(client, fake_ai)
 
 
 def test_prompt_did_not_grow_for_groq(db_session):
-    """Groq admite 8.000 tokens: si se añaden reglas, hay que recortar otras."""
+    """Groq admite 8.000 tokens: si se añaden reglas, hay que recortar otras.
+
+    El límite subió de 22.168 a 23.200 caracteres al alinear el CV con el PDF nuevo (perfil,
+    proyecto "CV con API y chat de IA" y competencias): el prompt base midió 23.124, unos 250
+    tokens más. En el peor caso (6 entradas extra, las más largas) son unos 6.700 tokens reales
+    de entrada, y con los 400 de respuesta máxima quedan por debajo de 8.000.
+    """
     base = len(chat.build_system_prompt(db_session, [], partial=True))
-    assert base <= 22_168, f"el prompt base ha crecido a {base} caracteres"
+    assert base <= 23_200, f"el prompt base ha crecido a {base} caracteres"

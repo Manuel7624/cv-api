@@ -68,7 +68,7 @@ def get_education(db: Session) -> list[schemas.Education]:
 
 def get_skills(db: Session) -> schemas.Skills:
     rows = db.scalars(select(models.Skill).order_by(models.Skill.position))
-    skills: dict[str, list[str]] = {"languages": [], "tools": [], "concepts": []}
+    skills: dict[str, list[str]] = {"languages": [], "backend": [], "tools": [], "concepts": []}
     for row in rows:
         skills[row.category].append(row.name)
     return schemas.Skills(**skills)
