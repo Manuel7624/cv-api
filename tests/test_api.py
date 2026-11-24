@@ -126,3 +126,21 @@ def test_new_cv_information_lives_in_separate_short_entries(client, db_session):
     assert "/admin" not in everything and "ADMIN_TOKEN" not in everything
     assert "25 días" not in everything
     assert "Desarrollo con agentes de IA" not in str(client.get("/profile").json())
+
+
+def test_contact_entries_use_the_real_email_and_never_a_phone_number(db_session):
+    from app import crud
+    from app.seed import PROFILE
+
+    entries = {
+        entry["pregunta"]: entry["respuesta"]
+        for entry in crud.get_extra_info(db_session, fixed_answer=False)
+        if entry["tema"] == "Contacto"
+    }
+    how, why = (answer for _, answer in sorted(entries.items(), key=lambda item: "Por qué" in item[0]))
+    assert len(entries) == 2
+    assert PROFILE["email"] in how and "LinkedIn" in how and "teléfono aparece en mi perfil de LinkedIn" in how
+    assert "web abierta" not in how and "copiar" not in how  # no explica por qué no está en la web
+    assert "web abierta" in why and "copiarlo" in why and "LinkedIn" in why and "correo" in why
+    for answer in (how, why):
+        assert not any(ch.isdigit() for ch in answer.replace(PROFILE["linkedin"], ""))  # ningún número

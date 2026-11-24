@@ -776,6 +776,18 @@ EXTRA_INFO = [
         "answer": "SQLite para los datos de mi CV, con SQLAlchemy, y PostgreSQL (en Neon) para las estadísticas del chat, sin SQLAlchemy. SQLAlchemy es una librería de Python que permite trabajar con la base de datos con clases y objetos en vez de escribir todo el SQL a mano.",
         "fixed_answer": False,
     },
+    {
+        "topic": "Contacto",
+        "question": "¿Cómo te contacto? ¿Cómo puedo contactarte? ¿Dónde te escribo?",
+        "answer": f"Puedes contactarme por correo en {PROFILE['email']} o por LinkedIn ({PROFILE['linkedin']}). Mi teléfono aparece en mi perfil de LinkedIn.",
+        "fixed_answer": False,
+    },
+    {
+        "topic": "Contacto",
+        "question": "¿Por qué no pones tu teléfono en la web? ¿Por qué no está tu teléfono aquí?",
+        "answer": "Prefiero no publicar mi teléfono en una web abierta, donde cualquiera puede copiarlo. Está en mi perfil de LinkedIn y también puedes pedírmelo por correo.",
+        "fixed_answer": False,
+    },
 ]
 
 
