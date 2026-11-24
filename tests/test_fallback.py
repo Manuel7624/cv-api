@@ -160,7 +160,7 @@ def test_keeps_the_rag_answer_if_the_retry_with_everything_fails(client, provide
     """Si el RAG dijo que no lo sabe y el plan B no consigue respuesta, se usa la del RAG."""
     script, calls = providers
     script["gemini"].append(ok(NO_INFO))
-    assert ask(client) == NO_INFO
+    assert ask(client) == NO_INFO + " Mi correo: manusastrenar@gmail.com."  # la respuesta menciona el correo: se completa
     assert [c["provider"] for c in calls] == ["gemini", "gemini", "gemini_backup", "groq"]
 
 
@@ -231,3 +231,50 @@ def test_stream_has_the_same_limits_as_chat(client, providers, monkeypatch):
     response = client.post("/chat/stream", json={"message": "Hola"})
     assert response.status_code == 429
     assert client.post("/chat/stream", json={"message": ""}).status_code == 422
+
+
+# --- La dirección del correo se completa en código, sin ampliar el prompt ---
+
+EMAIL = "manusastrenar@gmail.com"
+
+
+def test_an_invitation_to_write_gets_the_real_address(client, providers):
+    script, _calls = providers
+    script["gemini"].append(ok("Es algo que prefiero hablar directamente. Puedes escribirme a mi correo."))
+    answer = ask(client)
+    assert answer.endswith(f"Mi correo: {EMAIL}.") and answer.count(EMAIL) == 1
+
+
+def test_the_stream_also_completes_the_address_at_the_end(client, providers):
+    script, _calls = providers
+    script["gemini"].append(ok("Mi teléfono aparece en LinkedIn; también puedes escribirme al correo."))
+    events = stream_events(client)
+    assert "".join(events).endswith(f" Mi correo: {EMAIL}.")
+    assert events[-1] == f" Mi correo: {EMAIL}."  # va en un trozo final, sin tocar lo ya enviado
+
+
+def test_the_address_is_not_repeated_if_the_answer_already_has_it(client, providers):
+    script, _calls = providers
+    script["gemini"].append(ok(f"Puedes escribirme a {EMAIL.upper()} cuando quieras por correo."))
+    assert ask(client).lower().count(EMAIL) == 1
+
+
+def test_the_error_message_keeps_a_single_address(client, providers):
+    """Todo falla: el mensaje amable ya lleva el correo y no se añade otra vez."""
+    answer = ask(client)
+    assert answer == chat.fallback_message(EMAIL) and answer.count(EMAIL) == 1
+    assert "".join(stream_events(client)).count(EMAIL) == 1
+
+
+def test_nothing_is_added_if_the_answer_does_not_talk_about_the_mail(client, providers):
+    script, _calls = providers
+    script["gemini"].append(ok("Estudié un grado superior en Océano Atlántico."))
+    assert ask(client) == "Estudié un grado superior en Océano Atlántico."
+
+
+def test_after_a_restart_only_the_final_text_counts():
+    events = ["Escríbeme al correo", chat.RESTART, "Sin correo ni nada que decir"]
+    # el texto final también habla de "correo": se completa una sola vez
+    assert "".join(e for e in chat.complete_with_email(iter(events), EMAIL) if e is not chat.RESTART).count(EMAIL) == 1
+    plain = ["Hola", chat.RESTART, "Estudié DAM"]
+    assert [e for e in chat.complete_with_email(iter(plain), EMAIL)] == plain

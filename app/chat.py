@@ -8,6 +8,7 @@ El servidor no guarda ninguna conversación.
 import json
 import logging
 import math
+import re
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -400,6 +401,24 @@ def limit_length(events: Iterator[str | object]) -> Iterator[str | object]:
         yield event
 
 
+MAIL_WORDS = re.compile(r"(?<![a-z])(correo|e-?mail)(?![a-z])", re.IGNORECASE)
+
+
+def complete_with_email(events: Iterator[str | object], email: str) -> Iterator[str | object]:
+    """Si la respuesta invita a escribir al correo sin dar la dirección, la añade al final.
+
+    Se hace aquí, en código, y no con una regla más en el prompt (el de Groq casi no tiene
+    margen). La dirección sale de la base de datos. Si la respuesta ya la trae (como el
+    mensaje de error) o no habla del correo, no se añade nada.
+    """
+    text = ""
+    for event in events:
+        text = "" if event is RESTART else text + event
+        yield event
+    if text.strip() and MAIL_WORDS.search(text) and email.lower() not in text.lower():
+        yield f"{'' if text[-1].isspace() else ' '}Mi correo: {email}."
+
+
 def says_no_information(answer: str) -> bool:
     """Indica si la IA ha contestado que no tiene la información."""
     text = answer.lower()
@@ -527,7 +546,8 @@ def stream_answer(db: Session, message: str, history: list[ChatTurn]) -> Iterato
     finished = False
     answer = ""
     try:
-        for event in limit_length(find_answer(db, message, history, trace)):
+        email = crud.get_profile(db).contact.email
+        for event in complete_with_email(limit_length(find_answer(db, message, history, trace)), email):
             if event is RESTART:
                 chat_stats.count("restarts")
                 answer = ""
