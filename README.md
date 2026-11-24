@@ -9,9 +9,11 @@ de mi web-CV personal, que incluye un chatbot sobre mi perfil.
 - **Web:** <https://manuel-sastre-cv.vercel.app>
 - **API (Swagger):** <https://manuel-sastre-cv.vercel.app/docs>
 
-> Estado: publicada y en funcionamiento en Render (plan gratuito: si nadie la visita
-> durante un rato, se duerme y la primera visita tarda unos segundos). El CV está en
-> SQLite; el siguiente paso es pasarlo a PostgreSQL.
+> Estado: la web principal está publicada y en funcionamiento en Vercel
+> (<https://manuel-sastre-cv.vercel.app>); Render queda como copia de respaldo (plan
+> gratuito: si nadie la visita durante un rato, se duerme y la primera visita tarda
+> unos segundos). El CV está en SQLite con SQLAlchemy; PostgreSQL (Neon) se usa para
+> las estadísticas y los límites del chat.
 
 ## Endpoints
 
@@ -300,14 +302,14 @@ La web queda en `http://localhost:8000`. Las claves se cargan de `.env`.
 
 ## Despliegue
 
-La web está publicada en <https://manuel-sastre-cv.vercel.app> (documentación de la
-API en <https://manuel-sastre-cv.vercel.app/docs>). El archivo `render.yaml`
-describe el servicio para Render (región Frankfurt, plan gratuito): usa el
+La web principal está publicada en <https://manuel-sastre-cv.vercel.app> (documentación
+de la API en <https://manuel-sastre-cv.vercel.app/docs>). El archivo `render.yaml`
+describe el servicio de respaldo en Render (región Frankfurt, plan gratuito): usa el
 `Dockerfile` y comprueba `/health`. En el plan gratuito el disco no es persistente, así que
 `cv.db` se vuelve a crear desde `app/seed.py` en cada arranque. Las claves se
 escriben en el panel de Render, no en el repositorio.
 
-En Vercel (rama `vercel`) la app arranca desde `app/main.py` y la base del CV va a
+En Vercel (que despliega desde `main`) la app arranca desde `app/main.py` y la base del CV va a
 `/tmp`. Variables del panel: `GEMINI_API_KEY`, `GROQ_API_KEY`, `ADMIN_TOKEN`,
 `STATS_DATABASE_URL`, `LIMITS_HASH_SALT`, `CLIENT_IP_HEADER` (valor `x-real-ip`) y
 `PUBLIC_URL` (valor `https://manuel-sastre-cv.vercel.app`, no es secreto).
@@ -354,7 +356,8 @@ LICENSE          Licencia MIT del código
 
 ## Próximos pasos
 
-- Pasar el CV de SQLite a PostgreSQL (con migraciones).
+- Posible más adelante: llevar también el CV a PostgreSQL, con migraciones (hoy está en
+  SQLite con SQLAlchemy).
 - Estadísticas de visitas por origen, sin cookies.
 
 ## Licencia
