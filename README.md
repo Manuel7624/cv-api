@@ -124,7 +124,7 @@ que no lo sabe. Los elementos con `fixed_answer=True` son temas que prefiero hab
 nota media): el chat responde con ese texto y nunca da cifras. Después de editar
 ese archivo hay que borrar `cv.db` y reiniciar.
 
-Límites (por defecto): 5 mensajes por minuto y 30 al día por IP, 300 al día en
+Límites (por defecto): 5 mensajes por minuto y 30 al día por IP, 500 al día en
 total, y 500 caracteres por pregunta. Se cambian con variables de entorno, sin tocar
 el código: `CHAT_MESSAGES_PER_MINUTE_PER_IP`, `CHAT_MESSAGES_PER_DAY_PER_IP`,
 `CHAT_MESSAGES_PER_DAY_TOTAL` y `CHAT_MAX_MESSAGE_LENGTH` (ver `.env.example` y
@@ -202,7 +202,7 @@ proveedor, cuántas veces se usó el RAG, el plan B y la búsqueda por palabras 
 tiempos medios, mensajes bloqueados por cada límite y errores (por proveedor,
 429, tiempo agotado, internos). No aparece en `/docs`.
 
-Arriba del todo hay un indicador del tope global ("87 de 300" mensajes usados en las
+Arriba del todo hay un indicador del tope global ("87 de 500" mensajes usados en las
 últimas 24 horas) y una tabla de mensajes por día de los últimos 30 días, con un
 resumen de los últimos 7 y de los 30: mensajes, sin información, errores (los que
 ningún proveedor pudo responder y los fallos internos) y cuántos respondió cada

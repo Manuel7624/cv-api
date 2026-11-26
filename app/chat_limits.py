@@ -26,7 +26,7 @@ def positive_int_from_env(name: str, default: int) -> int:
 MESSAGES_PER_MINUTE_PER_IP = positive_int_from_env("CHAT_MESSAGES_PER_MINUTE_PER_IP", 5)
 MESSAGES_PER_DAY_PER_IP = positive_int_from_env("CHAT_MESSAGES_PER_DAY_PER_IP", 30)
 # Tope global: protege el cupo de los proveedores aunque lleguen muchas IP.
-MESSAGES_PER_DAY_TOTAL = positive_int_from_env("CHAT_MESSAGES_PER_DAY_TOTAL", 300)
+MESSAGES_PER_DAY_TOTAL = positive_int_from_env("CHAT_MESSAGES_PER_DAY_TOTAL", 500)
 
 # Longitudes máximas, en caracteres.
 MAX_MESSAGE_LENGTH = positive_int_from_env("CHAT_MAX_MESSAGE_LENGTH", 500)

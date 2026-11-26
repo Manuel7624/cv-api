@@ -37,6 +37,6 @@ services:
       - key: CHAT_MESSAGES_PER_DAY_PER_IP
         value: "30"
       - key: CHAT_MESSAGES_PER_DAY_TOTAL
-        value: "300"
+        value: "500"
       - key: CHAT_MAX_MESSAGE_LENGTH
         value: "500"
